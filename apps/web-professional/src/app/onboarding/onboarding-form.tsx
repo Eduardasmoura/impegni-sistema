@@ -15,15 +15,6 @@ const TIPOS_NEGOCIO = [
   { value: "estudio_estetica", label: "Studio / Estética", icon: Sparkles, swatches: ["#C4B5FD", "#71717A", "#FFFFFF"] },
 ] as const;
 
-function slugify(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
 // Primeiro acesso de um usuário sem empresa: cria a empresa (o trigger
 // on_company_created já o torna 'owner' automaticamente, ver migration 002).
 export function OnboardingForm() {
@@ -31,19 +22,43 @@ export function OnboardingForm() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [checkingSlug, setCheckingSlug] = useState(false);
   const [businessType, setBusinessType] = useState<(typeof TIPOS_NEGOCIO)[number]["value"]>("barbearia");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Só sugere o slug a partir do nome quando o usuário ainda não editou o
+  // campo de link na mão — chama o RPC generate_unique_slug (migration 013)
+  // pra já vir sem acento/espaço e sem colidir com um link já existente
+  // (kellyrein, kellyrein2...), em vez de só normalizar o texto localmente.
+  async function sugerirSlug(baseName: string) {
+    if (slugTouched || !baseName.trim()) return;
+    setCheckingSlug(true);
+    const supabase = createClient();
+    const { data, error: rpcError } = await supabase.rpc("generate_unique_slug", { base_name: baseName });
+    setCheckingSlug(false);
+    if (!rpcError && data && !slugTouched) setSlug(data);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
     const supabase = createClient();
-    const { error: insertError } = await supabase.from("companies").insert({ name, slug, business_type: businessType });
+
+    // Roda de novo em cima do valor atual (mesmo se editado à mão) — garante
+    // um slug realmente único e limpo na hora de gravar, não só no preview.
+    const { data: finalSlug, error: slugError } = await supabase.rpc("generate_unique_slug", { base_name: slug || name });
+    if (slugError || !finalSlug) {
+      setLoading(false);
+      setError(slugError?.message || "Não foi possível gerar o link da empresa.");
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("companies").insert({ name, slug: finalSlug, business_type: businessType });
     setLoading(false);
     if (insertError) {
-      setError(insertError.message.includes("duplicate") ? "Esse link já está em uso, escolha outro." : insertError.message);
+      setError(insertError.message);
       return;
     }
     router.push("/dashboard");
@@ -60,29 +75,30 @@ export function OnboardingForm() {
             id="name"
             autoFocus
             value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              if (!slugTouched) setSlug(slugify(e.target.value));
-            }}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={(e) => sugerirSlug(e.target.value)}
             placeholder="Studio Nova"
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="slug">Link de agendamento</Label>
+          <Label htmlFor="slug">Link público</Label>
           <div className="flex items-center rounded-lg border border-input bg-card text-sm overflow-hidden">
-            <span className="px-3 py-2 text-muted-foreground bg-muted whitespace-nowrap">agendar.barberinova.com/</span>
             <input
               id="slug"
-              value={slug}
+              value={checkingSlug ? "gerando..." : slug}
+              disabled={checkingSlug}
               onChange={(e) => {
                 setSlugTouched(true);
-                setSlug(slugify(e.target.value));
+                setSlug(e.target.value.toLowerCase());
               }}
-              className="flex-1 px-2 py-2 bg-transparent outline-none min-w-0"
+              className="flex-1 px-3 py-2 bg-transparent outline-none min-w-0"
+              placeholder="sua-empresa"
               required
             />
+            <span className="px-3 py-2 text-muted-foreground bg-muted whitespace-nowrap">.inova.app</span>
           </div>
+          <p className="text-xs text-muted-foreground">Gerado a partir do nome — pode editar, a gente garante que fica único.</p>
         </div>
         <div className="space-y-2">
           <Label>Tipo de negócio</Label>
@@ -112,7 +128,7 @@ export function OnboardingForm() {
             ))}
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading || checkingSlug}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar empresa"}
         </Button>
       </form>

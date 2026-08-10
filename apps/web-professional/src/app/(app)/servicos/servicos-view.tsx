@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Scissors, Pencil, Trash2, Clock } from "lucide-react";
+import { Plus, Scissors, Pencil, Trash2, Clock, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { uploadCompanyAsset } from "@/lib/upload";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const CATEGORIAS = ["cabelo", "barba", "combo", "estetica", "unhas", "maquiagem", "outros"];
@@ -21,7 +23,7 @@ const TIPOS = [
   { value: "avulso", label: "Serviço avulso" },
   { value: "pacote", label: "Pacote" },
 ];
-const FORM_VAZIO = { name: "", category: "cabelo", type: "avulso", duration_min: "30", price: "", active: true };
+const FORM_VAZIO = { name: "", description: "", category: "cabelo", type: "avulso", duration_min: "30", price: "", photo_url: "", active: true };
 
 export function ServicosView({ companyId }: { companyId: string }) {
   const qc = useQueryClient();
@@ -30,6 +32,7 @@ export function ServicosView({ companyId }: { companyId: string }) {
   const [open, setOpen] = useState(false);
   const [editando, setEditando] = useState<Tables<"services"> | null>(null);
   const [form, setForm] = useState(FORM_VAZIO);
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
 
   const { data: servicos = [] } = useQuery({
     queryKey: ["services", companyId],
@@ -40,14 +43,28 @@ export function ServicosView({ companyId }: { companyId: string }) {
     },
   });
 
+  async function uploadFoto(file: File) {
+    setEnviandoFoto(true);
+    try {
+      const url = await uploadCompanyAsset(supabase, companyId, "services", file);
+      setForm((f) => ({ ...f, photo_url: url }));
+    } catch (e) {
+      toast({ title: "Erro no upload", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally {
+      setEnviandoFoto(false);
+    }
+  }
+
   async function salvar() {
     const payload = {
       company_id: companyId,
       name: form.name,
+      description: form.description || null,
       category: form.category,
       type: form.type,
       duration_min: Number(form.duration_min) || 30,
       price: Number(form.price) || 0,
+      photo_url: form.photo_url || null,
       active: form.active,
     };
     const { error } = editando
@@ -78,10 +95,12 @@ export function ServicosView({ companyId }: { companyId: string }) {
     setEditando(servico);
     setForm({
       name: servico.name,
+      description: servico.description || "",
       category: servico.category || "cabelo",
       type: servico.type || "avulso",
       duration_min: String(servico.duration_min),
       price: String(servico.price),
+      photo_url: servico.photo_url || "",
       active: servico.active,
     });
     setOpen(true);
@@ -101,7 +120,22 @@ export function ServicosView({ companyId }: { companyId: string }) {
           <DialogContent>
             <DialogHeader><DialogTitle>{editando ? "Editar serviço" : "Novo serviço"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer shrink-0">
+                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                    {form.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={form.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFoto(e.target.files[0])} />
+                </label>
+                <p className="text-xs text-muted-foreground">{enviandoFoto ? "Enviando..." : "Clique na foto pra trocar (opcional)"}</p>
+              </div>
               <div><Label>Nome</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><Label>Descrição</Label><Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="O que o cliente vai ver antes de agendar (opcional)" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Categoria</Label>
@@ -139,9 +173,16 @@ export function ServicosView({ companyId }: { companyId: string }) {
           <Card key={s.id}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center"><Scissors className="w-4 h-4 text-muted-foreground" /></div>
-                  <div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                    {s.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Scissors className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
                     <p className="font-medium text-sm">{s.name}</p>
                     <p className="text-xs text-muted-foreground capitalize">
                       {s.category} · {s.type === "pacote" ? "Pacote" : "Avulso"}
@@ -149,11 +190,12 @@ export function ServicosView({ companyId }: { companyId: string }) {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   <button onClick={() => editar(s)} className="p-1.5 rounded-lg hover:bg-muted"><Pencil className="w-3.5 h-3.5 text-muted-foreground" /></button>
                   <button onClick={() => excluir(s)} className="p-1.5 rounded-lg hover:bg-muted"><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
                 </div>
               </div>
+              {s.description && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{s.description}</p>}
               <div className="flex items-end justify-between mt-3">
                 <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {s.duration_min} min</p>
                 <p className="font-heading font-bold text-primary">{formatCurrency(Number(s.price))}</p>

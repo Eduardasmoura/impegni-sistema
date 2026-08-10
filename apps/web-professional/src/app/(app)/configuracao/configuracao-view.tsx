@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Palette, ImageIcon, MessageCircle, Gift, Save, Scissors, Sparkles, Check, ShieldCheck, ShieldOff } from "lucide-react";
+import { Upload, Palette, ImageIcon, MessageCircle, Gift, Save, Scissors, Sparkles, Check, ShieldCheck, ShieldOff, Link2, Clock, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ type FormState = {
   whatsapp: string;
   address: string;
   instagram: string;
+  business_hours: string;
   logo_url: string;
   cover_url: string;
   color_primary: string;
@@ -55,6 +56,7 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
     whatsapp: company.whatsapp || "",
     address: company.address || "",
     instagram: company.instagram || "",
+    business_hours: company.business_hours || "",
     logo_url: company.logo_url || "",
     cover_url: company.cover_url || "",
     color_primary: company.color_primary || "#B45309",
@@ -95,6 +97,26 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <h1 className="font-heading text-3xl font-semibold mb-1">Identidade visual</h1>
       <p className="text-sm text-muted-foreground mb-6">Personalize cores, capa e informações do seu salão</p>
+
+      <Card className="mb-4">
+        <CardContent className="p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Link público (o que você compartilha com clientes)</p>
+              <p className="font-mono text-sm truncate">{company.slug}.inova.app</p>
+            </div>
+          </div>
+          <a
+            href={`https://${company.slug}.inova.app`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
+          >
+            Abrir <ExternalLink className="w-3 h-3" />
+          </a>
+        </CardContent>
+      </Card>
 
       <Card className="overflow-hidden mb-4">
         <div className="h-40 bg-muted relative">
@@ -213,6 +235,10 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
           </div>
           <div><Label>Endereço</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
           <div><Label>Instagram</Label><Input value={form.instagram} onChange={(e) => set("instagram", e.target.value)} /></div>
+          <div>
+            <Label className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Horário de funcionamento</Label>
+            <Input value={form.business_hours} onChange={(e) => set("business_hours", e.target.value)} placeholder="Seg-Sex 9h-19h, Sáb 9h-17h" />
+          </div>
         </CardContent>
       </Card>
 

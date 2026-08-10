@@ -138,6 +138,7 @@ export type Database = {
         Row: {
           address: string | null;
           anamnesis_enabled: boolean;
+          business_hours: string | null;
           business_type: string;
           color_accent: string | null;
           color_primary: string | null;
@@ -159,6 +160,7 @@ export type Database = {
         Insert: {
           address?: string | null;
           anamnesis_enabled?: boolean;
+          business_hours?: string | null;
           business_type?: string;
           color_accent?: string | null;
           color_primary?: string | null;
@@ -180,6 +182,7 @@ export type Database = {
         Update: {
           address?: string | null;
           anamnesis_enabled?: boolean;
+          business_hours?: string | null;
           business_type?: string;
           color_accent?: string | null;
           color_primary?: string | null;
@@ -493,6 +496,7 @@ export type Database = {
           category: string | null;
           company_id: string;
           created_at: string;
+          description: string | null;
           duration_min: number;
           id: string;
           name: string;
@@ -506,6 +510,7 @@ export type Database = {
           category?: string | null;
           company_id: string;
           created_at?: string;
+          description?: string | null;
           duration_min: number;
           id?: string;
           name: string;
@@ -519,6 +524,7 @@ export type Database = {
           category?: string | null;
           company_id?: string;
           created_at?: string;
+          description?: string | null;
           duration_min?: number;
           id?: string;
           name?: string;
@@ -600,6 +606,10 @@ export type Database = {
           whatsapp: string | null;
           whatsapp_reminder_enabled: boolean;
         };
+      };
+      generate_unique_slug: {
+        Args: { base_name: string };
+        Returns: string;
       };
     };
     Enums: { [_ in never]: never };

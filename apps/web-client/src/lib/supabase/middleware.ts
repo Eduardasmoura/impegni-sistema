@@ -1,14 +1,45 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
+import { extractSubdomain } from "@/lib/subdomain";
 
 // Rotas que exigem login; todo o resto (landing pública da empresa, catálogo
 // de serviços, telas de auth) é acessível sem sessão — bem diferente do app
 // profissional, aqui a navegação é majoritariamente pública.
 const PROTECTED_PATHS = ["/meus-agendamentos", "/perfil"];
 
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3001";
+
+// Em `kellyrein.inova.app`, reescreve internamente pra `/kellyrein` (home) ou
+// `/kellyrein/agendar` — as mesmas rotas dinâmicas que já atendem o acesso
+// por path (`inova.app/kellyrein`), sem duplicar nenhuma página. Qualquer
+// outro caminho (/login, /perfil, /meus-agendamentos...) passa direto, são
+// as mesmas telas pra cliente de qualquer empresa.
+function resolveTenantRewrite(request: NextRequest): URL | null {
+  const host = request.headers.get("host") || "";
+  const subdomain = extractSubdomain(host, ROOT_DOMAIN);
+  if (!subdomain) return null;
+
+  const { pathname } = request.nextUrl;
+  if (pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${subdomain}`;
+    return url;
+  }
+  if (pathname === "/agendar") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${subdomain}/agendar`;
+    return url;
+  }
+  return null;
+}
+
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  const tenantRewriteUrl = resolveTenantRewrite(request);
+
+  let supabaseResponse = tenantRewriteUrl
+    ? NextResponse.rewrite(tenantRewriteUrl, { request })
+    : NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +51,9 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = tenantRewriteUrl
+            ? NextResponse.rewrite(tenantRewriteUrl, { request })
+            : NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
         },
       },

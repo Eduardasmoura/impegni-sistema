@@ -29,7 +29,8 @@ export default async function CompanyPage({ params }: { params: { slug: string }
         )}
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 -mt-10 pb-16">
+      {/* pb-24 pra sobrar espaço acima da barra fixa "Agendar horário" no mobile */}
+      <main className="max-w-3xl mx-auto px-4 -mt-10 pb-24 sm:pb-16">
         <Card className="mb-6">
           <CardContent className="p-4 sm:p-6 flex flex-wrap items-center gap-4">
             <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0 border-4 border-card">
@@ -46,9 +47,10 @@ export default async function CompanyPage({ params }: { params: { slug: string }
                 {company.address && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {company.address}</span>}
                 {company.whatsapp && <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {company.whatsapp}</span>}
                 {company.instagram && <span className="flex items-center gap-1"><Instagram className="w-3 h-3" /> {company.instagram}</span>}
+                {company.business_hours && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {company.business_hours}</span>}
               </div>
             </div>
-            <Link href={`/${company.slug}/agendar`}>
+            <Link href={`/${company.slug}/agendar`} className="hidden sm:block">
               <Button className="gap-2"><CalendarPlus className="w-4 h-4" /> Agendar horário</Button>
             </Link>
           </CardContent>
@@ -58,9 +60,18 @@ export default async function CompanyPage({ params }: { params: { slug: string }
         <div className="grid sm:grid-cols-2 gap-3 mb-8">
           {(services as Tables<"services">[] | null)?.map((s) => (
             <Card key={s.id}>
-              <CardContent className="p-4 flex items-center justify-between gap-3">
-                <div>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                  {s.photo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.photo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Scissors className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">{s.name}</p>
+                  {s.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{s.description}</p>}
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Clock className="w-3 h-3" /> {s.duration_min} min</p>
                 </div>
                 <p className="font-heading font-bold text-primary shrink-0">{formatCurrency(Number(s.price))}</p>
@@ -93,6 +104,15 @@ export default async function CompanyPage({ params }: { params: { slug: string }
           {(!professionals || professionals.length === 0) && <p className="text-sm text-muted-foreground col-span-full">Nenhum profissional cadastrado.</p>}
         </div>
       </main>
+
+      {/* Barra fixa no mobile — o CTA principal continua acessível rolando a
+          página (pensado pra quem abre o link pelo WhatsApp/Instagram). No
+          desktop o botão do card do topo já basta. */}
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur p-3">
+        <Link href={`/${company.slug}/agendar`}>
+          <Button className="w-full h-12 gap-2 font-medium"><CalendarPlus className="w-4 h-4" /> Agendar horário</Button>
+        </Link>
+      </div>
     </div>
   );
 }
