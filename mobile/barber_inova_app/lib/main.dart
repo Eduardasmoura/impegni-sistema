@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app/messenger.dart';
 import 'app/router.dart';
 import 'data/env.dart';
 import 'features/notifications/push_service.dart';
@@ -11,7 +12,7 @@ import 'features/notifications/push_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
+  await Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseAnonKey);
 
   try {
     // Requer `firebase_options.dart`, gerado por `flutterfire configure`
@@ -34,9 +35,12 @@ class BarberInovaApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Barber iNova',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: scaffoldMessengerKey,
+      // Tema neutro só até a empresa carregar (tela de login) — o tema de
+      // verdade (por tipo de negócio) é aplicado dentro do MainShell.
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFB45309), // mesma cor primária padrão do web
+        colorSchemeSeed: const Color(0xFFB45309),
       ),
       routerConfig: router,
     );

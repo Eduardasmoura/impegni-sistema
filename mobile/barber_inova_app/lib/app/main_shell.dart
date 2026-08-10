@@ -6,6 +6,7 @@ import '../features/finance/finance_summary_screen.dart';
 import '../features/inventory/inventory_screen.dart';
 import '../features/notifications/push_service.dart';
 import '../features/profile/profile_screen.dart';
+import 'theme.dart';
 
 /// Casca do app já autenticado: resolve a empresa do profissional uma vez e
 /// monta a navegação por abas (Agenda / Financeiro / Estoque / Perfil).
@@ -59,17 +60,23 @@ class _MainShellState extends State<MainShell> {
       ProfileScreen(company: company),
     ];
 
-    return Scaffold(
-      body: IndexedStack(index: _tab, children: screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (index) => setState(() => _tab = index),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: 'Agenda'),
-          NavigationDestination(icon: Icon(Icons.attach_money_outlined), selectedIcon: Icon(Icons.attach_money), label: 'Financeiro'),
-          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Estoque'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
-        ],
+    // O tema muda por empresa (barbearia vs. studio/estética) — só dá pra
+    // saber depois de carregar a empresa, por isso o override fica aqui e
+    // não no MaterialApp (ver main.dart, que usa um tema neutro até aqui).
+    return Theme(
+      data: themeForBusinessType(company.businessType),
+      child: Scaffold(
+        body: IndexedStack(index: _tab, children: screens),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _tab,
+          onDestinationSelected: (index) => setState(() => _tab = index),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: 'Agenda'),
+            NavigationDestination(icon: Icon(Icons.attach_money_outlined), selectedIcon: Icon(Icons.attach_money), label: 'Financeiro'),
+            NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Estoque'),
+            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
+          ],
+        ),
       ),
     );
   }

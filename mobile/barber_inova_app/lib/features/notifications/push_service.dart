@@ -1,6 +1,8 @@
 import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import '../../app/messenger.dart';
 import '../../data/supabase_client.dart';
 
 /// Handler de mensagens em background precisa ser uma função top-level (não
@@ -35,7 +37,7 @@ class PushService {
       );
     }
 
-    FirebaseMessaging.onTokenRefresh.listen((newToken) async {
+    messaging.onTokenRefresh.listen((newToken) async {
       final uid = supabase.auth.currentUser?.id;
       if (uid == null) return;
       await supabase.from('device_tokens').upsert(
@@ -46,6 +48,27 @@ class PushService {
           'platform': Platform.isIOS ? 'ios' : 'android',
         },
         onConflict: 'user_id,fcm_token',
+      );
+    });
+
+    // Com o app aberto o SO não mostra a notificação sozinho — sem isso, o
+    // profissional não percebia nada chegando (só registrávamos o token).
+    FirebaseMessaging.onMessage.listen((message) {
+      final title = message.notification?.title;
+      final body = message.notification?.body;
+      if (title == null && body == null) return;
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (title != null) Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              if (body != null) Text(body),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     });
   }

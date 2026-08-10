@@ -8,8 +8,10 @@
   "scripts": {
     "dev:professional": "npm run dev --workspace=apps/web-professional",
     "dev:client": "npm run dev --workspace=apps/web-client",
+    "dev:admin": "npm run dev --workspace=apps/web-superadmin",
     "build:professional": "npm run build --workspace=apps/web-professional",
     "build:client": "npm run build --workspace=apps/web-client",
-    "build": "npm run build:professional && npm run build:client"
+    "build:admin": "npm run build --workspace=apps/web-superadmin",
+    "build": "npm run build:professional && npm run build:client && npm run build:admin"
   }
 }

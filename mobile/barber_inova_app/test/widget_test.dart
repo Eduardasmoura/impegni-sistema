@@ -1,30 +1,13 @@
-// This is a basic Flutter widget test.
+// Teste de exemplo do `flutter create` trocado por um smoke test mínimo.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+// `BarberInovaApp` inicializa Supabase/Firebase/GoRouter em `main()` antes de
+// montar a árvore de widgets, então testá-la de verdade aqui exigiria mocks
+// desses serviços — isso fica para quando a suíte de testes crescer. Por
+// enquanto, este teste só garante que o pipeline de testes roda.
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:barber_inova_app/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('sanity check', () {
+    expect(1 + 1, 2);
   });
 }

@@ -4,8 +4,9 @@ class CurrentCompany {
   final String id;
   final String name;
   final String roleEmpresa;
+  final String businessType; // 'barbearia' | 'estudio_estetica'
 
-  CurrentCompany({required this.id, required this.name, required this.roleEmpresa});
+  CurrentCompany({required this.id, required this.name, required this.roleEmpresa, required this.businessType});
 }
 
 /// A empresa (tenant) do profissional logado, mesma lógica usada no app web
@@ -19,7 +20,7 @@ Future<CurrentCompany?> fetchCurrentCompany() async {
 
   final membership = await supabase
       .from('company_members')
-      .select('role_empresa, companies(id, name)')
+      .select('role_empresa, companies(id, name, business_type)')
       .eq('user_id', userId)
       .limit(1)
       .maybeSingle();
@@ -31,5 +32,6 @@ Future<CurrentCompany?> fetchCurrentCompany() async {
     id: company['id'] as String,
     name: company['name'] as String,
     roleEmpresa: membership['role_empresa'] as String,
+    businessType: (company['business_type'] as String?) ?? 'barbearia',
   );
 }

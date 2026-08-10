@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Palette, ImageIcon, MessageCircle, Gift, Save } from "lucide-react";
+import { Upload, Palette, ImageIcon, MessageCircle, Gift, Save, Scissors, Sparkles, Check, ShieldCheck, ShieldOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { uploadCompanyAsset } from "@/lib/upload";
 import type { Tables } from "@/lib/supabase/database.types";
@@ -22,6 +23,11 @@ const PALETAS_PRONTAS = [
   { nome: "Preto", primaria: "#171717", secundaria: "#000000", acento: "#F5F5F5" },
 ];
 
+const TIPOS_NEGOCIO = [
+  { value: "barbearia", label: "Barbearia", icon: Scissors, swatches: ["#0A0A0A", "#FFFFFF", "#2563EB"] },
+  { value: "estudio_estetica", label: "Studio / Estética", icon: Sparkles, swatches: ["#C4B5FD", "#71717A", "#FFFFFF"] },
+] as const;
+
 type FormState = {
   name: string;
   phone: string;
@@ -33,6 +39,7 @@ type FormState = {
   color_primary: string;
   color_secondary: string;
   color_accent: string;
+  business_type: string;
   loyalty_program_enabled: boolean;
   whatsapp_reminder_enabled: boolean;
 };
@@ -53,6 +60,7 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
     color_primary: company.color_primary || "#B45309",
     color_secondary: company.color_secondary || "#1C1917",
     color_accent: company.color_accent || "#F5E6D3",
+    business_type: company.business_type,
     loyalty_program_enabled: company.loyalty_program_enabled,
     whatsapp_reminder_enabled: company.whatsapp_reminder_enabled,
   });
@@ -165,6 +173,37 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
       </Card>
 
       <Card className="mb-4">
+        <CardHeader><CardTitle className="text-base">Tipo de negócio</CardTitle></CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground mb-3">Define as cores do app mobile do seu time.</p>
+          <div className="grid grid-cols-2 gap-2">
+            {TIPOS_NEGOCIO.map((tipo) => (
+              <button
+                key={tipo.value}
+                type="button"
+                onClick={() => set("business_type", tipo.value)}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-3 rounded-lg border text-left transition-colors",
+                  form.business_type === tipo.value ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted"
+                )}
+              >
+                <div className="w-full flex items-center justify-between">
+                  <tipo.icon className="w-4 h-4 text-muted-foreground" />
+                  {form.business_type === tipo.value && <Check className="w-3.5 h-3.5 text-primary" />}
+                </div>
+                <div className="flex -space-x-1 self-start">
+                  {tipo.swatches.map((cor) => (
+                    <span key={cor} className="w-4 h-4 rounded-full border-2 border-card" style={{ background: cor }} />
+                  ))}
+                </div>
+                <span className="text-xs font-medium self-start">{tipo.label}</span>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
         <CardHeader><CardTitle className="text-base">Informações</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label>Nome do estabelecimento</Label><Input value={form.name} onChange={(e) => set("name", e.target.value)} /></div>
@@ -199,6 +238,17 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
               </div>
             </div>
             <Switch checked={form.whatsapp_reminder_enabled} onCheckedChange={(v) => set("whatsapp_reminder_enabled", v)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {company.anamnesis_enabled ? <ShieldCheck className="w-4 h-4 text-primary" /> : <ShieldOff className="w-4 h-4 text-muted-foreground" />}
+              <div>
+                <p className="text-sm font-medium">Ficha de Anamnese</p>
+                <p className="text-xs text-muted-foreground">
+                  {company.anamnesis_enabled ? "Liberada para a sua empresa" : "Recurso liberado pela Barber iNova — fale com o suporte"}
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

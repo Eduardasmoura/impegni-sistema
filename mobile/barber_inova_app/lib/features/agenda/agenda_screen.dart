@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel, PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType;
 import '../../data/company_service.dart';
 import '../../data/supabase_client.dart';
 import 'novo_agendamento_sheet.dart';
@@ -27,11 +28,32 @@ class _AgendaScreenState extends State<AgendaScreen> {
   DateTime _dia = DateTime.now();
   bool _loading = true;
   List<Map<String, dynamic>> _appointments = [];
+  late final RealtimeChannel _channel;
 
   @override
   void initState() {
     super.initState();
     _load();
+    // Agenda em tempo real: qualquer INSERT/UPDATE/DELETE em appointments
+    // desta empresa recarrega a lista sozinho — sem precisar puxar pra
+    // atualizar (requer a tabela estar na publication supabase_realtime,
+    // ver migration 011_realtime_appointments_and_notify_trigger).
+    _channel = supabase
+        .channel('appointments-company-${widget.company.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'appointments',
+          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'company_id', value: widget.company.id),
+          callback: (_) => _load(),
+        )
+        .subscribe();
+  }
+
+  @override
+  void dispose() {
+    supabase.removeChannel(_channel);
+    super.dispose();
   }
 
   String get _diaStr => DateFormat('yyyy-MM-dd').format(_dia);
@@ -73,6 +95,20 @@ class _AgendaScreenState extends State<AgendaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.company.name),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(20),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Text('Agenda em tempo real', style: TextStyle(fontSize: 11, color: Theme.of(context).appBarTheme.foregroundColor?.withValues(alpha: 0.8))),
+              ],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today, size: 20),

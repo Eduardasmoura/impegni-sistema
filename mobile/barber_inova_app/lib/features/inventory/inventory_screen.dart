@@ -45,8 +45,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
     await supabase.from('products').update({'stock_qty': novaQuantidade}).eq('id', id);
   }
 
+  int get _produtosComEstoqueBaixo => _products.where((p) {
+        final estoque = (p['stock_qty'] as num).toInt();
+        final minimo = (p['min_stock_qty'] as num?)?.toInt() ?? 0;
+        return estoque <= minimo;
+      }).length;
+
   @override
   Widget build(BuildContext context) {
+    final baixoEstoque = _produtosComEstoqueBaixo;
     return Scaffold(
       appBar: AppBar(title: const Text('Estoque')),
       body: _loading
@@ -62,9 +69,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),
-                      itemCount: _products.length,
+                      itemCount: _products.length + (baixoEstoque > 0 ? 1 : 0),
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
+                        if (baixoEstoque > 0) {
+                          if (index == 0) return _LowStockBanner(count: baixoEstoque);
+                          index -= 1;
+                        }
                         final p = _products[index];
                         final estoque = (p['stock_qty'] as num).toInt();
                         final minimo = (p['min_stock_qty'] as num?)?.toInt() ?? 0;
@@ -88,6 +99,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       },
                     ),
             ),
+    );
+  }
+}
+
+class _LowStockBanner extends StatelessWidget {
+  final int count;
+
+  const _LowStockBanner({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.orange.shade50,
+      margin: const EdgeInsets.only(bottom: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '$count produto${count == 1 ? '' : 's'} precisa${count == 1 ? '' : 'm'} de reposição.',
+                style: TextStyle(color: Colors.orange.shade900, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

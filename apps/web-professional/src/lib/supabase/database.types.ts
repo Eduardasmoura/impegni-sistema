@@ -137,6 +137,8 @@ export type Database = {
       companies: {
         Row: {
           address: string | null;
+          anamnesis_enabled: boolean;
+          business_type: string;
           color_accent: string | null;
           color_primary: string | null;
           color_secondary: string | null;
@@ -156,6 +158,8 @@ export type Database = {
         };
         Insert: {
           address?: string | null;
+          anamnesis_enabled?: boolean;
+          business_type?: string;
           color_accent?: string | null;
           color_primary?: string | null;
           color_secondary?: string | null;
@@ -175,6 +179,8 @@ export type Database = {
         };
         Update: {
           address?: string | null;
+          anamnesis_enabled?: boolean;
+          business_type?: string;
           color_accent?: string | null;
           color_primary?: string | null;
           color_secondary?: string | null;
@@ -566,7 +572,36 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      admin_update_company: {
+        Args: {
+          company_id: string;
+          new_anamnesis_enabled?: boolean;
+          new_status?: string;
+        };
+        Returns: {
+          address: string | null;
+          anamnesis_enabled: boolean;
+          business_type: string;
+          color_accent: string | null;
+          color_primary: string | null;
+          color_secondary: string | null;
+          cover_url: string | null;
+          created_at: string;
+          id: string;
+          instagram: string | null;
+          logo_url: string | null;
+          loyalty_program_enabled: boolean;
+          name: string;
+          phone: string | null;
+          slug: string;
+          status: string;
+          updated_at: string;
+          whatsapp: string | null;
+          whatsapp_reminder_enabled: boolean;
+        };
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };
