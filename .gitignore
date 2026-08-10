@@ -39,9 +39,3 @@ mobile/**/.flutter-plugins-dependencies
 mobile/**/.packages
 mobile/**/build/
 mobile/**/*.g.dart
-
-# Pastas que apareceram na raiz do projeto e NÃO fazem parte do barber-inova
-# (não foram criadas por mim) — fora do controle de versão até você decidir
-# o que fazer com elas. Ver aviso na conversa.
-/flutter/
-/saas-core/
