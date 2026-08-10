@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Flutter / Dart — android/, ios/, macos/, web/, windows/, linux/ (gerados por
+# `flutter create .`) SÃO versionados normalmente, só os artefatos de build:
+mobile/**/.dart_tool/
+mobile/**/.flutter-plugins
+mobile/**/.flutter-plugins-dependencies
+mobile/**/.packages
+mobile/**/build/
+mobile/**/*.g.dart
+
+# Pastas que apareceram na raiz do projeto e NÃO fazem parte do barber-inova
+# (não foram criadas por mim) — fora do controle de versão até você decidir
+# o que fazer com elas. Ver aviso na conversa.
+/flutter/
+/saas-core/

@@ -1,0 +1,15 @@
+{
+  "name": "barber-inova",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:professional": "npm run dev --workspace=apps/web-professional",
+    "dev:client": "npm run dev --workspace=apps/web-client",
+    "build:professional": "npm run build --workspace=apps/web-professional",
+    "build:client": "npm run build --workspace=apps/web-client",
+    "build": "npm run build:professional && npm run build:client"
+  }
+}
