@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Scissors, Sparkles, Loader2, Check } from "lucide-react";
 import { AuthLayout } from "@/components/auth-layout";
@@ -9,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/lib/supabase/database.types";
 
-const TIPOS_NEGOCIO = [
-  { value: "barbearia", label: "Barbearia", icon: Scissors, swatches: ["#0A0A0A", "#FFFFFF", "#2563EB"] },
-  { value: "estudio_estetica", label: "Studio / Estética", icon: Sparkles, swatches: ["#C4B5FD", "#71717A", "#FFFFFF"] },
-] as const;
+// Ícone só pra decorar o card de segmento — a lista de verdade vem do banco
+// (public.segments), o Super Admin pode cadastrar um segmento novo sem
+// precisar de deploy. theme_key "dark_blue" usa tesoura, o resto usa brilho.
+function iconFor(themeKey: string) {
+  return themeKey === "dark_blue" ? Scissors : Sparkles;
+}
 
 // Primeiro acesso de um usuário sem empresa: cria a empresa (o trigger
 // on_company_created já o torna 'owner' automaticamente, ver migration 002).
@@ -23,9 +26,24 @@ export function OnboardingForm() {
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [checkingSlug, setCheckingSlug] = useState(false);
-  const [businessType, setBusinessType] = useState<(typeof TIPOS_NEGOCIO)[number]["value"]>("barbearia");
+  const [segments, setSegments] = useState<Tables<"segments">[]>([]);
+  const [segmentId, setSegmentId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("segments")
+      .select("*")
+      .eq("active", true)
+      .order("name")
+      .then(({ data }) => {
+        if (!data) return;
+        setSegments(data);
+        if (data.length > 0) setSegmentId((current) => current || data[0].id);
+      });
+  }, []);
 
   // Só sugere o slug a partir do nome quando o usuário ainda não editou o
   // campo de link na mão — chama o RPC generate_unique_slug (migration 013)
@@ -55,7 +73,7 @@ export function OnboardingForm() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("companies").insert({ name, slug: finalSlug, business_type: businessType });
+    const { error: insertError } = await supabase.from("companies").insert({ name, slug: finalSlug, segment_id: segmentId });
     setLoading(false);
     if (insertError) {
       setError(insertError.message);
@@ -101,34 +119,31 @@ export function OnboardingForm() {
           <p className="text-xs text-muted-foreground">Gerado a partir do nome — pode editar, a gente garante que fica único.</p>
         </div>
         <div className="space-y-2">
-          <Label>Tipo de negócio</Label>
+          <Label>Segmento</Label>
           <p className="text-xs text-muted-foreground">Define as cores do app mobile do seu time — dá pra trocar depois em Configuração.</p>
-          <div className="grid grid-cols-2 gap-2">
-            {TIPOS_NEGOCIO.map((tipo) => (
-              <button
-                key={tipo.value}
-                type="button"
-                onClick={() => setBusinessType(tipo.value)}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-lg border text-left transition-colors",
-                  businessType === tipo.value ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted"
-                )}
-              >
-                <div className="w-full flex items-center justify-between">
-                  <tipo.icon className="w-4 h-4 text-muted-foreground" />
-                  {businessType === tipo.value && <Check className="w-3.5 h-3.5 text-primary" />}
-                </div>
-                <div className="flex -space-x-1 self-start">
-                  {tipo.swatches.map((cor) => (
-                    <span key={cor} className="w-4 h-4 rounded-full border-2 border-card" style={{ background: cor }} />
-                  ))}
-                </div>
-                <span className="text-xs font-medium self-start">{tipo.label}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto">
+            {segments.map((segment) => {
+              const Icon = iconFor(segment.theme_key);
+              return (
+                <button
+                  key={segment.id}
+                  type="button"
+                  onClick={() => setSegmentId(segment.id)}
+                  className={cn(
+                    "flex items-center justify-between gap-2 p-3 rounded-lg border text-left transition-colors",
+                    segmentId === segment.id ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted"
+                  )}
+                >
+                  <span className="flex items-center gap-2 text-xs font-medium">
+                    <Icon className="w-4 h-4 text-muted-foreground shrink-0" /> {segment.name}
+                  </span>
+                  {segmentId === segment.id && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+                </button>
+              );
+            })}
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading || checkingSlug}>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading || checkingSlug || !segmentId}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar empresa"}
         </Button>
       </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Palette, ImageIcon, MessageCircle, Gift, Save, Scissors, Sparkles, Check, ShieldCheck, ShieldOff, Link2, Clock, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,10 +23,9 @@ const PALETAS_PRONTAS = [
   { nome: "Preto", primaria: "#171717", secundaria: "#000000", acento: "#F5F5F5" },
 ];
 
-const TIPOS_NEGOCIO = [
-  { value: "barbearia", label: "Barbearia", icon: Scissors, swatches: ["#0A0A0A", "#FFFFFF", "#2563EB"] },
-  { value: "estudio_estetica", label: "Studio / Estética", icon: Sparkles, swatches: ["#C4B5FD", "#71717A", "#FFFFFF"] },
-] as const;
+function iconFor(themeKey: string) {
+  return themeKey === "dark_blue" ? Scissors : Sparkles;
+}
 
 type FormState = {
   name: string;
@@ -40,7 +39,7 @@ type FormState = {
   color_primary: string;
   color_secondary: string;
   color_accent: string;
-  business_type: string;
+  segment_id: string;
   loyalty_program_enabled: boolean;
   whatsapp_reminder_enabled: boolean;
 };
@@ -50,6 +49,18 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
   const { toast } = useToast();
   const supabase = createClient();
   const [enviandoCampo, setEnviandoCampo] = useState<string | null>(null);
+  const [segments, setSegments] = useState<Tables<"segments">[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("segments")
+      .select("*")
+      .eq("active", true)
+      .order("name")
+      .then(({ data }) => data && setSegments(data));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [form, setForm] = useState<FormState>({
     name: company.name || "",
     phone: company.phone || "",
@@ -62,7 +73,7 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
     color_primary: company.color_primary || "#B45309",
     color_secondary: company.color_secondary || "#1C1917",
     color_accent: company.color_accent || "#F5E6D3",
-    business_type: company.business_type,
+    segment_id: company.segment_id,
     loyalty_program_enabled: company.loyalty_program_enabled,
     whatsapp_reminder_enabled: company.whatsapp_reminder_enabled,
   });
@@ -195,32 +206,29 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
       </Card>
 
       <Card className="mb-4">
-        <CardHeader><CardTitle className="text-base">Tipo de negócio</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Segmento</CardTitle></CardHeader>
         <CardContent>
           <p className="text-xs text-muted-foreground mb-3">Define as cores do app mobile do seu time.</p>
-          <div className="grid grid-cols-2 gap-2">
-            {TIPOS_NEGOCIO.map((tipo) => (
-              <button
-                key={tipo.value}
-                type="button"
-                onClick={() => set("business_type", tipo.value)}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-lg border text-left transition-colors",
-                  form.business_type === tipo.value ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted"
-                )}
-              >
-                <div className="w-full flex items-center justify-between">
-                  <tipo.icon className="w-4 h-4 text-muted-foreground" />
-                  {form.business_type === tipo.value && <Check className="w-3.5 h-3.5 text-primary" />}
-                </div>
-                <div className="flex -space-x-1 self-start">
-                  {tipo.swatches.map((cor) => (
-                    <span key={cor} className="w-4 h-4 rounded-full border-2 border-card" style={{ background: cor }} />
-                  ))}
-                </div>
-                <span className="text-xs font-medium self-start">{tipo.label}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto">
+            {segments.map((segment) => {
+              const Icon = iconFor(segment.theme_key);
+              return (
+                <button
+                  key={segment.id}
+                  type="button"
+                  onClick={() => set("segment_id", segment.id)}
+                  className={cn(
+                    "flex items-center justify-between gap-2 p-3 rounded-lg border text-left transition-colors",
+                    form.segment_id === segment.id ? "border-primary ring-1 ring-primary" : "border-border hover:bg-muted"
+                  )}
+                >
+                  <span className="flex items-center gap-2 text-xs font-medium">
+                    <Icon className="w-4 h-4 text-muted-foreground shrink-0" /> {segment.name}
+                  </span>
+                  {form.segment_id === segment.id && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

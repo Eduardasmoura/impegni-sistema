@@ -4,9 +4,9 @@ class CurrentCompany {
   final String id;
   final String name;
   final String roleEmpresa;
-  final String businessType; // 'barbearia' | 'estudio_estetica'
+  final String themeKey; // 'dark_blue' | 'soft_purple' (vem de segments.theme_key)
 
-  CurrentCompany({required this.id, required this.name, required this.roleEmpresa, required this.businessType});
+  CurrentCompany({required this.id, required this.name, required this.roleEmpresa, required this.themeKey});
 }
 
 /// A empresa (tenant) do profissional logado, mesma lógica usada no app web
@@ -20,18 +20,20 @@ Future<CurrentCompany?> fetchCurrentCompany() async {
 
   final membership = await supabase
       .from('company_members')
-      .select('role_empresa, companies(id, name, business_type)')
+      .select('role_empresa, companies(id, name, segments(theme_key))')
       .eq('user_id', userId)
+      .eq('active', true)
       .limit(1)
       .maybeSingle();
 
   if (membership == null || membership['companies'] == null) return null;
 
   final company = membership['companies'] as Map<String, dynamic>;
+  final segment = company['segments'] as Map<String, dynamic>?;
   return CurrentCompany(
     id: company['id'] as String,
     name: company['name'] as String,
     roleEmpresa: membership['role_empresa'] as String,
-    businessType: (company['business_type'] as String?) ?? 'barbearia',
+    themeKey: (segment?['theme_key'] as String?) ?? 'dark_blue',
   );
 }

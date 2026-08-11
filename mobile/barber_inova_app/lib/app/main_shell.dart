@@ -64,7 +64,7 @@ class _MainShellState extends State<MainShell> {
     // saber depois de carregar a empresa, por isso o override fica aqui e
     // não no MaterialApp (ver main.dart, que usa um tema neutro até aqui).
     return Theme(
-      data: themeForBusinessType(company.businessType),
+      data: themeForSegment(company.themeKey),
       child: Scaffold(
         body: IndexedStack(index: _tab, children: screens),
         bottomNavigationBar: NavigationBar(

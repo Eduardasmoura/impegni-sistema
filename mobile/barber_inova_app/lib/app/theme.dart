@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// Identidade visual por tipo de negócio (ver `companies.business_type`):
-/// Barbearia = preto/branco/azul; Studio/Estética = roxo claro/cinza/branco.
+/// Identidade visual por segmento (ver `segments.theme_key`, escolhido pelo
+/// Super Admin ou pelo próprio profissional ao cadastrar a empresa):
+/// dark_blue = preto/branco/azul; soft_purple = roxo claro/cinza/branco. Um
+/// segmento novo (ex.: "Manicure") escolhe uma dessas duas paletas — uma
+/// terceira paleta só entraria aqui quando fizer sentido de verdade.
 /// `MainShell` escolhe qual usar depois de carregar a empresa do usuário —
 /// antes disso (tela de login), o app usa um tema neutro (ver `main.dart`).
-ThemeData themeForBusinessType(String businessType) {
-  return businessType == 'estudio_estetica' ? _estudioEsteticaTheme() : _barbeariaTheme();
+ThemeData themeForSegment(String themeKey) {
+  return themeKey == 'soft_purple' ? _estudioEsteticaTheme() : _barbeariaTheme();
 }
 
 ThemeData _barbeariaTheme() {
