@@ -59,8 +59,8 @@ export function ReportShell({
     );
     toast({ title: "PDF gerado", description: "O download deve começar automaticamente." });
   }
-  function handleExportXlsx() {
-    exportReportToXlsx({ reportTitle: title, reportDescription: description, companyName, periodoLabel, filtrosResumo, geradoEm: new Date() }, columns, rows);
+  async function handleExportXlsx() {
+    await exportReportToXlsx({ reportTitle: title, reportDescription: description, companyName, periodoLabel, filtrosResumo, geradoEm: new Date() }, columns, rows);
     toast({ title: "Excel gerado", description: "O download deve começar automaticamente." });
   }
 

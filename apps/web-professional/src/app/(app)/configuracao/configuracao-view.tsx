@@ -307,7 +307,7 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
               <div>
                 <p className="text-sm font-medium">Ficha de Anamnese</p>
                 <p className="text-xs text-muted-foreground">
-                  {company.anamnesis_enabled ? "Liberada para a sua empresa" : "Recurso liberado pela InovaFlow — fale com o suporte"}
+                  {company.anamnesis_enabled ? "Liberada para a sua empresa" : "Recurso liberado pela Impegni — fale com o suporte"}
                 </p>
               </div>
             </div>

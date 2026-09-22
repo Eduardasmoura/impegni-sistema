@@ -788,6 +788,7 @@ export type Database = {
           state: string | null
           status: string
           street: string | null
+          timezone: string
           trade_name: string | null
           updated_at: string
           whatsapp: string | null
@@ -824,6 +825,7 @@ export type Database = {
           state?: string | null
           status?: string
           street?: string | null
+          timezone?: string
           trade_name?: string | null
           updated_at?: string
           whatsapp?: string | null
@@ -860,6 +862,7 @@ export type Database = {
           state?: string | null
           status?: string
           street?: string | null
+          timezone?: string
           trade_name?: string | null
           updated_at?: string
           whatsapp?: string | null

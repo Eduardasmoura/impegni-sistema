@@ -4,7 +4,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 const PERGUNTAS = [
   {
     q: "Preciso instalar algum aplicativo?",
-    a: "Não. O InovaFlow funciona direto pelo navegador, no computador ou no celular, sem precisar instalar nada.",
+    a: "Não. O Impegni funciona direto pelo navegador, no computador ou no celular, sem precisar instalar nada.",
   },
   {
     q: "Posso usar pelo celular?",

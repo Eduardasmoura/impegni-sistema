@@ -354,7 +354,7 @@ export function PlanPicker({
           <h2 className="font-heading text-xl font-semibold mb-1">Pagamento confirmado</h2>
           <p className="text-sm text-muted-foreground mb-6">
             {context === "blocked"
-              ? `Seu plano ${view.plan.name} está ativo — o acesso ao InovaFlow foi liberado.`
+              ? `Seu plano ${view.plan.name} está ativo — o acesso ao Impegni foi liberado.`
               : `Agora você está no plano ${view.plan.name}.`}
           </p>
           <Button onClick={() => router.refresh()}>Continuar</Button>

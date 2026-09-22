@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "InovaFlow — Painel do Profissional",
+  title: "Impegni — Painel do Profissional",
   description: "Agenda, clientes, serviços, estoque e financeiro do seu salão.",
 };
 

@@ -66,7 +66,7 @@ const FORM_VAZIO = {
   motivo: "",
 };
 
-export function BloqueiosView({ companyId }: { companyId: string }) {
+export function BloqueiosView({ companyId, companyTimezone }: { companyId: string; companyTimezone: string }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const supabase = createClient();
@@ -305,6 +305,7 @@ export function BloqueiosView({ companyId }: { companyId: string }) {
           open={!!conflitos}
           conflitos={conflitos}
           companyId={companyId}
+          companyTimezone={companyTimezone}
           professionalId={payloadPendente.professional_id}
           criando={salvando}
           onVoltar={() => { setConflitos(null); setPayloadPendente(null); setOpen(true); }}

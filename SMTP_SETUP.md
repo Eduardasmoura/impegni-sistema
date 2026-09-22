@@ -55,7 +55,7 @@ port = 587
 user = "resend"                    # ajuste ao provedor
 pass = "env(SMTP_PASS)"            # NUNCA literal — variável de ambiente
 admin_email = "nao-responda@inova.app"
-sender_name = "InovaFlow"
+sender_name = "Impegni"
 
 [auth.rate_limit]
 email_sent = 30                    # por hora; com SMTP próprio pode subir bem

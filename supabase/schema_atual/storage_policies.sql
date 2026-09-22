@@ -1,9 +1,16 @@
+--
+-- PostgreSQL database dump
+--
 
+-- \restrict 8BETWYZCE9ddb19DtZybfvtqhjWm1ebYmjQVjKpXSoeaYgweiDPXiF1lI8KTctP
 
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+-- SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -12,12 +19,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: storage; Type: SCHEMA; Schema: -; Owner: supabase_admin
+--
 
 CREATE SCHEMA IF NOT EXISTS "storage";
 
 
 ALTER SCHEMA "storage" OWNER TO "supabase_admin";
 
+--
+-- Name: buckettype; Type: TYPE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TYPE "storage"."buckettype" AS ENUM (
     'STANDARD',
@@ -28,6 +41,9 @@ CREATE TYPE "storage"."buckettype" AS ENUM (
 
 ALTER TYPE "storage"."buckettype" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: allow_any_operation("text"[]); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."allow_any_operation"("expected_operations" "text"[]) RETURNS boolean
     LANGUAGE "sql" STABLE
@@ -58,6 +74,9 @@ $$;
 
 ALTER FUNCTION "storage"."allow_any_operation"("expected_operations" "text"[]) OWNER TO "supabase_storage_admin";
 
+--
+-- Name: allow_only_operation("text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."allow_only_operation"("expected_operation" "text") RETURNS boolean
     LANGUAGE "sql" STABLE
@@ -87,6 +106,9 @@ $$;
 
 ALTER FUNCTION "storage"."allow_only_operation"("expected_operation" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: can_insert_object("text", "text", "uuid", "jsonb"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."can_insert_object"("bucketid" "text", "name" "text", "owner" "uuid", "metadata" "jsonb") RETURNS "void"
     LANGUAGE "plpgsql"
@@ -103,6 +125,9 @@ $$;
 
 ALTER FUNCTION "storage"."can_insert_object"("bucketid" "text", "name" "text", "owner" "uuid", "metadata" "jsonb") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: enforce_bucket_name_length(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."enforce_bucket_name_length"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -118,6 +143,9 @@ $$;
 
 ALTER FUNCTION "storage"."enforce_bucket_name_length"() OWNER TO "supabase_storage_admin";
 
+--
+-- Name: extension("text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."extension"("name" "text") RETURNS "text"
     LANGUAGE "plpgsql" IMMUTABLE
@@ -138,6 +166,9 @@ $$;
 
 ALTER FUNCTION "storage"."extension"("name" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: filename("text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."filename"("name" "text") RETURNS "text"
     LANGUAGE "plpgsql" IMMUTABLE
@@ -153,6 +184,9 @@ $$;
 
 ALTER FUNCTION "storage"."filename"("name" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: foldername("text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."foldername"("name" "text") RETURNS "text"[]
     LANGUAGE "plpgsql" IMMUTABLE
@@ -170,6 +204,9 @@ $$;
 
 ALTER FUNCTION "storage"."foldername"("name" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: get_common_prefix("text", "text", "text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."get_common_prefix"("p_key" "text", "p_prefix" "text", "p_delimiter" "text") RETURNS "text"
     LANGUAGE "sql" IMMUTABLE
@@ -184,6 +221,9 @@ $$;
 
 ALTER FUNCTION "storage"."get_common_prefix"("p_key" "text", "p_prefix" "text", "p_delimiter" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: get_size_by_bucket(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."get_size_by_bucket"() RETURNS TABLE("size" bigint, "bucket_id" "text")
     LANGUAGE "plpgsql" STABLE
@@ -199,6 +239,9 @@ $$;
 
 ALTER FUNCTION "storage"."get_size_by_bucket"() OWNER TO "supabase_storage_admin";
 
+--
+-- Name: list_multipart_uploads_with_delimiter("text", "text", "text", integer, "text", "text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."list_multipart_uploads_with_delimiter"("bucket_id" "text", "prefix_param" "text", "delimiter_param" "text", "max_keys" integer DEFAULT 100, "next_key_token" "text" DEFAULT ''::"text", "next_upload_token" "text" DEFAULT ''::"text") RETURNS TABLE("key" "text", "id" "text", "created_at" timestamp with time zone)
     LANGUAGE "plpgsql"
@@ -244,6 +287,9 @@ $_$;
 
 ALTER FUNCTION "storage"."list_multipart_uploads_with_delimiter"("bucket_id" "text", "prefix_param" "text", "delimiter_param" "text", "max_keys" integer, "next_key_token" "text", "next_upload_token" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: list_objects_with_delimiter("text", "text", "text", integer, "text", "text", "text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."list_objects_with_delimiter"("_bucket_id" "text", "prefix_param" "text", "delimiter_param" "text", "max_keys" integer DEFAULT 100, "start_after" "text" DEFAULT ''::"text", "next_token" "text" DEFAULT ''::"text", "sort_order" "text" DEFAULT 'asc'::"text") RETURNS TABLE("name" "text", "id" "uuid", "metadata" "jsonb", "updated_at" timestamp with time zone, "created_at" timestamp with time zone, "last_accessed_at" timestamp with time zone)
     LANGUAGE "plpgsql" STABLE
@@ -458,6 +504,9 @@ $_$;
 
 ALTER FUNCTION "storage"."list_objects_with_delimiter"("_bucket_id" "text", "prefix_param" "text", "delimiter_param" "text", "max_keys" integer, "start_after" "text", "next_token" "text", "sort_order" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: operation(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."operation"() RETURNS "text"
     LANGUAGE "plpgsql" STABLE
@@ -470,6 +519,9 @@ $$;
 
 ALTER FUNCTION "storage"."operation"() OWNER TO "supabase_storage_admin";
 
+--
+-- Name: protect_delete(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."protect_delete"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -488,6 +540,9 @@ $$;
 
 ALTER FUNCTION "storage"."protect_delete"() OWNER TO "supabase_storage_admin";
 
+--
+-- Name: search("text", "text", integer, integer, integer, "text", "text", "text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."search"("prefix" "text", "bucketname" "text", "limits" integer DEFAULT 100, "levels" integer DEFAULT 1, "offsets" integer DEFAULT 0, "search" "text" DEFAULT ''::"text", "sortcolumn" "text" DEFAULT 'name'::"text", "sortorder" "text" DEFAULT 'asc'::"text") RETURNS TABLE("name" "text", "id" "uuid", "updated_at" timestamp with time zone, "created_at" timestamp with time zone, "last_accessed_at" timestamp with time zone, "metadata" "jsonb")
     LANGUAGE "plpgsql" STABLE
@@ -747,6 +802,9 @@ $_$;
 
 ALTER FUNCTION "storage"."search"("prefix" "text", "bucketname" "text", "limits" integer, "levels" integer, "offsets" integer, "search" "text", "sortcolumn" "text", "sortorder" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: search_by_timestamp("text", "text", integer, integer, "text", "text", "text", "text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."search_by_timestamp"("p_prefix" "text", "p_bucket_id" "text", "p_limit" integer, "p_level" integer, "p_start_after" "text", "p_sort_order" "text", "p_sort_column" "text", "p_sort_column_after" "text") RETURNS TABLE("key" "text", "name" "text", "id" "uuid", "updated_at" timestamp with time zone, "created_at" timestamp with time zone, "last_accessed_at" timestamp with time zone, "metadata" "jsonb")
     LANGUAGE "plpgsql" STABLE
@@ -869,6 +927,9 @@ $_$;
 
 ALTER FUNCTION "storage"."search_by_timestamp"("p_prefix" "text", "p_bucket_id" "text", "p_limit" integer, "p_level" integer, "p_start_after" "text", "p_sort_order" "text", "p_sort_column" "text", "p_sort_column_after" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: search_v2("text", "text", integer, integer, "text", "text", "text", "text"); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."search_v2"("prefix" "text", "bucket_name" "text", "limits" integer DEFAULT 100, "levels" integer DEFAULT 1, "start_after" "text" DEFAULT ''::"text", "sort_order" "text" DEFAULT 'asc'::"text", "sort_column" "text" DEFAULT 'name'::"text", "sort_column_after" "text" DEFAULT ''::"text") RETURNS TABLE("key" "text", "name" "text", "id" "uuid", "updated_at" timestamp with time zone, "created_at" timestamp with time zone, "last_accessed_at" timestamp with time zone, "metadata" "jsonb")
     LANGUAGE "plpgsql" STABLE
@@ -928,6 +989,9 @@ $$;
 
 ALTER FUNCTION "storage"."search_v2"("prefix" "text", "bucket_name" "text", "limits" integer, "levels" integer, "start_after" "text", "sort_order" "text", "sort_column" "text", "sort_column_after" "text") OWNER TO "supabase_storage_admin";
 
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE FUNCTION "storage"."update_updated_at_column"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -945,6 +1009,9 @@ SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
 
+--
+-- Name: buckets; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."buckets" (
     "id" "text" NOT NULL,
@@ -967,10 +1034,16 @@ CREATE TABLE IF NOT EXISTS "storage"."buckets" (
 
 ALTER TABLE "storage"."buckets" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: COLUMN "buckets"."owner"; Type: COMMENT; Schema: storage; Owner: supabase_storage_admin
+--
 
 COMMENT ON COLUMN "storage"."buckets"."owner" IS 'Field is deprecated, use owner_id instead';
 
 
+--
+-- Name: buckets_analytics; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."buckets_analytics" (
     "name" "text" NOT NULL,
@@ -985,6 +1058,9 @@ CREATE TABLE IF NOT EXISTS "storage"."buckets_analytics" (
 
 ALTER TABLE "storage"."buckets_analytics" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: buckets_vectors; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."buckets_vectors" (
     "id" "text" NOT NULL,
@@ -996,6 +1072,9 @@ CREATE TABLE IF NOT EXISTS "storage"."buckets_vectors" (
 
 ALTER TABLE "storage"."buckets_vectors" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: migrations; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."migrations" (
     "id" integer NOT NULL,
@@ -1007,6 +1086,9 @@ CREATE TABLE IF NOT EXISTS "storage"."migrations" (
 
 ALTER TABLE "storage"."migrations" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: objects; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."objects" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1029,10 +1111,16 @@ CREATE TABLE IF NOT EXISTS "storage"."objects" (
 
 ALTER TABLE "storage"."objects" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: COLUMN "objects"."owner"; Type: COMMENT; Schema: storage; Owner: supabase_storage_admin
+--
 
 COMMENT ON COLUMN "storage"."objects"."owner" IS 'Field is deprecated, use owner_id instead';
 
 
+--
+-- Name: s3_multipart_uploads; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."s3_multipart_uploads" (
     "id" "text" NOT NULL,
@@ -1050,6 +1138,9 @@ CREATE TABLE IF NOT EXISTS "storage"."s3_multipart_uploads" (
 
 ALTER TABLE "storage"."s3_multipart_uploads" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: s3_multipart_uploads_parts; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."s3_multipart_uploads_parts" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1067,6 +1158,9 @@ CREATE TABLE IF NOT EXISTS "storage"."s3_multipart_uploads_parts" (
 
 ALTER TABLE "storage"."s3_multipart_uploads_parts" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: vector_indexes; Type: TABLE; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE TABLE IF NOT EXISTS "storage"."vector_indexes" (
     "id" "text" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1083,204 +1177,351 @@ CREATE TABLE IF NOT EXISTS "storage"."vector_indexes" (
 
 ALTER TABLE "storage"."vector_indexes" OWNER TO "supabase_storage_admin";
 
+--
+-- Name: buckets_analytics buckets_analytics_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."buckets_analytics"
     ADD CONSTRAINT "buckets_analytics_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: buckets buckets_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."buckets"
     ADD CONSTRAINT "buckets_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: buckets_vectors buckets_vectors_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."buckets_vectors"
     ADD CONSTRAINT "buckets_vectors_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: migrations migrations_name_key; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."migrations"
     ADD CONSTRAINT "migrations_name_key" UNIQUE ("name");
 
 
+--
+-- Name: migrations migrations_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."migrations"
     ADD CONSTRAINT "migrations_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: objects objects_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."objects"
     ADD CONSTRAINT "objects_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: s3_multipart_uploads_parts s3_multipart_uploads_parts_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."s3_multipart_uploads_parts"
     ADD CONSTRAINT "s3_multipart_uploads_parts_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: s3_multipart_uploads s3_multipart_uploads_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."s3_multipart_uploads"
     ADD CONSTRAINT "s3_multipart_uploads_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: vector_indexes vector_indexes_pkey; Type: CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."vector_indexes"
     ADD CONSTRAINT "vector_indexes_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: bname; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "bname" ON "storage"."buckets" USING "btree" ("name");
 
 
+--
+-- Name: bucketid_objname; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "bucketid_objname" ON "storage"."objects" USING "btree" ("bucket_id", "name");
 
 
+--
+-- Name: buckets_analytics_unique_name_idx; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "buckets_analytics_unique_name_idx" ON "storage"."buckets_analytics" USING "btree" ("name") WHERE ("deleted_at" IS NULL);
 
 
+--
+-- Name: idx_multipart_uploads_list; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE INDEX "idx_multipart_uploads_list" ON "storage"."s3_multipart_uploads" USING "btree" ("bucket_id", "key", "created_at");
 
 
+--
+-- Name: idx_objects_bucket_id_name; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE INDEX "idx_objects_bucket_id_name" ON "storage"."objects" USING "btree" ("bucket_id", "name" COLLATE "C");
 
 
+--
+-- Name: idx_objects_bucket_id_name_lower; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE INDEX "idx_objects_bucket_id_name_lower" ON "storage"."objects" USING "btree" ("bucket_id", "lower"("name") COLLATE "C");
 
 
+--
+-- Name: idx_objects_current_version; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "idx_objects_current_version" ON "storage"."objects" USING "btree" ("bucket_id", "name" COLLATE "C") WHERE ("archived_at" IS NULL);
 
 
+--
+-- Name: idx_objects_null_version; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "idx_objects_null_version" ON "storage"."objects" USING "btree" ("bucket_id", "name" COLLATE "C") WHERE (NOT "is_versioned");
 
 
+--
+-- Name: name_prefix_search; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE INDEX "name_prefix_search" ON "storage"."objects" USING "btree" ("name" "text_pattern_ops");
 
 
+--
+-- Name: objects_bucket_id_name_version_key; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "objects_bucket_id_name_version_key" ON "storage"."objects" USING "btree" ("bucket_id", "name" COLLATE "C", "version") NULLS NOT DISTINCT;
 
 
+--
+-- Name: vector_indexes_name_bucket_id_idx; Type: INDEX; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE UNIQUE INDEX "vector_indexes_name_bucket_id_idx" ON "storage"."vector_indexes" USING "btree" ("name", "bucket_id");
 
 
+--
+-- Name: buckets enforce_bucket_name_length_trigger; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE TRIGGER "enforce_bucket_name_length_trigger" BEFORE INSERT OR UPDATE OF "name" ON "storage"."buckets" FOR EACH ROW EXECUTE FUNCTION "storage"."enforce_bucket_name_length"();
 
 
+--
+-- Name: buckets protect_buckets_delete; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE TRIGGER "protect_buckets_delete" BEFORE DELETE ON "storage"."buckets" FOR EACH STATEMENT EXECUTE FUNCTION "storage"."protect_delete"();
 
 
+--
+-- Name: objects protect_objects_delete; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE TRIGGER "protect_objects_delete" BEFORE DELETE ON "storage"."objects" FOR EACH STATEMENT EXECUTE FUNCTION "storage"."protect_delete"();
 
 
+--
+-- Name: objects update_objects_updated_at; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE OR REPLACE TRIGGER "update_objects_updated_at" BEFORE UPDATE ON "storage"."objects" FOR EACH ROW EXECUTE FUNCTION "storage"."update_updated_at_column"();
 
 
+--
+-- Name: objects objects_bucketId_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."objects"
     ADD CONSTRAINT "objects_bucketId_fkey" FOREIGN KEY ("bucket_id") REFERENCES "storage"."buckets"("id");
 
 
+--
+-- Name: s3_multipart_uploads s3_multipart_uploads_bucket_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."s3_multipart_uploads"
     ADD CONSTRAINT "s3_multipart_uploads_bucket_id_fkey" FOREIGN KEY ("bucket_id") REFERENCES "storage"."buckets"("id");
 
 
+--
+-- Name: s3_multipart_uploads_parts s3_multipart_uploads_parts_bucket_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."s3_multipart_uploads_parts"
     ADD CONSTRAINT "s3_multipart_uploads_parts_bucket_id_fkey" FOREIGN KEY ("bucket_id") REFERENCES "storage"."buckets"("id");
 
 
+--
+-- Name: s3_multipart_uploads_parts s3_multipart_uploads_parts_upload_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."s3_multipart_uploads_parts"
     ADD CONSTRAINT "s3_multipart_uploads_parts_upload_id_fkey" FOREIGN KEY ("upload_id") REFERENCES "storage"."s3_multipart_uploads"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: vector_indexes vector_indexes_bucket_id_fkey; Type: FK CONSTRAINT; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE ONLY "storage"."vector_indexes"
     ADD CONSTRAINT "vector_indexes_bucket_id_fkey" FOREIGN KEY ("bucket_id") REFERENCES "storage"."buckets_vectors"("id");
 
 
+--
+-- Name: objects avatars_owner_delete; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "avatars_owner_delete" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'avatars'::"text") AND (("storage"."foldername"("name"))[1] = ("auth"."uid"())::"text")));
 
 
+--
+-- Name: objects avatars_owner_update; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "avatars_owner_update" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'avatars'::"text") AND (("storage"."foldername"("name"))[1] = ("auth"."uid"())::"text"))) WITH CHECK ((("bucket_id" = 'avatars'::"text") AND (("storage"."foldername"("name"))[1] = ("auth"."uid"())::"text")));
 
 
+--
+-- Name: objects avatars_owner_write; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "avatars_owner_write" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'avatars'::"text") AND (("storage"."foldername"("name"))[1] = ("auth"."uid"())::"text")));
 
 
+--
+-- Name: objects avatars_public_read; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "avatars_public_read" ON "storage"."objects" FOR SELECT USING (("bucket_id" = 'avatars'::"text"));
 
 
+--
+-- Name: buckets; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."buckets" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: buckets_analytics; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."buckets_analytics" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: buckets_vectors; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."buckets_vectors" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: objects company_assets_admin_delete; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_admin_delete" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'company-assets'::"text") AND "private"."is_super_admin"()));
 
 
+--
+-- Name: objects company_assets_admin_update; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_admin_update" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'company-assets'::"text") AND "private"."is_super_admin"())) WITH CHECK ((("bucket_id" = 'company-assets'::"text") AND "private"."is_super_admin"()));
 
 
+--
+-- Name: objects company_assets_admin_write; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_admin_write" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'company-assets'::"text") AND "private"."is_super_admin"()));
 
 
+--
+-- Name: objects company_assets_members_delete; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_members_delete" ON "storage"."objects" FOR DELETE TO "authenticated" USING ((("bucket_id" = 'company-assets'::"text") AND "private"."is_company_member"((("storage"."foldername"("name"))[1])::"uuid")));
 
 
+--
+-- Name: objects company_assets_members_update; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_members_update" ON "storage"."objects" FOR UPDATE TO "authenticated" USING ((("bucket_id" = 'company-assets'::"text") AND "private"."is_company_member"((("storage"."foldername"("name"))[1])::"uuid"))) WITH CHECK ((("bucket_id" = 'company-assets'::"text") AND "private"."is_company_member"((("storage"."foldername"("name"))[1])::"uuid")));
 
 
+--
+-- Name: objects company_assets_members_write; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_members_write" ON "storage"."objects" FOR INSERT TO "authenticated" WITH CHECK ((("bucket_id" = 'company-assets'::"text") AND "private"."is_company_member"((("storage"."foldername"("name"))[1])::"uuid")));
 
 
+--
+-- Name: objects company_assets_public_read; Type: POLICY; Schema: storage; Owner: supabase_storage_admin
+--
 
 CREATE POLICY "company_assets_public_read" ON "storage"."objects" FOR SELECT USING (("bucket_id" = 'company-assets'::"text"));
 
 
+--
+-- Name: migrations; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."migrations" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: objects; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."objects" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: s3_multipart_uploads; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."s3_multipart_uploads" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: s3_multipart_uploads_parts; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."s3_multipart_uploads_parts" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: vector_indexes; Type: ROW SECURITY; Schema: storage; Owner: supabase_storage_admin
+--
 
 ALTER TABLE "storage"."vector_indexes" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: SCHEMA "storage"; Type: ACL; Schema: -; Owner: supabase_admin
+--
 
 GRANT USAGE ON SCHEMA "storage" TO "postgres" WITH GRANT OPTION;
 GRANT USAGE ON SCHEMA "storage" TO "anon";
@@ -1290,6 +1531,9 @@ GRANT ALL ON SCHEMA "storage" TO "supabase_storage_admin" WITH GRANT OPTION;
 GRANT ALL ON SCHEMA "storage" TO "dashboard_user";
 
 
+--
+-- Name: TABLE "buckets"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 REVOKE ALL ON TABLE "storage"."buckets" FROM "supabase_storage_admin";
 GRANT ALL ON TABLE "storage"."buckets" TO "supabase_storage_admin" WITH GRANT OPTION;
@@ -1299,18 +1543,27 @@ GRANT ALL ON TABLE "storage"."buckets" TO "anon";
 GRANT ALL ON TABLE "storage"."buckets" TO "postgres" WITH GRANT OPTION;
 
 
+--
+-- Name: TABLE "buckets_analytics"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 GRANT ALL ON TABLE "storage"."buckets_analytics" TO "service_role";
 GRANT ALL ON TABLE "storage"."buckets_analytics" TO "authenticated";
 GRANT ALL ON TABLE "storage"."buckets_analytics" TO "anon";
 
 
+--
+-- Name: TABLE "buckets_vectors"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 GRANT SELECT ON TABLE "storage"."buckets_vectors" TO "service_role";
 GRANT SELECT ON TABLE "storage"."buckets_vectors" TO "authenticated";
 GRANT SELECT ON TABLE "storage"."buckets_vectors" TO "anon";
 
 
+--
+-- Name: TABLE "objects"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 REVOKE ALL ON TABLE "storage"."objects" FROM "supabase_storage_admin";
 GRANT ALL ON TABLE "storage"."objects" TO "supabase_storage_admin" WITH GRANT OPTION;
@@ -1320,24 +1573,36 @@ GRANT ALL ON TABLE "storage"."objects" TO "anon";
 GRANT ALL ON TABLE "storage"."objects" TO "postgres" WITH GRANT OPTION;
 
 
+--
+-- Name: TABLE "s3_multipart_uploads"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 GRANT ALL ON TABLE "storage"."s3_multipart_uploads" TO "service_role";
 GRANT SELECT ON TABLE "storage"."s3_multipart_uploads" TO "authenticated";
 GRANT SELECT ON TABLE "storage"."s3_multipart_uploads" TO "anon";
 
 
+--
+-- Name: TABLE "s3_multipart_uploads_parts"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 GRANT ALL ON TABLE "storage"."s3_multipart_uploads_parts" TO "service_role";
 GRANT SELECT ON TABLE "storage"."s3_multipart_uploads_parts" TO "authenticated";
 GRANT SELECT ON TABLE "storage"."s3_multipart_uploads_parts" TO "anon";
 
 
+--
+-- Name: TABLE "vector_indexes"; Type: ACL; Schema: storage; Owner: supabase_storage_admin
+--
 
 GRANT SELECT ON TABLE "storage"."vector_indexes" TO "service_role";
 GRANT SELECT ON TABLE "storage"."vector_indexes" TO "authenticated";
 GRANT SELECT ON TABLE "storage"."vector_indexes" TO "anon";
 
 
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: storage; Owner: postgres
+--
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON SEQUENCES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON SEQUENCES TO "anon";
@@ -1345,6 +1610,9 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON SE
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON SEQUENCES TO "service_role";
 
 
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: storage; Owner: postgres
+--
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON FUNCTIONS TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON FUNCTIONS TO "anon";
@@ -1352,6 +1620,9 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON FU
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON FUNCTIONS TO "service_role";
 
 
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: storage; Owner: postgres
+--
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON TABLES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON TABLES TO "anon";
@@ -1359,5 +1630,9 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON TA
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "storage" GRANT ALL ON TABLES TO "service_role";
 
 
+--
+-- PostgreSQL database dump complete
+--
 
+-- \unrestrict 8BETWYZCE9ddb19DtZybfvtqhjWm1ebYmjQVjKpXSoeaYgweiDPXiF1lI8KTctP
 

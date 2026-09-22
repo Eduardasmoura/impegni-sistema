@@ -15,6 +15,7 @@ import { LoadingState, ErrorState } from "@/components/ui/query-state";
 import { formatCurrency, formatDuration } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
+import { zonedTimeToUtcIso } from "@/lib/timezone";
 import { OccupancyCalendar, type DiaOcupacao } from "./occupancy-calendar";
 import { ReagendarStaffDialog } from "./reagendar-staff-dialog";
 import { AddToCalendarDialog } from "@/components/add-to-calendar";
@@ -41,7 +42,15 @@ const DEFAULT_EXPEDIENTE_FIM = 20 * 60;
 const NOVO_VAZIO = { clientName: "", clientPhone: "", serviceId: "", professionalId: "", time: "09:00" };
 const FILTROS_VAZIO: AgendaFiltrosState = { status: null, clientId: null, serviceId: null };
 
-export function AgendaView({ companyId, currentUserId }: { companyId: string; currentUserId: string | null }) {
+export function AgendaView({
+  companyId,
+  companyTimezone,
+  currentUserId,
+}: {
+  companyId: string;
+  companyTimezone: string;
+  currentUserId: string | null;
+}) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const supabase = createClient();
@@ -307,7 +316,7 @@ export function AgendaView({ companyId, currentUserId }: { companyId: string; cu
         clientId = novoCliente.id;
       }
 
-      const scheduledAt = new Date(`${dia}T${novo.time}:00`).toISOString();
+      const scheduledAt = zonedTimeToUtcIso(dia, novo.time, companyTimezone);
       const { data: criado, error: appointmentError } = await supabase.from("appointments").insert({
         company_id: companyId,
         client_id: clientId,
@@ -508,6 +517,7 @@ export function AgendaView({ companyId, currentUserId }: { companyId: string; cu
           onOpenChange={(o) => !o && setReagendando(null)}
           appointmentId={reagendando.id}
           companyId={companyId}
+          companyTimezone={companyTimezone}
           professionalId={reagendando.professional_id}
           serviceId={reagendando.service_id}
           servicoNome={services.find((s) => s.id === reagendando.service_id)?.name ?? "Atendimento"}

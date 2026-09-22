@@ -1,5 +1,5 @@
 {
-  "name": "inovaflow",
+  "name": "impegni",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
@@ -15,5 +15,10 @@
     "build:admin": "npm run build --workspace=apps/web-superadmin",
     "build:site": "npm run build --workspace=apps/site",
     "build": "npm run build:professional && npm run build:client && npm run build:admin && npm run build:site"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }

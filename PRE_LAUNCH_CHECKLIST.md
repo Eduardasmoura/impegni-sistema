@@ -1,4 +1,4 @@
-# Checklist pré-lançamento — InovaFlow
+# Checklist pré-lançamento — Impegni
 
 Atualizado na auditoria de 04/09/2026. `[x]` = testado de verdade nesta auditoria (contra o banco
 de produção real, ou via chamada HTTP real) e confirmado funcionando. `[ ]` = pendente, com o

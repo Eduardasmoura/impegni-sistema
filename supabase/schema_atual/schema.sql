@@ -1,9 +1,16 @@
+--
+-- PostgreSQL database dump
+--
 
+-- \restrict 9djvIrGmcuueEe2Mcufhx7whk2yX9snKcChbrr4hM0pCplJCqlPqnDZQH4Knhsv
 
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+-- SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -12,65 +19,34 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
 
-CREATE EXTENSION IF NOT EXISTS "pg_cron" WITH SCHEMA "pg_catalog";
+CREATE SCHEMA IF NOT EXISTS "public";
 
 
+ALTER SCHEMA "public" OWNER TO "pg_database_owner";
 
-
-
+--
+-- Name: SCHEMA "public"; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
 
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
-
-CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "public";
-
-
-
-
-
+--
+-- Name: private; Type: SCHEMA; Schema: -; Owner: postgres
+--
 
 CREATE SCHEMA IF NOT EXISTS "private";
 
 
 ALTER SCHEMA "private" OWNER TO "postgres";
 
-
-CREATE EXTENSION IF NOT EXISTS "btree_gist" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
-
-
-
-
-
+--
+-- Name: add_creator_as_owner(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."add_creator_as_owner"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -88,6 +64,9 @@ $$;
 
 ALTER FUNCTION "private"."add_creator_as_owner"() OWNER TO "postgres";
 
+--
+-- Name: add_default_subscription(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."add_default_subscription"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -120,6 +99,9 @@ $$;
 
 ALTER FUNCTION "private"."add_default_subscription"() OWNER TO "postgres";
 
+--
+-- Name: company_has_access("uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."company_has_access"("p_company_id" "uuid") RETURNS boolean
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -159,10 +141,16 @@ $$;
 
 ALTER FUNCTION "private"."company_has_access"("p_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: FUNCTION "company_has_access"("p_company_id" "uuid"); Type: COMMENT; Schema: private; Owner: postgres
+--
 
 COMMENT ON FUNCTION "private"."company_has_access"("p_company_id" "uuid") IS 'BLOCKER #1 (auditoria pré-produção): fonte única sobre se a empresa pode ESCREVER agora. Usada pelo trigger private.enforce_company_access — não confundir com get_company_access_status (só leitura/UI).';
 
 
+--
+-- Name: company_has_feature("uuid", "text"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") RETURNS boolean
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -196,10 +184,16 @@ $$;
 
 ALTER FUNCTION "private"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") OWNER TO "postgres";
 
+--
+-- Name: FUNCTION "company_has_feature"("p_company_id" "uuid", "p_feature_key" "text"); Type: COMMENT; Schema: private; Owner: postgres
+--
 
 COMMENT ON FUNCTION "private"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") IS 'BLOCKER #4 (auditoria pré-produção): gate de recurso por plano. Acesso = override manual (companies.<feature>_enabled, hoje só anamnesis) OU plan_features do plano atual. Usado em RLS/trigger de anamnesis_*.';
 
 
+--
+-- Name: company_ids(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."company_ids"() RETURNS SETOF "uuid"
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -211,6 +205,9 @@ $$;
 
 ALTER FUNCTION "private"."company_ids"() OWNER TO "postgres";
 
+--
+-- Name: company_role("uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."company_role"("target_company_id" "uuid") RETURNS "text"
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -223,6 +220,9 @@ $$;
 
 ALTER FUNCTION "private"."company_role"("target_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: compose_legacy_address("text", "text", "text"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."compose_legacy_address"("p_street" "text", "p_number" "text", "p_neighborhood" "text") RETURNS "text"
     LANGUAGE "sql" IMMUTABLE
@@ -234,6 +234,9 @@ $$;
 
 ALTER FUNCTION "private"."compose_legacy_address"("p_street" "text", "p_number" "text", "p_neighborhood" "text") OWNER TO "postgres";
 
+--
+-- Name: compute_coupon_discount("uuid", "uuid", "uuid", "uuid", numeric); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."compute_coupon_discount"("p_coupon_id" "uuid", "p_client_id" "uuid", "p_service_id" "uuid", "p_professional_id" "uuid", "p_service_price" numeric) RETURNS TABLE("valid" boolean, "reason" "text", "discount_amount" numeric)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -306,6 +309,9 @@ $$;
 
 ALTER FUNCTION "private"."compute_coupon_discount"("p_coupon_id" "uuid", "p_client_id" "uuid", "p_service_id" "uuid", "p_professional_id" "uuid", "p_service_price" numeric) OWNER TO "postgres";
 
+--
+-- Name: compute_day_availability("uuid", integer, "date"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."compute_day_availability"("p_professional_id" "uuid", "p_service_duration_min" integer, "p_day" "date") RETURNS TABLE("slot_start" timestamp with time zone)
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -342,6 +348,9 @@ $$;
 
 ALTER FUNCTION "private"."compute_day_availability"("p_professional_id" "uuid", "p_service_duration_min" integer, "p_day" "date") OWNER TO "postgres";
 
+--
+-- Name: enforce_anamnesis_customization(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_anamnesis_customization"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -373,6 +382,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_anamnesis_customization"() OWNER TO "postgres";
 
+--
+-- Name: enforce_anamnesis_feature(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_anamnesis_feature"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -406,6 +418,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_anamnesis_feature"() OWNER TO "postgres";
 
+--
+-- Name: enforce_client_appointment_update(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_client_appointment_update"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -451,6 +466,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_client_appointment_update"() OWNER TO "postgres";
 
+--
+-- Name: enforce_client_review_update(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_client_review_update"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -480,6 +498,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_client_review_update"() OWNER TO "postgres";
 
+--
+-- Name: enforce_company_access(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_company_access"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -502,10 +523,16 @@ $$;
 
 ALTER FUNCTION "private"."enforce_company_access"() OWNER TO "postgres";
 
+--
+-- Name: FUNCTION "enforce_company_access"(); Type: COMMENT; Schema: private; Owner: postgres
+--
 
 COMMENT ON FUNCTION "private"."enforce_company_access"() IS 'BLOCKER #1 (auditoria pré-produção): trigger BEFORE INSERT/UPDATE que bloqueia escrita quando private.company_has_access(company_id) = false. Funciona mesmo dentro de RPCs SECURITY DEFINER (trigger de tabela não é ignorado por SECURITY DEFINER, diferente de RLS).';
 
 
+--
+-- Name: enforce_company_access_on_company(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_company_access_on_company"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -528,6 +555,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_company_access_on_company"() OWNER TO "postgres";
 
+--
+-- Name: enforce_company_access_via_anamnesis_form(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_company_access_via_anamnesis_form"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -553,6 +583,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_company_access_via_anamnesis_form"() OWNER TO "postgres";
 
+--
+-- Name: enforce_company_goals_exclusivity(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_company_goals_exclusivity"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -581,6 +614,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_company_goals_exclusivity"() OWNER TO "postgres";
 
+--
+-- Name: enforce_company_segment_consistency(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_company_segment_consistency"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -612,6 +648,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_company_segment_consistency"() OWNER TO "postgres";
 
+--
+-- Name: enforce_limit_appointments(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_limit_appointments"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -626,6 +665,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_limit_appointments"() OWNER TO "postgres";
 
+--
+-- Name: enforce_limit_clients(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_limit_clients"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -640,6 +682,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_limit_clients"() OWNER TO "postgres";
 
+--
+-- Name: enforce_limit_company_members(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_limit_company_members"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -654,6 +699,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_limit_company_members"() OWNER TO "postgres";
 
+--
+-- Name: enforce_limit_professionals(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_limit_professionals"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -668,6 +716,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_limit_professionals"() OWNER TO "postgres";
 
+--
+-- Name: enforce_loyalty_program_feature(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_loyalty_program_feature"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -690,6 +741,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_loyalty_program_feature"() OWNER TO "postgres";
 
+--
+-- Name: enforce_plan_limit("uuid", "text"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."enforce_plan_limit"("target_company_id" "uuid", "resource" "text") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -755,6 +809,9 @@ $$;
 
 ALTER FUNCTION "private"."enforce_plan_limit"("target_company_id" "uuid", "resource" "text") OWNER TO "postgres";
 
+--
+-- Name: expire_trials(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."expire_trials"() RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -783,6 +840,9 @@ $$;
 
 ALTER FUNCTION "private"."expire_trials"() OWNER TO "postgres";
 
+--
+-- Name: get_professional_hours_for_day("uuid", "date"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."get_professional_hours_for_day"("p_professional_id" "uuid", "p_day" "date") RETURNS TABLE("has_config" boolean, "active" boolean, "start_time" time without time zone, "end_time" time without time zone)
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -803,6 +863,9 @@ $$;
 
 ALTER FUNCTION "private"."get_professional_hours_for_day"("p_professional_id" "uuid", "p_day" "date") OWNER TO "postgres";
 
+--
+-- Name: handle_new_user(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -824,6 +887,9 @@ $$;
 
 ALTER FUNCTION "private"."handle_new_user"() OWNER TO "postgres";
 
+--
+-- Name: is_company_manager("uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."is_company_manager"("target_company_id" "uuid") RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -835,6 +901,9 @@ $$;
 
 ALTER FUNCTION "private"."is_company_manager"("target_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: is_company_member("uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."is_company_member"("target_company_id" "uuid") RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -849,6 +918,9 @@ $$;
 
 ALTER FUNCTION "private"."is_company_member"("target_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: is_super_admin(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."is_super_admin"() RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -863,6 +935,9 @@ $$;
 
 ALTER FUNCTION "private"."is_super_admin"() OWNER TO "postgres";
 
+--
+-- Name: is_terminal_subscription_status("text"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."is_terminal_subscription_status"("p_status" "text") RETURNS boolean
     LANGUAGE "sql" IMMUTABLE
@@ -874,6 +949,26 @@ $$;
 
 ALTER FUNCTION "private"."is_terminal_subscription_status"("p_status" "text") OWNER TO "postgres";
 
+--
+-- Name: linked_active_anamnesis_form("uuid", "uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "private"."linked_active_anamnesis_form"("p_company_id" "uuid", "p_service_id" "uuid") RETURNS "uuid"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  select f.id
+  from public.services s
+  join public.anamnesis_forms f on f.id = s.anamnesis_form_id and f.company_id = s.company_id
+  where s.id = p_service_id and s.company_id = p_company_id and f.active
+$$;
+
+
+ALTER FUNCTION "private"."linked_active_anamnesis_form"("p_company_id" "uuid", "p_service_id" "uuid") OWNER TO "postgres";
+
+--
+-- Name: notify_appointment_change(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."notify_appointment_change"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -910,6 +1005,9 @@ $$;
 
 ALTER FUNCTION "private"."notify_appointment_change"() OWNER TO "postgres";
 
+--
+-- Name: process_asaas_webhook_event("text", "text", "jsonb"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1054,6 +1152,29 @@ $$;
 
 ALTER FUNCTION "private"."process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb") OWNER TO "postgres";
 
+--
+-- Name: protect_answered_anamnesis_field(); Type: FUNCTION; Schema: private; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "private"."protect_answered_anamnesis_field"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+begin
+  if exists (select 1 from public.anamnesis_response_answers where field_id = old.id) then
+    raise exception 'não é possível excluir uma pergunta com respostas já registradas — arquive em vez de excluir'
+      using errcode = 'P0001';
+  end if;
+  return old;
+end;
+$$;
+
+
+ALTER FUNCTION "private"."protect_answered_anamnesis_field"() OWNER TO "postgres";
+
+--
+-- Name: protect_closed_payout_totals(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."protect_closed_payout_totals"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1078,10 +1199,72 @@ $$;
 
 ALTER FUNCTION "private"."protect_closed_payout_totals"() OWNER TO "postgres";
 
+--
+-- Name: record_anamnesis_response("uuid", "uuid", "uuid", "uuid", "uuid", "jsonb"); Type: FUNCTION; Schema: private; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "private"."record_anamnesis_response"("p_form_id" "uuid", "p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  v_field record;
+  v_answer jsonb;
+  v_has_answer boolean;
+  v_response_id uuid;
+  v_target public.anamnesis_fields;
+begin
+  -- toda resposta precisa apontar pra uma pergunta ATIVA desta ficha
+  for v_answer in select * from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb)) loop
+    if not exists (
+      select 1 from public.anamnesis_fields
+      where id = (v_answer ->> 'field_id')::uuid and form_id = p_form_id and archived_at is null
+    ) then
+      raise exception 'resposta para uma pergunta que não pertence a esta ficha';
+    end if;
+  end loop;
+
+  for v_field in
+    select id, label from public.anamnesis_fields
+    where form_id = p_form_id and required = true and archived_at is null
+  loop
+    select exists (
+      select 1 from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb)) a
+      where (a ->> 'field_id')::uuid = v_field.id
+        and a -> 'value' is not null
+        and a ->> 'value' <> ''
+    ) into v_has_answer;
+    if not v_has_answer then
+      raise exception '"%" é obrigatória', v_field.label;
+    end if;
+  end loop;
+
+  insert into public.anamnesis_responses (form_id, company_id, client_id, professional_id, appointment_id, created_by)
+  values (p_form_id, p_company_id, p_client_id, p_professional_id, p_appointment_id, auth.uid())
+  returning id into v_response_id;
+
+  for v_answer in select * from jsonb_array_elements(coalesce(p_answers, '[]'::jsonb)) loop
+    if v_answer -> 'value' is not null and v_answer ->> 'value' <> '' then
+      select * into v_target from public.anamnesis_fields where id = (v_answer ->> 'field_id')::uuid;
+      insert into public.anamnesis_response_answers (response_id, field_id, value, field_label_snapshot, field_type_snapshot)
+      values (v_response_id, v_target.id, v_answer -> 'value', v_target.label, v_target.field_type);
+    end if;
+  end loop;
+
+  return v_response_id;
+end;
+$$;
+
+
+ALTER FUNCTION "private"."record_anamnesis_response"("p_form_id" "uuid", "p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb") OWNER TO "postgres";
+
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
 
+--
+-- Name: client_packages; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."client_packages" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1103,6 +1286,9 @@ CREATE TABLE IF NOT EXISTS "public"."client_packages" (
 
 ALTER TABLE "public"."client_packages" OWNER TO "postgres";
 
+--
+-- Name: redeem_package_session("uuid", "uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."redeem_package_session"("p_client_package_id" "uuid", "p_service_id" "uuid") RETURNS "public"."client_packages"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1136,6 +1322,9 @@ $$;
 
 ALTER FUNCTION "private"."redeem_package_session"("p_client_package_id" "uuid", "p_service_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: request_ip(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."request_ip"() RETURNS "text"
     LANGUAGE "plpgsql" STABLE
@@ -1164,12 +1353,73 @@ $$;
 
 ALTER FUNCTION "private"."request_ip"() OWNER TO "postgres";
 
+--
+-- Name: resolve_anamnesis_form("uuid", "uuid", "uuid"); Type: FUNCTION; Schema: private; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "private"."resolve_anamnesis_form"("p_company_id" "uuid", "p_form_id" "uuid", "p_service_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  v_id uuid;
+  v_service_company uuid;
+  v_linked uuid;
+  v_count integer;
+begin
+  if p_form_id is not null then
+    select id into v_id from public.anamnesis_forms
+      where id = p_form_id and company_id = p_company_id and active;
+    if v_id is null then
+      raise exception 'ficha de anamnese inválida ou desativada para esta empresa';
+    end if;
+    return v_id;
+  end if;
+
+  if p_service_id is not null then
+    select company_id, anamnesis_form_id into v_service_company, v_linked
+      from public.services where id = p_service_id;
+    if v_service_company is null or v_service_company <> p_company_id then
+      raise exception 'serviço inválido para esta empresa';
+    end if;
+    if v_linked is not null then
+      select id into v_id from public.anamnesis_forms
+        where id = v_linked and company_id = p_company_id and active;
+      if v_id is not null then
+        return v_id;
+      end if;
+      -- ficha vinculada foi desativada: cai na regra geral abaixo
+    end if;
+  end if;
+
+  select count(*) into v_count from public.anamnesis_forms where company_id = p_company_id and active;
+  if v_count = 0 then
+    raise exception 'nenhum formulário de anamnese ativo para esta empresa';
+  end if;
+  if v_count > 1 then
+    raise exception 'esta empresa tem mais de uma ficha de anamnese e o serviço não define qual — informe qual preencher';
+  end if;
+  select id into v_id from public.anamnesis_forms where company_id = p_company_id and active;
+  return v_id;
+end;
+$$;
+
+
+ALTER FUNCTION "private"."resolve_anamnesis_form"("p_company_id" "uuid", "p_form_id" "uuid", "p_service_id" "uuid") OWNER TO "postgres";
+
+--
+-- Name: seed_default_anamnesis_fields(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."seed_default_anamnesis_fields"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
 begin
+  if new.segment_id is not null then
+    return new;
+  end if;
+
   if private.company_has_feature(new.company_id, 'anamnesis')
      and not private.company_has_feature(new.company_id, 'anamnesis_customizable') then
     perform set_config('app.seeding_anamnesis_defaults', 'true', true);
@@ -1188,6 +1438,9 @@ $$;
 
 ALTER FUNCTION "private"."seed_default_anamnesis_fields"() OWNER TO "postgres";
 
+--
+-- Name: set_updated_at(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."set_updated_at"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -1202,6 +1455,9 @@ $$;
 
 ALTER FUNCTION "private"."set_updated_at"() OWNER TO "postgres";
 
+--
+-- Name: validate_appointment_tenant_scope(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."validate_appointment_tenant_scope"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1243,6 +1499,9 @@ $$;
 
 ALTER FUNCTION "private"."validate_appointment_tenant_scope"() OWNER TO "postgres";
 
+--
+-- Name: validate_appointment_time_off_conflict(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."validate_appointment_time_off_conflict"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1273,6 +1532,9 @@ $$;
 
 ALTER FUNCTION "private"."validate_appointment_time_off_conflict"() OWNER TO "postgres";
 
+--
+-- Name: validate_appointment_working_hours(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."validate_appointment_working_hours"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1313,6 +1575,9 @@ $$;
 
 ALTER FUNCTION "private"."validate_appointment_working_hours"() OWNER TO "postgres";
 
+--
+-- Name: validate_block_tenant_scope(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."validate_block_tenant_scope"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1335,6 +1600,9 @@ $$;
 
 ALTER FUNCTION "private"."validate_block_tenant_scope"() OWNER TO "postgres";
 
+--
+-- Name: validate_weekly_hours_tenant_scope(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."validate_weekly_hours_tenant_scope"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1354,6 +1622,9 @@ $$;
 
 ALTER FUNCTION "private"."validate_weekly_hours_tenant_scope"() OWNER TO "postgres";
 
+--
+-- Name: void_pending_payment_on_appointment_cancel(); Type: FUNCTION; Schema: private; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "private"."void_pending_payment_on_appointment_cancel"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1386,6 +1657,9 @@ $$;
 
 ALTER FUNCTION "private"."void_pending_payment_on_appointment_cancel"() OWNER TO "postgres";
 
+--
+-- Name: subscriptions; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."subscriptions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1412,22 +1686,37 @@ ALTER TABLE ONLY "public"."subscriptions" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."subscriptions" OWNER TO "postgres";
 
+--
+-- Name: COLUMN "subscriptions"."asaas_subscription_id"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."subscriptions"."asaas_subscription_id" IS 'ID da assinatura recorrente no Asaas — o Asaas gera a cobrança de cada ciclo sozinho; asaas-webhook atualiza o status aqui a partir dos eventos de pagamento.';
 
 
+--
+-- Name: COLUMN "subscriptions"."asaas_checkout_id"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."subscriptions"."asaas_checkout_id" IS 'Id da checkout session do Asaas (POST /checkouts) enquanto o pagamento não é confirmado. asaas_subscription_id só é preenchido depois que o webhook confirma o pagamento — a Asaas Checkout API cria a assinatura recorrente de verdade só nesse momento.';
 
 
+--
+-- Name: COLUMN "subscriptions"."promo_price_cents"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."subscriptions"."promo_price_cents" IS 'Preço promocional travado pra esta assinatura (centavos). NULL = não está em promoção (nunca esteve, ou os 6 meses já passaram e o valor já foi revertido pelo job expire-subscription-promos).';
 
 
+--
+-- Name: COLUMN "subscriptions"."promo_ends_at"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."subscriptions"."promo_ends_at" IS 'Quando a janela promocional desta assinatura fecha (6 meses do 1º pagamento confirmado). Setado uma única vez, nunca reiniciado por troca de plano.';
 
 
+--
+-- Name: admin_change_plan("uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_change_plan"("company_id" "uuid", "new_plan_id" "uuid") RETURNS "public"."subscriptions"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1468,6 +1757,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_change_plan"("company_id" "uuid", "new_plan_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: admin_companies_by_plan(); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_companies_by_plan"() RETURNS TABLE("plan_id" "uuid", "plan_name" "text", "company_count" integer)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1490,6 +1782,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_companies_by_plan"() OWNER TO "postgres";
 
+--
+-- Name: admin_dashboard_summary(timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_dashboard_summary"("p_from" timestamp with time zone DEFAULT NULL::timestamp with time zone, "p_to" timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS TABLE("total_companies" integer, "active_companies" integer, "trial_companies" integer, "trial_expired_companies" integer, "suspended_companies" integer, "deleted_companies" integer, "active_subscriptions" integer, "trial_subscriptions" integer, "past_due_subscriptions" integer, "canceled_subscriptions" integer, "expired_subscriptions" integer, "payments_confirmed" integer, "payments_pending" integer, "payments_overdue" integer, "revenue_period" numeric, "mrr" numeric, "new_companies_period" integer)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1529,6 +1824,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_dashboard_summary"("p_from" timestamp with time zone, "p_to" timestamp with time zone) OWNER TO "postgres";
 
+--
+-- Name: impersonation_sessions; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."impersonation_sessions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1544,6 +1842,9 @@ CREATE TABLE IF NOT EXISTS "public"."impersonation_sessions" (
 
 ALTER TABLE "public"."impersonation_sessions" OWNER TO "postgres";
 
+--
+-- Name: admin_end_impersonation("uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_end_impersonation"("session_id" "uuid") RETURNS "public"."impersonation_sessions"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1575,6 +1876,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_end_impersonation"("session_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: admin_list_companies_owners("uuid"[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_list_companies_owners"("p_company_ids" "uuid"[]) RETURNS TABLE("company_id" "uuid", "full_name" "text", "email" "text")
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1599,6 +1903,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_list_companies_owners"("p_company_ids" "uuid"[]) OWNER TO "postgres";
 
+--
+-- Name: admin_list_company_users("uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_list_company_users"("target_company_id" "uuid") RETURNS TABLE("member_id" "uuid", "user_id" "uuid", "email" "text", "full_name" "text", "phone" "text", "avatar_url" "text", "role_empresa" "text", "active" boolean, "member_created_at" timestamp with time zone)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1624,6 +1931,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_list_company_users"("target_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: admin_list_users("text", "uuid", integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_list_users"("p_search" "text" DEFAULT NULL::"text", "p_company_id" "uuid" DEFAULT NULL::"uuid", "p_page" integer DEFAULT 1, "p_page_size" integer DEFAULT 20) RETURNS TABLE("user_id" "uuid", "email" "text", "full_name" "text", "role_platform" "text", "last_sign_in_at" timestamp with time zone, "created_at" timestamp with time zone, "banned" boolean, "memberships" "jsonb", "total_count" bigint)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1678,6 +1988,77 @@ $$;
 
 ALTER FUNCTION "public"."admin_list_users"("p_search" "text", "p_company_id" "uuid", "p_page" integer, "p_page_size" integer) OWNER TO "postgres";
 
+--
+-- Name: anamnesis_templates; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."anamnesis_templates" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "segment_id" "uuid" NOT NULL,
+    "version" integer NOT NULL,
+    "title" "text" DEFAULT 'Anamnese'::"text" NOT NULL,
+    "is_current" boolean DEFAULT true NOT NULL,
+    "created_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."anamnesis_templates" OWNER TO "postgres";
+
+--
+-- Name: admin_save_anamnesis_template("uuid", "text", "jsonb"); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "public"."admin_save_anamnesis_template"("p_segment_id" "uuid", "p_title" "text", "p_fields" "jsonb") RETURNS "public"."anamnesis_templates"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  v_next_version integer;
+  v_new public.anamnesis_templates;
+  v_field jsonb;
+begin
+  if not private.is_super_admin() then
+    raise exception 'only super_admin can call admin_save_anamnesis_template';
+  end if;
+
+  select coalesce(max(version), 0) + 1 into v_next_version
+  from public.anamnesis_templates where segment_id = p_segment_id;
+
+  update public.anamnesis_templates set is_current = false
+    where segment_id = p_segment_id and is_current;
+
+  insert into public.anamnesis_templates (segment_id, version, title, is_current, created_by)
+  values (p_segment_id, v_next_version, coalesce(nullif(trim(p_title), ''), 'Anamnese'), true, auth.uid())
+  returning * into v_new;
+
+  for v_field in select * from jsonb_array_elements(coalesce(p_fields, '[]'::jsonb))
+  loop
+    insert into public.anamnesis_template_fields (template_id, label, field_type, options, required, sort_order)
+    values (
+      v_new.id,
+      v_field ->> 'label',
+      v_field ->> 'field_type',
+      case when v_field -> 'options' = 'null'::jsonb then null else v_field -> 'options' end,
+      coalesce((v_field ->> 'required')::boolean, false),
+      coalesce((v_field ->> 'sort_order')::integer, 0)
+    );
+  end loop;
+
+  insert into public.audit_logs (actor_id, company_id, action, target_table, target_id, payload)
+  values (auth.uid(), null, 'anamnesis_template.publish', 'anamnesis_templates', v_new.id,
+    jsonb_build_object('segment_id', p_segment_id, 'version', v_next_version, 'fields_count', jsonb_array_length(coalesce(p_fields, '[]'::jsonb))));
+
+  return v_new;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."admin_save_anamnesis_template"("p_segment_id" "uuid", "p_title" "text", "p_fields" "jsonb") OWNER TO "postgres";
+
+--
+-- Name: company_members; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."company_members" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1693,10 +2074,16 @@ ALTER TABLE ONLY "public"."company_members" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."company_members" OWNER TO "postgres";
 
+--
+-- Name: TABLE "company_members"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."company_members" IS 'Which auth users can manage which company (professional side), and at what role.';
 
 
+--
+-- Name: admin_set_member_active("uuid", boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_set_member_active"("member_id" "uuid", "new_active" boolean) RETURNS "public"."company_members"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1732,6 +2119,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_set_member_active"("member_id" "uuid", "new_active" boolean) OWNER TO "postgres";
 
+--
+-- Name: companies; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."companies" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -1778,34 +2168,58 @@ ALTER TABLE ONLY "public"."companies" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."companies" OWNER TO "postgres";
 
+--
+-- Name: TABLE "companies"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."companies" IS 'Tenant root: one row per business (barbershop/salon).';
 
 
+--
+-- Name: COLUMN "companies"."anamnesis_enabled"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."companies"."anamnesis_enabled" IS 'Liberado só pelo super_admin via admin_update_company() — a empresa não pode alterar isto sozinha.';
 
 
+--
+-- Name: COLUMN "companies"."asaas_customer_id"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."companies"."asaas_customer_id" IS 'ID do cliente correspondente no Asaas (cobrança da assinatura do SaaS) — criado pela Edge Function admin-create-company.';
 
 
+--
+-- Name: COLUMN "companies"."business_size"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."companies"."business_size" IS 'Porte informado no cadastro do trial: unico | rede | franquia.';
 
 
+--
+-- Name: COLUMN "companies"."staff_size_range"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."companies"."staff_size_range" IS 'Faixa de nº de profissionais informada no cadastro do trial (valores padronizados, não texto de exibição).';
 
 
+--
+-- Name: COLUMN "companies"."other_segment"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."companies"."other_segment" IS 'Preenchido só quando segment_id aponta pro segmento "Outro" (slug=outro).';
 
 
+--
+-- Name: COLUMN "companies"."street"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."companies"."street" IS 'Rua/logradouro — parte estruturada do endereço, ao lado de `address` (mantido como resumo legível pra quem já lê esse campo).';
 
 
+--
+-- Name: admin_update_company("uuid", "text", boolean, "text", "uuid", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."admin_update_company"("company_id" "uuid", "new_status" "text" DEFAULT NULL::"text", "new_anamnesis_enabled" boolean DEFAULT NULL::boolean, "new_name" "text" DEFAULT NULL::"text", "new_segment_id" "uuid" DEFAULT NULL::"uuid", "new_trade_name" "text" DEFAULT NULL::"text", "new_document" "text" DEFAULT NULL::"text", "new_email" "text" DEFAULT NULL::"text", "new_phone" "text" DEFAULT NULL::"text", "new_whatsapp" "text" DEFAULT NULL::"text", "new_address" "text" DEFAULT NULL::"text", "new_city" "text" DEFAULT NULL::"text", "new_state" "text" DEFAULT NULL::"text", "new_zip_code" "text" DEFAULT NULL::"text", "new_street" "text" DEFAULT NULL::"text", "new_neighborhood" "text" DEFAULT NULL::"text", "new_address_number" "text" DEFAULT NULL::"text", "new_complement" "text" DEFAULT NULL::"text", "new_other_segment" "text" DEFAULT NULL::"text") RETURNS "public"."companies"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1901,6 +2315,9 @@ $$;
 
 ALTER FUNCTION "public"."admin_update_company"("company_id" "uuid", "new_status" "text", "new_anamnesis_enabled" boolean, "new_name" "text", "new_segment_id" "uuid", "new_trade_name" "text", "new_document" "text", "new_email" "text", "new_phone" "text", "new_whatsapp" "text", "new_address" "text", "new_city" "text", "new_state" "text", "new_zip_code" "text", "new_street" "text", "new_neighborhood" "text", "new_address_number" "text", "new_complement" "text", "new_other_segment" "text") OWNER TO "postgres";
 
+--
+-- Name: book_appointment("uuid", "uuid", "uuid", "uuid", timestamp with time zone, "text", "text", "uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."book_appointment"("p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_scheduled_at" timestamp with time zone, "p_payment_method" "text" DEFAULT NULL::"text", "p_coupon_code" "text" DEFAULT NULL::"text", "p_client_package_id" "uuid" DEFAULT NULL::"uuid") RETURNS TABLE("appointment_id" "uuid", "payment_id" "uuid", "price" numeric, "duration_min" integer, "discount_amount" numeric, "final_amount" numeric)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1988,6 +2405,9 @@ $$;
 
 ALTER FUNCTION "public"."book_appointment"("p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_scheduled_at" timestamp with time zone, "p_payment_method" "text", "p_coupon_code" "text", "p_client_package_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: calculate_professional_payout("uuid", "uuid", "date", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."calculate_professional_payout"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") RETURNS TABLE("total_appointments" integer, "total_revenue" numeric, "total_commission" numeric)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2035,6 +2455,9 @@ $$;
 
 ALTER FUNCTION "public"."calculate_professional_payout"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") OWNER TO "postgres";
 
+--
+-- Name: payout_periods; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."payout_periods" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -2061,6 +2484,9 @@ CREATE TABLE IF NOT EXISTS "public"."payout_periods" (
 
 ALTER TABLE "public"."payout_periods" OWNER TO "postgres";
 
+--
+-- Name: close_payout_period("uuid", "uuid", "date", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."close_payout_period"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") RETURNS "public"."payout_periods"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2094,6 +2520,9 @@ $$;
 
 ALTER FUNCTION "public"."close_payout_period"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") OWNER TO "postgres";
 
+--
+-- Name: company_has_feature("uuid", "text"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") RETURNS boolean
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2110,6 +2539,9 @@ $$;
 
 ALTER FUNCTION "public"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") OWNER TO "postgres";
 
+--
+-- Name: complete_company_onboarding("text", "text", "uuid", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text", "text"[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."complete_company_onboarding"("p_name" "text", "p_slug" "text", "p_segment_id" "uuid", "p_other_segment" "text" DEFAULT NULL::"text", "p_business_size" "text" DEFAULT NULL::"text", "p_staff_size_range" "text" DEFAULT NULL::"text", "p_phone" "text" DEFAULT NULL::"text", "p_document" "text" DEFAULT NULL::"text", "p_zip_code" "text" DEFAULT NULL::"text", "p_street" "text" DEFAULT NULL::"text", "p_neighborhood" "text" DEFAULT NULL::"text", "p_address_number" "text" DEFAULT NULL::"text", "p_complement" "text" DEFAULT NULL::"text", "p_city" "text" DEFAULT NULL::"text", "p_state" "text" DEFAULT NULL::"text", "p_goals" "text"[] DEFAULT '{}'::"text"[]) RETURNS "public"."companies"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2195,6 +2627,9 @@ $$;
 
 ALTER FUNCTION "public"."complete_company_onboarding"("p_name" "text", "p_slug" "text", "p_segment_id" "uuid", "p_other_segment" "text", "p_business_size" "text", "p_staff_size_range" "text", "p_phone" "text", "p_document" "text", "p_zip_code" "text", "p_street" "text", "p_neighborhood" "text", "p_address_number" "text", "p_complement" "text", "p_city" "text", "p_state" "text", "p_goals" "text"[]) OWNER TO "postgres";
 
+--
+-- Name: generate_unique_slug("text"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."generate_unique_slug"("base_name" "text") RETURNS "text"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2230,6 +2665,9 @@ $_$;
 
 ALTER FUNCTION "public"."generate_unique_slug"("base_name" "text") OWNER TO "postgres";
 
+--
+-- Name: get_availability_day("uuid", "uuid", "uuid", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_availability_day"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_day" "date") RETURNS TABLE("slot_time" time without time zone)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2262,6 +2700,9 @@ $$;
 
 ALTER FUNCTION "public"."get_availability_day"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_day" "date") OWNER TO "postgres";
 
+--
+-- Name: get_availability_month("uuid", "uuid", "uuid", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_availability_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_month" "date") RETURNS TABLE("day" "date", "available_count" integer)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2297,6 +2738,9 @@ $$;
 
 ALTER FUNCTION "public"."get_availability_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_month" "date") OWNER TO "postgres";
 
+--
+-- Name: get_birthday_candidates("uuid", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_birthday_candidates"("p_company_id" "uuid", "p_date" "date" DEFAULT CURRENT_DATE) RETURNS TABLE("client_id" "uuid", "name" "text", "phone" "text", "birth_date" "date")
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2320,6 +2764,9 @@ $$;
 
 ALTER FUNCTION "public"."get_birthday_candidates"("p_company_id" "uuid", "p_date" "date") OWNER TO "postgres";
 
+--
+-- Name: get_birthday_candidates_range("uuid", "date", integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date" DEFAULT CURRENT_DATE, "p_days" integer DEFAULT 30) RETURNS TABLE("client_id" "uuid", "name" "text", "phone" "text", "birth_date" "date", "next_birthday" "date", "days_until" integer)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2363,10 +2810,16 @@ $$;
 
 ALTER FUNCTION "public"."get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date", "p_days" integer) OWNER TO "postgres";
 
+--
+-- Name: FUNCTION "get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date", "p_days" integer); Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON FUNCTION "public"."get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date", "p_days" integer) IS 'Aniversariantes num intervalo (mês atual / próximos N dias) — calcula a próxima ocorrência do aniversário no servidor, tratando virada de ano (ex.: hoje é dezembro, aniversário é em janeiro). Complementa get_birthday_candidates (Fase 4), que só resolve um dia exato.';
 
 
+--
+-- Name: get_block_conflicts("uuid", "uuid", timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_block_conflicts"("p_company_id" "uuid", "p_professional_id" "uuid", "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) RETURNS TABLE("appointment_id" "uuid", "scheduled_at" timestamp with time zone, "duration_min" integer, "status" "text", "client_name" "text", "service_name" "text", "service_id" "uuid")
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2394,6 +2847,9 @@ $$;
 
 ALTER FUNCTION "public"."get_block_conflicts"("p_company_id" "uuid", "p_professional_id" "uuid", "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) OWNER TO "postgres";
 
+--
+-- Name: get_company_access_status("uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_company_access_status"("p_company_id" "uuid") RETURNS TABLE("allowed" boolean, "reason" "text", "company_status" "text", "subscription_status" "text", "trial_ends_at" timestamp with time zone, "current_period_end" timestamp with time zone)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2477,6 +2933,9 @@ $$;
 
 ALTER FUNCTION "public"."get_company_access_status"("p_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: get_company_plan_limits("uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_company_plan_limits"("p_company_id" "uuid") RETURNS TABLE("max_users" integer, "max_professionals" integer, "max_clients" integer, "max_appointments" integer)
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2500,6 +2959,9 @@ $$;
 
 ALTER FUNCTION "public"."get_company_plan_limits"("p_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: get_company_rating_summary("uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_company_rating_summary"("p_company_id" "uuid") RETURNS TABLE("average" numeric, "total" integer)
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -2516,6 +2978,9 @@ $$;
 
 ALTER FUNCTION "public"."get_company_rating_summary"("p_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: get_inactive_client_candidates("uuid", integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_inactive_client_candidates"("p_company_id" "uuid", "p_days_inactive" integer DEFAULT 60) RETURNS TABLE("client_id" "uuid", "name" "text", "phone" "text", "last_appointment_at" timestamp with time zone)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2539,6 +3004,9 @@ $$;
 
 ALTER FUNCTION "public"."get_inactive_client_candidates"("p_company_id" "uuid", "p_days_inactive" integer) OWNER TO "postgres";
 
+--
+-- Name: get_my_inactive_membership(); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_my_inactive_membership"() RETURNS TABLE("company_name" "text", "role_empresa" "text")
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2562,10 +3030,16 @@ $$;
 
 ALTER FUNCTION "public"."get_my_inactive_membership"() OWNER TO "postgres";
 
+--
+-- Name: FUNCTION "get_my_inactive_membership"(); Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON FUNCTION "public"."get_my_inactive_membership"() IS 'Auditoria ETAPA 2: permite ao usuário logado saber se foi desativado de alguma empresa (pra mostrar mensagem clara em vez de mandar pro onboarding como se nunca tivesse tido empresa). Só revela a PRÓPRIA membership, nunca de terceiros.';
 
 
+--
+-- Name: get_new_client_candidates("uuid", integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_new_client_candidates"("p_company_id" "uuid", "p_days" integer DEFAULT 30) RETURNS TABLE("client_id" "uuid", "name" "text", "phone" "text", "first_appointment_at" timestamp with time zone)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2589,6 +3063,9 @@ $$;
 
 ALTER FUNCTION "public"."get_new_client_candidates"("p_company_id" "uuid", "p_days" integer) OWNER TO "postgres";
 
+--
+-- Name: get_pending_onboarding(); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_pending_onboarding"() RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2613,6 +3090,9 @@ $$;
 
 ALTER FUNCTION "public"."get_pending_onboarding"() OWNER TO "postgres";
 
+--
+-- Name: get_professional_occupancy_month("uuid", "uuid", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_professional_occupancy_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_month" "date") RETURNS TABLE("day" "date", "capacity_min" integer, "occupied_min" integer, "appointment_count" integer, "occupancy_pct" numeric)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2668,6 +3148,9 @@ $$;
 
 ALTER FUNCTION "public"."get_professional_occupancy_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_month" "date") OWNER TO "postgres";
 
+--
+-- Name: get_recovery_candidates("uuid", integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_recovery_candidates"("p_company_id" "uuid", "p_days_since_last" integer DEFAULT 90) RETURNS TABLE("client_id" "uuid", "name" "text", "phone" "text", "last_appointment_at" timestamp with time zone)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2685,6 +3168,9 @@ $$;
 
 ALTER FUNCTION "public"."get_recovery_candidates"("p_company_id" "uuid", "p_days_since_last" integer) OWNER TO "postgres";
 
+--
+-- Name: get_recurring_client_candidates("uuid", integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."get_recurring_client_candidates"("p_company_id" "uuid", "p_min_appointments" integer DEFAULT 3, "p_period_days" integer DEFAULT 90) RETURNS TABLE("client_id" "uuid", "name" "text", "phone" "text", "appointments_count" integer, "last_appointment_at" timestamp with time zone)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2709,6 +3195,9 @@ $$;
 
 ALTER FUNCTION "public"."get_recurring_client_candidates"("p_company_id" "uuid", "p_min_appointments" integer, "p_period_days" integer) OWNER TO "postgres";
 
+--
+-- Name: list_company_clients("uuid", "text", "text", integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."list_company_clients"("p_company_id" "uuid", "p_search" "text" DEFAULT NULL::"text", "p_filter" "text" DEFAULT 'all'::"text", "p_page" integer DEFAULT 1, "p_page_size" integer DEFAULT 25) RETURNS TABLE("id" "uuid", "name" "text", "phone" "text", "email" "text", "notes" "text", "birth_date" "date", "user_id" "uuid", "active" boolean, "created_at" timestamp with time zone, "last_appointment_at" timestamp with time zone, "next_appointment_at" timestamp with time zone, "has_anamnesis" boolean, "total_count" bigint)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2774,6 +3263,65 @@ $$;
 
 ALTER FUNCTION "public"."list_company_clients"("p_company_id" "uuid", "p_search" "text", "p_filter" "text", "p_page" integer, "p_page_size" integer) OWNER TO "postgres";
 
+--
+-- Name: list_company_payments("uuid", "text", "text", "text", "uuid", "uuid", timestamp with time zone, timestamp with time zone, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "public"."list_company_payments"("p_company_id" "uuid", "p_search" "text" DEFAULT NULL::"text", "p_status" "text" DEFAULT NULL::"text", "p_method" "text" DEFAULT NULL::"text", "p_professional_id" "uuid" DEFAULT NULL::"uuid", "p_service_id" "uuid" DEFAULT NULL::"uuid", "p_period_start" timestamp with time zone DEFAULT NULL::timestamp with time zone, "p_period_end" timestamp with time zone DEFAULT NULL::timestamp with time zone, "p_page" integer DEFAULT 1, "p_page_size" integer DEFAULT 25) RETURNS TABLE("id" "uuid", "amount" numeric, "method" "text", "status" "text", "created_at" timestamp with time zone, "asaas_invoice_url" "text", "client_id" "uuid", "client_name" "text", "service_id" "uuid", "service_name" "text", "professional_id" "uuid", "professional_name" "text", "appointment_id" "uuid", "appointment_status" "text", "appointment_scheduled_at" timestamp with time zone, "total_count" bigint)
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  offset_val integer := greatest(0, (p_page - 1) * greatest(1, p_page_size));
+  safe_page_size integer := least(100, greatest(1, p_page_size));
+  safe_search text := nullif(trim(coalesce(p_search, '')), '');
+begin
+  if not private.is_company_member(p_company_id) then
+    raise exception 'not authorized';
+  end if;
+
+  return query
+  with base as (
+    select
+      pay.id, pay.amount, pay.method, pay.status, pay.created_at, pay.asaas_invoice_url,
+      c.id as client_id, c.name as client_name,
+      s.id as service_id, s.name as service_name,
+      pr.id as professional_id, pr.name as professional_name,
+      a.id as appointment_id, a.status as appointment_status, a.scheduled_at as appointment_scheduled_at
+    from public.payments pay
+    left join public.appointments a on a.id = pay.appointment_id
+    left join public.clients c on c.id = coalesce(pay.client_id, a.client_id)
+    left join public.services s on s.id = a.service_id
+    left join public.professionals pr on pr.id = a.professional_id
+    where pay.company_id = p_company_id
+      and (safe_search is null or c.name ilike '%' || safe_search || '%' or c.phone ilike '%' || safe_search || '%' or c.email ilike '%' || safe_search || '%')
+      and (p_status is null or pay.status = p_status)
+      and (p_method is null or pay.method = p_method)
+      and (p_professional_id is null or pr.id = p_professional_id)
+      and (p_service_id is null or s.id = p_service_id)
+      and (p_period_start is null or pay.created_at >= p_period_start)
+      and (p_period_end is null or pay.created_at <= p_period_end)
+  ),
+  counted as (
+    select count(*) over () as total_count, base.*
+    from base
+  )
+  select counted.id, counted.amount, counted.method, counted.status, counted.created_at, counted.asaas_invoice_url,
+         counted.client_id, counted.client_name, counted.service_id, counted.service_name,
+         counted.professional_id, counted.professional_name, counted.appointment_id,
+         counted.appointment_status, counted.appointment_scheduled_at, counted.total_count
+  from counted
+  order by counted.created_at desc
+  limit safe_page_size offset offset_val;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."list_company_payments"("p_company_id" "uuid", "p_search" "text", "p_status" "text", "p_method" "text", "p_professional_id" "uuid", "p_service_id" "uuid", "p_period_start" timestamp with time zone, "p_period_end" timestamp with time zone, "p_page" integer, "p_page_size" integer) OWNER TO "postgres";
+
+--
+-- Name: mark_payout_paid("uuid", timestamp with time zone, "text", "text"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."mark_payout_paid"("p_payout_period_id" "uuid", "p_paid_at" timestamp with time zone, "p_payment_method" "text", "p_notes" "text" DEFAULT NULL::"text") RETURNS "public"."payout_periods"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2807,6 +3355,9 @@ $$;
 
 ALTER FUNCTION "public"."mark_payout_paid"("p_payout_period_id" "uuid", "p_paid_at" timestamp with time zone, "p_payment_method" "text", "p_notes" "text") OWNER TO "postgres";
 
+--
+-- Name: preview_coupon("uuid", "text", "uuid", "uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."preview_coupon"("p_company_id" "uuid", "p_code" "text", "p_client_id" "uuid" DEFAULT NULL::"uuid", "p_service_id" "uuid" DEFAULT NULL::"uuid", "p_professional_id" "uuid" DEFAULT NULL::"uuid") RETURNS TABLE("valid" boolean, "reason" "text", "discount_amount" numeric, "final_amount" numeric, "price" numeric)
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
@@ -2840,6 +3391,9 @@ $$;
 
 ALTER FUNCTION "public"."preview_coupon"("p_company_id" "uuid", "p_code" "text", "p_client_id" "uuid", "p_service_id" "uuid", "p_professional_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: process_asaas_webhook_event("text", "text", "jsonb"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb") RETURNS "jsonb"
     LANGUAGE "sql" SECURITY DEFINER
@@ -2851,6 +3405,9 @@ $$;
 
 ALTER FUNCTION "public"."process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb") OWNER TO "postgres";
 
+--
+-- Name: public_company_is_bookable("uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."public_company_is_bookable"("p_company_id" "uuid") RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -2862,6 +3419,9 @@ $$;
 
 ALTER FUNCTION "public"."public_company_is_bookable"("p_company_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: public_directory_companies(); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."public_directory_companies"() RETURNS SETOF "public"."companies"
     LANGUAGE "sql" STABLE SECURITY DEFINER
@@ -2877,6 +3437,9 @@ $$;
 
 ALTER FUNCTION "public"."public_directory_companies"() OWNER TO "postgres";
 
+--
+-- Name: appointments; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."appointments" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -2905,6 +3468,9 @@ ALTER TABLE ONLY "public"."appointments" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."appointments" OWNER TO "postgres";
 
+--
+-- Name: reschedule_appointment("uuid", timestamp with time zone); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."reschedule_appointment"("p_appointment_id" "uuid", "p_new_scheduled_at" timestamp with time zone) RETURNS "public"."appointments"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2952,6 +3518,9 @@ $$;
 
 ALTER FUNCTION "public"."reschedule_appointment"("p_appointment_id" "uuid", "p_new_scheduled_at" timestamp with time zone) OWNER TO "postgres";
 
+--
+-- Name: rls_auto_enable(); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -2984,6 +3553,9 @@ $$;
 
 ALTER FUNCTION "public"."rls_auto_enable"() OWNER TO "postgres";
 
+--
+-- Name: professional_commissions; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."professional_commissions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3004,6 +3576,9 @@ CREATE TABLE IF NOT EXISTS "public"."professional_commissions" (
 
 ALTER TABLE "public"."professional_commissions" OWNER TO "postgres";
 
+--
+-- Name: set_professional_commission("uuid", "text", numeric); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."set_professional_commission"("p_professional_id" "uuid", "p_commission_type" "text", "p_commission_value" numeric) RETURNS "public"."professional_commissions"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -3036,6 +3611,104 @@ $$;
 
 ALTER FUNCTION "public"."set_professional_commission"("p_professional_id" "uuid", "p_commission_type" "text", "p_commission_value" numeric) OWNER TO "postgres";
 
+--
+-- Name: segments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."segments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "slug" "text" NOT NULL,
+    "theme_key" "text" DEFAULT 'soft_purple'::"text" NOT NULL,
+    "active" boolean DEFAULT true NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "segments_theme_key_check" CHECK (("theme_key" = ANY (ARRAY['dark_blue'::"text", 'soft_purple'::"text"])))
+);
+
+ALTER TABLE ONLY "public"."segments" FORCE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."segments" OWNER TO "postgres";
+
+--
+-- Name: set_professional_segments("uuid", "uuid"[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE FUNCTION "public"."set_professional_segments"("p_professional_id" "uuid", "p_segment_ids" "uuid"[]) RETURNS SETOF "public"."segments"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  v_company_id uuid;
+  v_segment_id uuid;
+  v_template public.anamnesis_templates;
+  v_new_form public.anamnesis_forms;
+begin
+  select company_id into v_company_id from public.professionals where id = p_professional_id;
+  if v_company_id is null then
+    raise exception 'profissional não encontrado';
+  end if;
+  if not (private.is_company_manager(v_company_id) or private.is_super_admin()) then
+    raise exception 'not authorized';
+  end if;
+
+  delete from public.professional_segments where professional_id = p_professional_id;
+  if p_segment_ids is not null and array_length(p_segment_ids, 1) > 0 then
+    insert into public.professional_segments (professional_id, segment_id)
+    select p_professional_id, s from unnest(p_segment_ids) as s
+    on conflict do nothing;
+  end if;
+
+  -- Sincroniza: pra cada segmento novo sem ficha ativa nesta empresa, cria
+  -- uma copiando o template atual do segmento (ou vazia, se o Super Admin
+  -- ainda não publicou nenhum template pra esse segmento — mesmo
+  -- comportamento de fallback que já existia antes desta etapa).
+  if p_segment_ids is not null then
+    foreach v_segment_id in array p_segment_ids loop
+      if not exists (
+        select 1 from public.anamnesis_forms
+        where company_id = v_company_id and segment_id = v_segment_id and active
+      ) then
+        select * into v_template from public.anamnesis_templates
+          where segment_id = v_segment_id and is_current limit 1;
+
+        insert into public.anamnesis_forms (company_id, segment_id, template_id, template_version, title)
+        values (
+          v_company_id, v_segment_id, v_template.id, v_template.version,
+          coalesce(v_template.title, (select name from public.segments where id = v_segment_id))
+        )
+        returning * into v_new_form;
+
+        if v_template.id is not null then
+          perform set_config('app.seeding_anamnesis_defaults', 'true', true);
+          insert into public.anamnesis_fields (form_id, label, field_type, options, required, sort_order)
+          select v_new_form.id, tf.label, tf.field_type, tf.options, tf.required, tf.sort_order
+          from public.anamnesis_template_fields tf
+          where tf.template_id = v_template.id
+          order by tf.sort_order;
+          perform set_config('app.seeding_anamnesis_defaults', 'false', true);
+        end if;
+      end if;
+    end loop;
+  end if;
+
+  insert into public.audit_logs (actor_id, company_id, action, target_table, target_id, payload)
+  values (auth.uid(), v_company_id, 'professional.set_segments', 'professionals', p_professional_id,
+    jsonb_build_object('segment_ids', p_segment_ids));
+
+  return query select s.* from public.segments s
+    join public.professional_segments ps on ps.segment_id = s.id
+    where ps.professional_id = p_professional_id
+    order by s.name;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."set_professional_segments"("p_professional_id" "uuid", "p_segment_ids" "uuid"[]) OWNER TO "postgres";
+
+--
+-- Name: stage_pending_onboarding("text", "jsonb"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."stage_pending_onboarding"("p_email" "text", "p_payload" "jsonb") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -3063,6 +3736,9 @@ $$;
 
 ALTER FUNCTION "public"."stage_pending_onboarding"("p_email" "text", "p_payload" "jsonb") OWNER TO "postgres";
 
+--
+-- Name: stage_terms_acceptance("text", "text", "text", "text"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE FUNCTION "public"."stage_terms_acceptance"("p_email" "text", "p_document_type" "text", "p_document_version" "text", "p_user_agent" "text" DEFAULT NULL::"text") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -3093,18 +3769,18 @@ $$;
 
 ALTER FUNCTION "public"."stage_terms_acceptance"("p_email" "text", "p_document_type" "text", "p_document_version" "text", "p_user_agent" "text") OWNER TO "postgres";
 
+--
+-- Name: submit_anamnesis_response("uuid", "uuid", "uuid", "jsonb", "uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
-CREATE OR REPLACE FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid" DEFAULT NULL::"uuid", "p_appointment_id" "uuid" DEFAULT NULL::"uuid", "p_answers" "jsonb" DEFAULT '[]'::"jsonb") RETURNS "uuid"
+CREATE OR REPLACE FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid" DEFAULT NULL::"uuid", "p_appointment_id" "uuid" DEFAULT NULL::"uuid", "p_answers" "jsonb" DEFAULT '[]'::"jsonb", "p_form_id" "uuid" DEFAULT NULL::"uuid", "p_service_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
 declare
   v_company_id uuid;
   v_form_id uuid;
-  v_response_id uuid;
-  v_field record;
-  v_answer jsonb;
-  v_has_answer boolean;
+  v_service_id uuid := p_service_id;
 begin
   select company_id into v_company_id from public.clients where id = p_client_id;
   if v_company_id is null then
@@ -3114,109 +3790,75 @@ begin
     raise exception 'not authorized';
   end if;
 
-  select id into v_form_id from public.anamnesis_forms where company_id = v_company_id and active = true;
-  if v_form_id is null then
-    raise exception 'nenhum formulário de anamnese ativo para esta empresa';
+  -- atendimento informado: tem que ser desta empresa e deste cliente; o
+  -- serviço dele define a ficha quando nada mais foi informado
+  if p_appointment_id is not null then
+    select service_id into v_service_id from public.appointments
+      where id = p_appointment_id and company_id = v_company_id and client_id = p_client_id;
+    if v_service_id is null then
+      raise exception 'atendimento inválido para este cliente';
+    end if;
+    if p_service_id is not null and p_service_id <> v_service_id then
+      raise exception 'serviço informado não corresponde ao atendimento';
+    end if;
   end if;
 
-  -- valida que toda pergunta obrigatória tem resposta antes de gravar
-  -- qualquer coisa — mesma checagem que hoje só existe no frontend.
-  for v_field in select id, label from public.anamnesis_fields where form_id = v_form_id and required = true loop
-    select exists (
-      select 1 from jsonb_array_elements(p_answers) a
-      where (a->>'field_id')::uuid = v_field.id
-        and a->'value' is not null
-        and a->>'value' <> ''
-    ) into v_has_answer;
-    if not v_has_answer then
-      raise exception '"%" é obrigatória', v_field.label;
-    end if;
-  end loop;
-
-  insert into public.anamnesis_responses (form_id, company_id, client_id, professional_id, appointment_id, created_by)
-  values (v_form_id, v_company_id, p_client_id, p_professional_id, p_appointment_id, auth.uid())
-  returning id into v_response_id;
-
-  for v_answer in select * from jsonb_array_elements(p_answers) loop
-    if v_answer->'value' is not null and v_answer->>'value' <> '' then
-      insert into public.anamnesis_response_answers (response_id, field_id, value)
-      values (v_response_id, (v_answer->>'field_id')::uuid, v_answer->'value');
-    end if;
-  end loop;
-
-  return v_response_id;
+  v_form_id := private.resolve_anamnesis_form(v_company_id, p_form_id, v_service_id);
+  return private.record_anamnesis_response(v_form_id, v_company_id, p_client_id, p_professional_id, p_appointment_id, p_answers);
 end;
 $$;
 
 
-ALTER FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb") OWNER TO "postgres";
+ALTER FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_service_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: submit_anamnesis_response_as_client("uuid", "jsonb", "uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: postgres
+--
 
-CREATE OR REPLACE FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb" DEFAULT '[]'::"jsonb") RETURNS "uuid"
+CREATE OR REPLACE FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb" DEFAULT '[]'::"jsonb", "p_form_id" "uuid" DEFAULT NULL::"uuid", "p_appointment_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
 declare
   v_client_id uuid;
+  v_service_id uuid;
+  v_linked uuid;
   v_form_id uuid;
-  v_response_id uuid;
-  v_field record;
-  v_answer jsonb;
-  v_has_answer boolean;
 begin
   if auth.uid() is null then
     raise exception 'not authenticated';
   end if;
 
-  select id into v_client_id
-  from public.clients
-  where company_id = p_company_id and user_id = auth.uid()
-  limit 1;
+  select id into v_client_id from public.clients
+    where company_id = p_company_id and user_id = auth.uid() limit 1;
   if v_client_id is null then
     raise exception 'você ainda não é cliente desta empresa';
   end if;
 
-  select id into v_form_id
-  from public.anamnesis_forms
-  where company_id = p_company_id and active = true;
-  if v_form_id is null then
-    raise exception 'nenhum formulário de anamnese ativo para esta empresa';
+  -- atendimento: precisa ser deste cliente, nesta empresa
+  if p_appointment_id is not null then
+    select service_id into v_service_id from public.appointments
+      where id = p_appointment_id and company_id = p_company_id and client_id = v_client_id;
+    if v_service_id is null then
+      raise exception 'atendimento inválido';
+    end if;
+    v_linked := private.linked_active_anamnesis_form(p_company_id, v_service_id);
+    if v_linked is not null and p_form_id is not null and p_form_id <> v_linked then
+      raise exception 'a ficha deste atendimento é definida pelo serviço';
+    end if;
   end if;
 
-  -- toda pergunta obrigatória precisa de resposta antes de gravar qualquer coisa
-  for v_field in
-    select id, label from public.anamnesis_fields where form_id = v_form_id and required = true
-  loop
-    select exists (
-      select 1 from jsonb_array_elements(p_answers) a
-      where (a->>'field_id')::uuid = v_field.id
-        and a->'value' is not null
-        and a->>'value' <> ''
-    ) into v_has_answer;
-    if not v_has_answer then
-      raise exception '"%" é obrigatória', v_field.label;
-    end if;
-  end loop;
-
-  insert into public.anamnesis_responses (form_id, company_id, client_id, professional_id, appointment_id, created_by)
-  values (v_form_id, p_company_id, v_client_id, null, null, auth.uid())
-  returning id into v_response_id;
-
-  for v_answer in select * from jsonb_array_elements(p_answers)
-  loop
-    if v_answer->'value' is not null and v_answer->>'value' <> '' then
-      insert into public.anamnesis_response_answers (response_id, field_id, value)
-      values (v_response_id, (v_answer->>'field_id')::uuid, v_answer->'value');
-    end if;
-  end loop;
-
-  return v_response_id;
+  v_form_id := private.resolve_anamnesis_form(p_company_id, p_form_id, v_service_id);
+  return private.record_anamnesis_response(v_form_id, p_company_id, v_client_id, null, p_appointment_id, p_answers);
 end;
 $$;
 
 
-ALTER FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb") OWNER TO "postgres";
+ALTER FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_appointment_id" "uuid") OWNER TO "postgres";
 
+--
+-- Name: anamnesis_fields; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."anamnesis_fields" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3228,6 +3870,7 @@ CREATE TABLE IF NOT EXISTS "public"."anamnesis_fields" (
     "sort_order" integer DEFAULT 0 NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "archived_at" timestamp with time zone,
     CONSTRAINT "anamnesis_fields_field_type_check" CHECK (("field_type" = ANY (ARRAY['text'::"text", 'textarea'::"text", 'number'::"text", 'date'::"text", 'boolean'::"text", 'single_choice'::"text", 'multiple_choice'::"text"]))),
     CONSTRAINT "anamnesis_fields_options_only_for_choice" CHECK ((("field_type" = ANY (ARRAY['single_choice'::"text", 'multiple_choice'::"text"])) OR ("options" IS NULL)))
 );
@@ -3235,6 +3878,9 @@ CREATE TABLE IF NOT EXISTS "public"."anamnesis_fields" (
 
 ALTER TABLE "public"."anamnesis_fields" OWNER TO "postgres";
 
+--
+-- Name: anamnesis_forms; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."anamnesis_forms" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3242,24 +3888,35 @@ CREATE TABLE IF NOT EXISTS "public"."anamnesis_forms" (
     "title" "text" DEFAULT 'Anamnese'::"text" NOT NULL,
     "active" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "segment_id" "uuid",
+    "template_id" "uuid",
+    "template_version" integer
 );
 
 
 ALTER TABLE "public"."anamnesis_forms" OWNER TO "postgres";
 
+--
+-- Name: anamnesis_response_answers; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."anamnesis_response_answers" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "response_id" "uuid" NOT NULL,
     "field_id" "uuid" NOT NULL,
     "value" "jsonb" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "field_label_snapshot" "text",
+    "field_type_snapshot" "text"
 );
 
 
 ALTER TABLE "public"."anamnesis_response_answers" OWNER TO "postgres";
 
+--
+-- Name: anamnesis_responses; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."anamnesis_responses" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3275,6 +3932,29 @@ CREATE TABLE IF NOT EXISTS "public"."anamnesis_responses" (
 
 ALTER TABLE "public"."anamnesis_responses" OWNER TO "postgres";
 
+--
+-- Name: anamnesis_template_fields; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."anamnesis_template_fields" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "template_id" "uuid" NOT NULL,
+    "label" "text" NOT NULL,
+    "field_type" "text" NOT NULL,
+    "options" "jsonb",
+    "required" boolean DEFAULT false NOT NULL,
+    "sort_order" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "anamnesis_template_fields_field_type_check" CHECK (("field_type" = ANY (ARRAY['text'::"text", 'textarea'::"text", 'number'::"text", 'date'::"text", 'boolean'::"text", 'single_choice'::"text", 'multiple_choice'::"text"]))),
+    CONSTRAINT "anamnesis_template_fields_options_only_for_choice" CHECK ((("field_type" = ANY (ARRAY['single_choice'::"text", 'multiple_choice'::"text"])) OR ("options" IS NULL)))
+);
+
+
+ALTER TABLE "public"."anamnesis_template_fields" OWNER TO "postgres";
+
+--
+-- Name: appointment_notifications; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."appointment_notifications" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3290,6 +3970,9 @@ CREATE TABLE IF NOT EXISTS "public"."appointment_notifications" (
 
 ALTER TABLE "public"."appointment_notifications" OWNER TO "postgres";
 
+--
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."audit_logs" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3309,6 +3992,9 @@ ALTER TABLE ONLY "public"."audit_logs" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."audit_logs" OWNER TO "postgres";
 
+--
+-- Name: campaign_rules; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."campaign_rules" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3325,6 +4011,9 @@ CREATE TABLE IF NOT EXISTS "public"."campaign_rules" (
 
 ALTER TABLE "public"."campaign_rules" OWNER TO "postgres";
 
+--
+-- Name: campaign_sends; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."campaign_sends" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3344,6 +4033,32 @@ CREATE TABLE IF NOT EXISTS "public"."campaign_sends" (
 
 ALTER TABLE "public"."campaign_sends" OWNER TO "postgres";
 
+--
+-- Name: campaigns; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."campaigns" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "company_id" "uuid" NOT NULL,
+    "occasion" "text" NOT NULL,
+    "name" "text" NOT NULL,
+    "message_template" "text",
+    "starts_on" "date",
+    "ends_on" "date",
+    "enabled" boolean DEFAULT false NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "campaigns_name_check" CHECK (("length"(TRIM(BOTH FROM "name")) > 0)),
+    CONSTRAINT "campaigns_occasion_check" CHECK (("occasion" = ANY (ARRAY['dia_das_maes'::"text", 'dia_dos_pais'::"text", 'dia_do_amigo'::"text", 'dia_dos_namorados'::"text", 'dia_da_mulher'::"text", 'dia_do_cliente'::"text", 'natal'::"text", 'black_friday'::"text", 'personalizada'::"text"]))),
+    CONSTRAINT "campaigns_period_check" CHECK ((("starts_on" IS NULL) OR ("ends_on" IS NULL) OR ("ends_on" >= "starts_on")))
+);
+
+
+ALTER TABLE "public"."campaigns" OWNER TO "postgres";
+
+--
+-- Name: clients; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."clients" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3366,14 +4081,23 @@ ALTER TABLE ONLY "public"."clients" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."clients" OWNER TO "postgres";
 
+--
+-- Name: COLUMN "clients"."cpf_cnpj"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."clients"."cpf_cnpj" IS 'CPF/CNPJ do cliente, coletado sob demanda no momento do pagamento online (exigido pelo Asaas pra criar o customer). Não é obrigatório pra cadastro normal de cliente.';
 
 
+--
+-- Name: COLUMN "clients"."active"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."clients"."active" IS 'Soft-delete (mesmo padrão de professionals.active/services.active). "Excluir cliente" na UI seta false — nunca faz DELETE real, pra não perder histórico via CASCADE. false = cliente inativo/arquivado, mas todo o histórico (agendamentos, anamnese, pacotes) continua intacto e consultável.';
 
 
+--
+-- Name: company_goals; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."company_goals" (
     "company_id" "uuid" NOT NULL,
@@ -3387,10 +4111,16 @@ ALTER TABLE ONLY "public"."company_goals" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."company_goals" OWNER TO "postgres";
 
+--
+-- Name: TABLE "company_goals"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."company_goals" IS 'Objetivos selecionados no cadastro do trial (seleção múltipla) — uma linha por objetivo marcado.';
 
 
+--
+-- Name: coupon_professionals; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."coupon_professionals" (
     "coupon_id" "uuid" NOT NULL,
@@ -3400,6 +4130,9 @@ CREATE TABLE IF NOT EXISTS "public"."coupon_professionals" (
 
 ALTER TABLE "public"."coupon_professionals" OWNER TO "postgres";
 
+--
+-- Name: coupon_redemptions; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."coupon_redemptions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3415,6 +4148,9 @@ CREATE TABLE IF NOT EXISTS "public"."coupon_redemptions" (
 
 ALTER TABLE "public"."coupon_redemptions" OWNER TO "postgres";
 
+--
+-- Name: coupon_services; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."coupon_services" (
     "coupon_id" "uuid" NOT NULL,
@@ -3424,6 +4160,9 @@ CREATE TABLE IF NOT EXISTS "public"."coupon_services" (
 
 ALTER TABLE "public"."coupon_services" OWNER TO "postgres";
 
+--
+-- Name: coupons; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."coupons" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3455,6 +4194,42 @@ CREATE TABLE IF NOT EXISTS "public"."coupons" (
 
 ALTER TABLE "public"."coupons" OWNER TO "postgres";
 
+--
+-- Name: custom_reports; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."custom_reports" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "company_id" "uuid" NOT NULL,
+    "created_by" "uuid" NOT NULL,
+    "name" "text" NOT NULL,
+    "source" "text" NOT NULL,
+    "config" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "custom_reports_source_check" CHECK (("source" = ANY (ARRAY['agendamentos'::"text", 'clientes'::"text", 'servicos'::"text", 'profissionais'::"text", 'financeiro'::"text", 'estoque'::"text"])))
+);
+
+
+ALTER TABLE "public"."custom_reports" OWNER TO "postgres";
+
+--
+-- Name: TABLE "custom_reports"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "public"."custom_reports" IS 'Relatórios personalizados montados no construtor da Central de Relatórios ("Meus relatórios") — config guarda colunas/filtros/agrupamento/visualização escolhidos, executados sob demanda (nada de cache de resultado aqui).';
+
+
+--
+-- Name: COLUMN "custom_reports"."config"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN "public"."custom_reports"."config" IS 'Shape: { columns: string[], filters: object, groupBy: string|null, visualization: "table"|"bar"|"line"|"kpi" } — validado na aplicação, não no banco (é config de UI, não dado de negócio).';
+
+
+--
+-- Name: device_tokens; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."device_tokens" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3471,6 +4246,9 @@ ALTER TABLE ONLY "public"."device_tokens" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."device_tokens" OWNER TO "postgres";
 
+--
+-- Name: expenses; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."expenses" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3491,6 +4269,9 @@ ALTER TABLE ONLY "public"."expenses" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."expenses" OWNER TO "postgres";
 
+--
+-- Name: favorites; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."favorites" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3502,6 +4283,9 @@ CREATE TABLE IF NOT EXISTS "public"."favorites" (
 
 ALTER TABLE "public"."favorites" OWNER TO "postgres";
 
+--
+-- Name: goals; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."goals" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3522,6 +4306,9 @@ CREATE TABLE IF NOT EXISTS "public"."goals" (
 
 ALTER TABLE "public"."goals" OWNER TO "postgres";
 
+--
+-- Name: payment_webhook_events; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."payment_webhook_events" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3542,10 +4329,16 @@ ALTER TABLE ONLY "public"."payment_webhook_events" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."payment_webhook_events" OWNER TO "postgres";
 
+--
+-- Name: TABLE "payment_webhook_events"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."payment_webhook_events" IS 'Log + dedup de todo webhook de pagamento recebido. provider_event_id = hash do payload bruto (Asaas não manda ID de entrega estável neste formato).';
 
 
+--
+-- Name: payments; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."payments" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3569,10 +4362,16 @@ ALTER TABLE ONLY "public"."payments" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."payments" OWNER TO "postgres";
 
+--
+-- Name: COLUMN "payments"."asaas_payment_id"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."payments"."asaas_payment_id" IS 'id da cobrança no Asaas (POST /payments) — presente só quando o pagamento foi feito online. Distinto de subscription_payments.asaas_payment_id, que é sobre a assinatura da empresa, não sobre um agendamento.';
 
 
+--
+-- Name: pending_onboarding; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."pending_onboarding" (
     "email" "text" NOT NULL,
@@ -3586,10 +4385,16 @@ ALTER TABLE ONLY "public"."pending_onboarding" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."pending_onboarding" OWNER TO "postgres";
 
+--
+-- Name: TABLE "pending_onboarding"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."pending_onboarding" IS 'Rascunho do cadastro de trial entre o signUp e a confirmação de e-mail. NUNCA contém senha (bloqueado em stage_pending_onboarding). Só acessível via stage_pending_onboarding/get_pending_onboarding — sem policy própria de propósito.';
 
 
+--
+-- Name: plan_features; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."plan_features" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3605,6 +4410,9 @@ ALTER TABLE ONLY "public"."plan_features" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."plan_features" OWNER TO "postgres";
 
+--
+-- Name: plans; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."plans" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3628,14 +4436,47 @@ ALTER TABLE ONLY "public"."plans" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."plans" OWNER TO "postgres";
 
+--
+-- Name: COLUMN "plans"."promo_price_cents"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."plans"."promo_price_cents" IS 'Preço promocional atual do plano (centavos). NULL = sem promoção cadastrada.';
 
 
+--
+-- Name: COLUMN "plans"."promo_active"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."plans"."promo_active" IS 'Liga/desliga a promoção pra NOVOS clientes sem precisar editar código. Quem já está numa promoção mantém o preço travado em subscriptions.promo_price_cents até promo_ends_at, mesmo que isto vire false depois.';
 
 
+--
+-- Name: platform_announcements; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."platform_announcements" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "created_by" "uuid",
+    "title" "text" NOT NULL,
+    "message" "text" NOT NULL,
+    "audience_type" "text" NOT NULL,
+    "audience_plan_id" "uuid",
+    "audience_segment_id" "uuid",
+    "audience_status" "text",
+    "audience_company_id" "uuid",
+    "status" "text" DEFAULT 'draft'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "sent_at" timestamp with time zone,
+    CONSTRAINT "platform_announcements_audience_type_check" CHECK (("audience_type" = ANY (ARRAY['all'::"text", 'plan'::"text", 'segment'::"text", 'status'::"text", 'company'::"text"]))),
+    CONSTRAINT "platform_announcements_status_check" CHECK (("status" = ANY (ARRAY['draft'::"text", 'sent'::"text", 'failed'::"text"])))
+);
+
+
+ALTER TABLE "public"."platform_announcements" OWNER TO "postgres";
+
+--
+-- Name: products; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."products" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3661,6 +4502,9 @@ ALTER TABLE ONLY "public"."products" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."products" OWNER TO "postgres";
 
+--
+-- Name: professional_blocks; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."professional_blocks" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3681,10 +4525,29 @@ ALTER TABLE ONLY "public"."professional_blocks" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."professional_blocks" OWNER TO "postgres";
 
+--
+-- Name: COLUMN "professional_blocks"."type"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."professional_blocks"."type" IS 'Diferenciação de UI: block = bloqueio pontual (ex.: almoço), day_off = folga, vacation = férias. Mesma lógica de disponibilidade pros 3 (starts_at/ends_at).';
 
 
+--
+-- Name: professional_segments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."professional_segments" (
+    "professional_id" "uuid" NOT NULL,
+    "segment_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."professional_segments" OWNER TO "postgres";
+
+--
+-- Name: professional_weekly_hours; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."professional_weekly_hours" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3706,6 +4569,9 @@ ALTER TABLE ONLY "public"."professional_weekly_hours" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."professional_weekly_hours" OWNER TO "postgres";
 
+--
+-- Name: professionals; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."professionals" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3726,6 +4592,9 @@ ALTER TABLE ONLY "public"."professionals" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."professionals" OWNER TO "postgres";
 
+--
+-- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "id" "uuid" NOT NULL,
@@ -3743,10 +4612,61 @@ ALTER TABLE ONLY "public"."profiles" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."profiles" OWNER TO "postgres";
 
+--
+-- Name: TABLE "profiles"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."profiles" IS 'Platform-wide profile, one row per auth.users. role_platform only gates super_admin; professional/client access is derived from company_members and clients, not from this column.';
 
 
+--
+-- Name: report_favorites; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."report_favorites" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "company_id" "uuid" NOT NULL,
+    "profile_id" "uuid" NOT NULL,
+    "report_key" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."report_favorites" OWNER TO "postgres";
+
+--
+-- Name: TABLE "report_favorites"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "public"."report_favorites" IS 'Relatórios (built-in ou custom:<id>) favoritados por um profissional — preferência pessoal, não visível a outros membros da empresa.';
+
+
+--
+-- Name: report_view_history; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."report_view_history" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "company_id" "uuid" NOT NULL,
+    "profile_id" "uuid" NOT NULL,
+    "report_key" "text" NOT NULL,
+    "report_title" "text" NOT NULL,
+    "viewed_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."report_view_history" OWNER TO "postgres";
+
+--
+-- Name: TABLE "report_view_history"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "public"."report_view_history" IS 'Registro do último acesso de cada profissional a cada relatório (upsert — não é um log crescente) pra alimentar "Acessados recentemente" com dado real.';
+
+
+--
+-- Name: reviews; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."reviews" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3769,6 +4689,9 @@ CREATE TABLE IF NOT EXISTS "public"."reviews" (
 
 ALTER TABLE "public"."reviews" OWNER TO "postgres";
 
+--
+-- Name: roles; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."roles" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3784,26 +4707,16 @@ ALTER TABLE ONLY "public"."roles" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."roles" OWNER TO "postgres";
 
+--
+-- Name: TABLE "roles"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."roles" IS 'Catálogo de papéis (company_members.role_empresa). is_system=true marca papéis que a própria plataforma depende (owner/admin) — não deletar via UI.';
 
 
-
-CREATE TABLE IF NOT EXISTS "public"."segments" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "slug" "text" NOT NULL,
-    "theme_key" "text" DEFAULT 'soft_purple'::"text" NOT NULL,
-    "active" boolean DEFAULT true NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "segments_theme_key_check" CHECK (("theme_key" = ANY (ARRAY['dark_blue'::"text", 'soft_purple'::"text"])))
-);
-
-ALTER TABLE ONLY "public"."segments" FORCE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."segments" OWNER TO "postgres";
-
+--
+-- Name: services; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."services" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3818,6 +4731,7 @@ CREATE TABLE IF NOT EXISTS "public"."services" (
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "type" "text" DEFAULT 'avulso'::"text" NOT NULL,
     "description" "text",
+    "anamnesis_form_id" "uuid",
     CONSTRAINT "services_duration_min_check" CHECK (("duration_min" > 0)),
     CONSTRAINT "services_price_check" CHECK (("price" >= (0)::numeric)),
     CONSTRAINT "services_type_check" CHECK (("type" = ANY (ARRAY['avulso'::"text", 'pacote'::"text"])))
@@ -3828,10 +4742,23 @@ ALTER TABLE ONLY "public"."services" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."services" OWNER TO "postgres";
 
+--
+-- Name: COLUMN "services"."type"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON COLUMN "public"."services"."type" IS 'avulso = serviço individual; pacote = combo de vários atendimentos.';
 
 
+--
+-- Name: COLUMN "services"."anamnesis_form_id"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN "public"."services"."anamnesis_form_id" IS 'Ficha de anamnese usada por este serviço (mesma empresa — FK composta). NULL = sem ficha vinculada: o atendimento usa a única ficha ativa da empresa ou exige seleção manual.';
+
+
+--
+-- Name: subscription_payments; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."subscription_payments" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3854,6 +4781,32 @@ CREATE TABLE IF NOT EXISTS "public"."subscription_payments" (
 
 ALTER TABLE "public"."subscription_payments" OWNER TO "postgres";
 
+--
+-- Name: support_tickets; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE IF NOT EXISTS "public"."support_tickets" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "company_id" "uuid" NOT NULL,
+    "opened_by" "uuid",
+    "subject" "text" NOT NULL,
+    "description" "text",
+    "status" "text" DEFAULT 'open'::"text" NOT NULL,
+    "priority" "text" DEFAULT 'normal'::"text" NOT NULL,
+    "assigned_to" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "closed_at" timestamp with time zone,
+    CONSTRAINT "support_tickets_priority_check" CHECK (("priority" = ANY (ARRAY['low'::"text", 'normal'::"text", 'high'::"text", 'urgent'::"text"]))),
+    CONSTRAINT "support_tickets_status_check" CHECK (("status" = ANY (ARRAY['open'::"text", 'in_progress'::"text", 'waiting_company'::"text", 'resolved'::"text", 'closed'::"text"])))
+);
+
+
+ALTER TABLE "public"."support_tickets" OWNER TO "postgres";
+
+--
+-- Name: terms_acceptances; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."terms_acceptances" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3873,10 +4826,16 @@ ALTER TABLE ONLY "public"."terms_acceptances" FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."terms_acceptances" OWNER TO "postgres";
 
+--
+-- Name: TABLE "terms_acceptances"; Type: COMMENT; Schema: public; Owner: postgres
+--
 
 COMMENT ON TABLE "public"."terms_acceptances" IS 'Aceite auditável do contrato/termos — 1 linha por versão aceita, nunca sobrescrita. company_id fica NULL até complete_company_onboarding vincular (o aceite acontece antes de a empresa existir). ip_address não é preenchido ainda — requer decisão de política de privacidade + captura server-side confiável, registrado como pendência.';
 
 
+--
+-- Name: waitlist_entries; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE IF NOT EXISTS "public"."waitlist_entries" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -3897,1392 +4856,2686 @@ CREATE TABLE IF NOT EXISTS "public"."waitlist_entries" (
 
 ALTER TABLE "public"."waitlist_entries" OWNER TO "postgres";
 
+--
+-- Name: anamnesis_fields anamnesis_fields_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_fields"
     ADD CONSTRAINT "anamnesis_fields_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_id_company_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_forms"
-    ADD CONSTRAINT "anamnesis_forms_company_id_unique" UNIQUE ("company_id");
+    ADD CONSTRAINT "anamnesis_forms_id_company_unique" UNIQUE ("id", "company_id");
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_forms"
     ADD CONSTRAINT "anamnesis_forms_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: anamnesis_response_answers anamnesis_response_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_response_answers"
     ADD CONSTRAINT "anamnesis_response_answers_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: anamnesis_template_fields anamnesis_template_fields_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_template_fields"
+    ADD CONSTRAINT "anamnesis_template_fields_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: anamnesis_templates anamnesis_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_templates"
+    ADD CONSTRAINT "anamnesis_templates_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: anamnesis_templates anamnesis_templates_segment_id_version_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_templates"
+    ADD CONSTRAINT "anamnesis_templates_segment_id_version_key" UNIQUE ("segment_id", "version");
+
+
+--
+-- Name: appointment_notifications appointment_notifications_appointment_id_event_channel_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointment_notifications"
     ADD CONSTRAINT "appointment_notifications_appointment_id_event_channel_key" UNIQUE ("appointment_id", "event", "channel");
 
 
+--
+-- Name: appointment_notifications appointment_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointment_notifications"
     ADD CONSTRAINT "appointment_notifications_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: appointments appointments_no_overlap; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_no_overlap" EXCLUDE USING "gist" ("professional_id" WITH =, "tsrange"(("scheduled_at" AT TIME ZONE 'UTC'::"text"), (("scheduled_at" AT TIME ZONE 'UTC'::"text") + (("duration_min")::double precision * '00:01:00'::interval)), '[)'::"text") WITH &&) WHERE (("status" <> 'canceled'::"text"));
 
 
+--
+-- Name: appointments appointments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."audit_logs"
     ADD CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: campaign_rules campaign_rules_company_id_type_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_rules"
     ADD CONSTRAINT "campaign_rules_company_id_type_key" UNIQUE ("company_id", "type");
 
 
+--
+-- Name: campaign_rules campaign_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_rules"
     ADD CONSTRAINT "campaign_rules_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: campaign_sends campaign_sends_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_sends"
     ADD CONSTRAINT "campaign_sends_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: campaigns campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."campaigns"
+    ADD CONSTRAINT "campaigns_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: client_packages client_packages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."client_packages"
     ADD CONSTRAINT "client_packages_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: clients clients_company_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."clients"
     ADD CONSTRAINT "clients_company_id_user_id_key" UNIQUE ("company_id", "user_id");
 
 
+--
+-- Name: clients clients_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."clients"
     ADD CONSTRAINT "clients_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: companies companies_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."companies"
     ADD CONSTRAINT "companies_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: companies companies_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."companies"
     ADD CONSTRAINT "companies_slug_key" UNIQUE ("slug");
 
 
+--
+-- Name: company_goals company_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_goals"
     ADD CONSTRAINT "company_goals_pkey" PRIMARY KEY ("company_id", "goal_key");
 
 
+--
+-- Name: company_members company_members_company_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_members"
     ADD CONSTRAINT "company_members_company_id_user_id_key" UNIQUE ("company_id", "user_id");
 
 
+--
+-- Name: company_members company_members_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_members"
     ADD CONSTRAINT "company_members_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: coupon_professionals coupon_professionals_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_professionals"
     ADD CONSTRAINT "coupon_professionals_pkey" PRIMARY KEY ("coupon_id", "professional_id");
 
 
+--
+-- Name: coupon_redemptions coupon_redemptions_coupon_id_appointment_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_redemptions"
     ADD CONSTRAINT "coupon_redemptions_coupon_id_appointment_id_key" UNIQUE ("coupon_id", "appointment_id");
 
 
+--
+-- Name: coupon_redemptions coupon_redemptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_redemptions"
     ADD CONSTRAINT "coupon_redemptions_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: coupon_services coupon_services_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_services"
     ADD CONSTRAINT "coupon_services_pkey" PRIMARY KEY ("coupon_id", "service_id");
 
 
+--
+-- Name: coupons coupons_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupons"
     ADD CONSTRAINT "coupons_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: custom_reports custom_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."custom_reports"
+    ADD CONSTRAINT "custom_reports_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: device_tokens device_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."device_tokens"
     ADD CONSTRAINT "device_tokens_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: device_tokens device_tokens_user_id_fcm_token_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."device_tokens"
     ADD CONSTRAINT "device_tokens_user_id_fcm_token_key" UNIQUE ("user_id", "fcm_token");
 
 
+--
+-- Name: expenses expenses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."expenses"
     ADD CONSTRAINT "expenses_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: favorites favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."favorites"
     ADD CONSTRAINT "favorites_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: favorites favorites_user_id_company_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."favorites"
     ADD CONSTRAINT "favorites_user_id_company_id_key" UNIQUE ("user_id", "company_id");
 
 
+--
+-- Name: goals goals_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."goals"
     ADD CONSTRAINT "goals_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: impersonation_sessions impersonation_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."impersonation_sessions"
     ADD CONSTRAINT "impersonation_sessions_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: payment_webhook_events payment_webhook_events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payment_webhook_events"
     ADD CONSTRAINT "payment_webhook_events_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: payment_webhook_events payment_webhook_events_provider_provider_event_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payment_webhook_events"
     ADD CONSTRAINT "payment_webhook_events_provider_provider_event_id_key" UNIQUE ("provider", "provider_event_id");
 
 
+--
+-- Name: payments payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payments"
     ADD CONSTRAINT "payments_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: payout_periods payout_periods_company_id_professional_id_period_start_peri_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payout_periods"
     ADD CONSTRAINT "payout_periods_company_id_professional_id_period_start_peri_key" UNIQUE ("company_id", "professional_id", "period_start", "period_end");
 
 
+--
+-- Name: payout_periods payout_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payout_periods"
     ADD CONSTRAINT "payout_periods_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: pending_onboarding pending_onboarding_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."pending_onboarding"
     ADD CONSTRAINT "pending_onboarding_pkey" PRIMARY KEY ("email");
 
 
+--
+-- Name: plan_features plan_features_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."plan_features"
     ADD CONSTRAINT "plan_features_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: plan_features plan_features_plan_id_feature_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."plan_features"
     ADD CONSTRAINT "plan_features_plan_id_feature_key_key" UNIQUE ("plan_id", "feature_key");
 
 
+--
+-- Name: plans plans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."plans"
     ADD CONSTRAINT "plans_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: platform_announcements platform_announcements_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."platform_announcements"
+    ADD CONSTRAINT "platform_announcements_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."products"
     ADD CONSTRAINT "products_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: professional_blocks professional_blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_blocks"
     ADD CONSTRAINT "professional_blocks_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: professional_commissions professional_commissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_commissions"
     ADD CONSTRAINT "professional_commissions_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: professional_segments professional_segments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."professional_segments"
+    ADD CONSTRAINT "professional_segments_pkey" PRIMARY KEY ("professional_id", "segment_id");
+
+
+--
+-- Name: professional_weekly_hours professional_weekly_hours_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_weekly_hours"
     ADD CONSTRAINT "professional_weekly_hours_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_professional_id_weekday_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_weekly_hours"
     ADD CONSTRAINT "professional_weekly_hours_professional_id_weekday_key" UNIQUE ("professional_id", "weekday");
 
 
+--
+-- Name: professionals professionals_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professionals"
     ADD CONSTRAINT "professionals_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: report_favorites report_favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_favorites"
+    ADD CONSTRAINT "report_favorites_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: report_favorites report_favorites_profile_id_report_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_favorites"
+    ADD CONSTRAINT "report_favorites_profile_id_report_key_key" UNIQUE ("profile_id", "report_key");
+
+
+--
+-- Name: report_view_history report_view_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_view_history"
+    ADD CONSTRAINT "report_view_history_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: report_view_history report_view_history_profile_id_report_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_view_history"
+    ADD CONSTRAINT "report_view_history_profile_id_report_key_key" UNIQUE ("profile_id", "report_key");
+
+
+--
+-- Name: reviews reviews_appointment_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_appointment_id_key" UNIQUE ("appointment_id");
 
 
+--
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: roles roles_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."roles"
     ADD CONSTRAINT "roles_key_key" UNIQUE ("key");
 
 
+--
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."roles"
     ADD CONSTRAINT "roles_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: segments segments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."segments"
     ADD CONSTRAINT "segments_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: segments segments_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."segments"
     ADD CONSTRAINT "segments_slug_key" UNIQUE ("slug");
 
 
+--
+-- Name: services services_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."services"
     ADD CONSTRAINT "services_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: subscription_payments subscription_payments_asaas_payment_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscription_payments"
     ADD CONSTRAINT "subscription_payments_asaas_payment_id_key" UNIQUE ("asaas_payment_id");
 
 
+--
+-- Name: subscription_payments subscription_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscription_payments"
     ADD CONSTRAINT "subscription_payments_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: subscriptions subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscriptions"
     ADD CONSTRAINT "subscriptions_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: support_tickets support_tickets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."support_tickets"
+    ADD CONSTRAINT "support_tickets_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: terms_acceptances terms_acceptances_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."terms_acceptances"
     ADD CONSTRAINT "terms_acceptances_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: terms_acceptances terms_acceptances_user_id_document_type_document_version_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."terms_acceptances"
     ADD CONSTRAINT "terms_acceptances_user_id_document_type_document_version_key" UNIQUE ("user_id", "document_type", "document_version");
 
 
+--
+-- Name: waitlist_entries waitlist_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."waitlist_entries"
     ADD CONSTRAINT "waitlist_entries_pkey" PRIMARY KEY ("id");
 
 
+--
+-- Name: anamnesis_fields_form_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_fields_form_id_idx" ON "public"."anamnesis_fields" USING "btree" ("form_id");
 
 
+--
+-- Name: anamnesis_forms_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_forms_company_id_idx" ON "public"."anamnesis_forms" USING "btree" ("company_id");
 
 
+--
+-- Name: anamnesis_forms_one_active_per_company_segment; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "anamnesis_forms_one_active_per_company_segment" ON "public"."anamnesis_forms" USING "btree" ("company_id", "segment_id") WHERE "active";
+
+
+--
+-- Name: anamnesis_response_answers_field_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_response_answers_field_id_idx" ON "public"."anamnesis_response_answers" USING "btree" ("field_id");
 
 
+--
+-- Name: anamnesis_response_answers_response_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_response_answers_response_id_idx" ON "public"."anamnesis_response_answers" USING "btree" ("response_id");
 
 
+--
+-- Name: anamnesis_responses_appointment_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_responses_appointment_id_idx" ON "public"."anamnesis_responses" USING "btree" ("appointment_id");
 
 
+--
+-- Name: anamnesis_responses_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_responses_client_id_idx" ON "public"."anamnesis_responses" USING "btree" ("client_id");
 
 
+--
+-- Name: anamnesis_responses_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_responses_company_id_idx" ON "public"."anamnesis_responses" USING "btree" ("company_id");
 
 
+--
+-- Name: anamnesis_responses_created_by_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_responses_created_by_idx" ON "public"."anamnesis_responses" USING "btree" ("created_by");
 
 
+--
+-- Name: anamnesis_responses_form_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_responses_form_id_idx" ON "public"."anamnesis_responses" USING "btree" ("form_id");
 
 
+--
+-- Name: anamnesis_responses_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "anamnesis_responses_professional_id_idx" ON "public"."anamnesis_responses" USING "btree" ("professional_id");
 
 
+--
+-- Name: anamnesis_template_fields_template_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "anamnesis_template_fields_template_idx" ON "public"."anamnesis_template_fields" USING "btree" ("template_id", "sort_order");
+
+
+--
+-- Name: anamnesis_templates_one_current_per_segment; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "anamnesis_templates_one_current_per_segment" ON "public"."anamnesis_templates" USING "btree" ("segment_id") WHERE "is_current";
+
+
+--
+-- Name: appointment_notifications_appointment_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointment_notifications_appointment_id_idx" ON "public"."appointment_notifications" USING "btree" ("appointment_id");
 
 
+--
+-- Name: appointment_notifications_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointment_notifications_company_id_idx" ON "public"."appointment_notifications" USING "btree" ("company_id");
 
 
+--
+-- Name: appointments_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointments_client_id_idx" ON "public"."appointments" USING "btree" ("client_id");
 
 
+--
+-- Name: appointments_company_scheduled_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointments_company_scheduled_idx" ON "public"."appointments" USING "btree" ("company_id", "scheduled_at");
 
 
+--
+-- Name: appointments_created_by_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointments_created_by_idx" ON "public"."appointments" USING "btree" ("created_by");
 
 
+--
+-- Name: appointments_professional_scheduled_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointments_professional_scheduled_idx" ON "public"."appointments" USING "btree" ("professional_id", "scheduled_at");
 
 
+--
+-- Name: appointments_service_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "appointments_service_id_idx" ON "public"."appointments" USING "btree" ("service_id");
 
 
+--
+-- Name: audit_logs_actor_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "audit_logs_actor_id_idx" ON "public"."audit_logs" USING "btree" ("actor_id");
 
 
+--
+-- Name: audit_logs_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "audit_logs_company_id_idx" ON "public"."audit_logs" USING "btree" ("company_id");
 
 
+--
+-- Name: audit_logs_created_at_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "audit_logs_created_at_idx" ON "public"."audit_logs" USING "btree" ("created_at" DESC);
 
 
+--
+-- Name: campaign_rules_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "campaign_rules_company_id_idx" ON "public"."campaign_rules" USING "btree" ("company_id");
 
 
+--
+-- Name: campaign_sends_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "campaign_sends_client_id_idx" ON "public"."campaign_sends" USING "btree" ("client_id");
 
 
+--
+-- Name: campaign_sends_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "campaign_sends_company_id_idx" ON "public"."campaign_sends" USING "btree" ("company_id");
 
 
+--
+-- Name: campaign_sends_rule_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "campaign_sends_rule_id_idx" ON "public"."campaign_sends" USING "btree" ("campaign_rule_id");
 
 
+--
+-- Name: campaign_sends_status_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "campaign_sends_status_idx" ON "public"."campaign_sends" USING "btree" ("status") WHERE ("status" = 'pending'::"text");
 
 
+--
+-- Name: campaigns_company_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "campaigns_company_idx" ON "public"."campaigns" USING "btree" ("company_id", "created_at" DESC);
+
+
+--
+-- Name: client_packages_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "client_packages_client_id_idx" ON "public"."client_packages" USING "btree" ("client_id");
 
 
+--
+-- Name: client_packages_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "client_packages_company_id_idx" ON "public"."client_packages" USING "btree" ("company_id");
 
 
+--
+-- Name: clients_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "clients_company_id_idx" ON "public"."clients" USING "btree" ("company_id");
 
 
+--
+-- Name: clients_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "clients_user_id_idx" ON "public"."clients" USING "btree" ("user_id");
 
 
+--
+-- Name: companies_segment_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "companies_segment_id_idx" ON "public"."companies" USING "btree" ("segment_id");
 
 
+--
+-- Name: company_members_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "company_members_company_id_idx" ON "public"."company_members" USING "btree" ("company_id");
 
 
+--
+-- Name: company_members_role_empresa_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "company_members_role_empresa_idx" ON "public"."company_members" USING "btree" ("role_empresa");
 
 
+--
+-- Name: company_members_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "company_members_user_id_idx" ON "public"."company_members" USING "btree" ("user_id");
 
 
+--
+-- Name: coupon_professionals_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupon_professionals_professional_id_idx" ON "public"."coupon_professionals" USING "btree" ("professional_id");
 
 
+--
+-- Name: coupon_redemptions_appointment_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupon_redemptions_appointment_id_idx" ON "public"."coupon_redemptions" USING "btree" ("appointment_id");
 
 
+--
+-- Name: coupon_redemptions_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupon_redemptions_client_id_idx" ON "public"."coupon_redemptions" USING "btree" ("client_id");
 
 
+--
+-- Name: coupon_redemptions_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupon_redemptions_company_id_idx" ON "public"."coupon_redemptions" USING "btree" ("company_id");
 
 
+--
+-- Name: coupon_redemptions_coupon_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupon_redemptions_coupon_id_idx" ON "public"."coupon_redemptions" USING "btree" ("coupon_id");
 
 
+--
+-- Name: coupon_services_service_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupon_services_service_id_idx" ON "public"."coupon_services" USING "btree" ("service_id");
 
 
+--
+-- Name: coupons_company_code_unique; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE UNIQUE INDEX "coupons_company_code_unique" ON "public"."coupons" USING "btree" ("company_id", "lower"("code"));
 
 
+--
+-- Name: coupons_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "coupons_company_id_idx" ON "public"."coupons" USING "btree" ("company_id");
 
 
+--
+-- Name: device_tokens_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "device_tokens_company_id_idx" ON "public"."device_tokens" USING "btree" ("company_id");
 
 
+--
+-- Name: device_tokens_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "device_tokens_user_id_idx" ON "public"."device_tokens" USING "btree" ("user_id");
 
 
+--
+-- Name: expenses_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "expenses_company_id_idx" ON "public"."expenses" USING "btree" ("company_id");
 
 
+--
+-- Name: favorites_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "favorites_company_id_idx" ON "public"."favorites" USING "btree" ("company_id");
 
 
+--
+-- Name: favorites_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "favorites_user_id_idx" ON "public"."favorites" USING "btree" ("user_id");
 
 
+--
+-- Name: goals_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "goals_company_id_idx" ON "public"."goals" USING "btree" ("company_id");
 
 
+--
+-- Name: goals_created_by_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "goals_created_by_idx" ON "public"."goals" USING "btree" ("created_by");
 
 
+--
+-- Name: goals_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "goals_professional_id_idx" ON "public"."goals" USING "btree" ("professional_id");
 
 
+--
+-- Name: idx_payment_webhook_events_company_id; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "idx_payment_webhook_events_company_id" ON "public"."payment_webhook_events" USING "btree" ("company_id");
 
 
+--
+-- Name: idx_terms_acceptances_company_id; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "idx_terms_acceptances_company_id" ON "public"."terms_acceptances" USING "btree" ("company_id");
 
 
+--
+-- Name: impersonation_sessions_admin_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "impersonation_sessions_admin_id_idx" ON "public"."impersonation_sessions" USING "btree" ("admin_id");
 
 
+--
+-- Name: impersonation_sessions_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "impersonation_sessions_company_id_idx" ON "public"."impersonation_sessions" USING "btree" ("company_id");
 
 
+--
+-- Name: payments_appointment_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "payments_appointment_id_idx" ON "public"."payments" USING "btree" ("appointment_id");
 
 
+--
+-- Name: payments_asaas_payment_id_key; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE UNIQUE INDEX "payments_asaas_payment_id_key" ON "public"."payments" USING "btree" ("asaas_payment_id") WHERE ("asaas_payment_id" IS NOT NULL);
 
 
+--
+-- Name: payments_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "payments_client_id_idx" ON "public"."payments" USING "btree" ("client_id");
 
 
+--
+-- Name: payments_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "payments_company_id_idx" ON "public"."payments" USING "btree" ("company_id");
 
 
+--
+-- Name: payout_periods_closed_by_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "payout_periods_closed_by_idx" ON "public"."payout_periods" USING "btree" ("closed_by");
 
 
+--
+-- Name: payout_periods_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "payout_periods_company_id_idx" ON "public"."payout_periods" USING "btree" ("company_id");
 
 
+--
+-- Name: payout_periods_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "payout_periods_professional_id_idx" ON "public"."payout_periods" USING "btree" ("professional_id");
 
 
+--
+-- Name: platform_announcements_created_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "platform_announcements_created_idx" ON "public"."platform_announcements" USING "btree" ("created_at" DESC);
+
+
+--
+-- Name: products_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "products_company_id_idx" ON "public"."products" USING "btree" ("company_id");
 
 
+--
+-- Name: professional_blocks_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_blocks_company_id_idx" ON "public"."professional_blocks" USING "btree" ("company_id");
 
 
+--
+-- Name: professional_blocks_created_by_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_blocks_created_by_idx" ON "public"."professional_blocks" USING "btree" ("created_by");
 
 
+--
+-- Name: professional_blocks_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_blocks_professional_id_idx" ON "public"."professional_blocks" USING "btree" ("professional_id");
 
 
+--
+-- Name: professional_blocks_professional_time_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_blocks_professional_time_idx" ON "public"."professional_blocks" USING "btree" ("professional_id", "starts_at", "ends_at");
 
 
+--
+-- Name: professional_commissions_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_commissions_company_id_idx" ON "public"."professional_commissions" USING "btree" ("company_id");
 
 
+--
+-- Name: professional_commissions_created_by_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_commissions_created_by_idx" ON "public"."professional_commissions" USING "btree" ("created_by");
 
 
+--
+-- Name: professional_commissions_one_open_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE UNIQUE INDEX "professional_commissions_one_open_idx" ON "public"."professional_commissions" USING "btree" ("professional_id") WHERE ("effective_to" IS NULL);
 
 
+--
+-- Name: professional_commissions_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_commissions_professional_id_idx" ON "public"."professional_commissions" USING "btree" ("professional_id");
 
 
+--
+-- Name: professional_segments_segment_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "professional_segments_segment_idx" ON "public"."professional_segments" USING "btree" ("segment_id");
+
+
+--
+-- Name: professional_weekly_hours_company_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_weekly_hours_company_idx" ON "public"."professional_weekly_hours" USING "btree" ("company_id");
 
 
+--
+-- Name: professional_weekly_hours_professional_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professional_weekly_hours_professional_idx" ON "public"."professional_weekly_hours" USING "btree" ("professional_id");
 
 
+--
+-- Name: professionals_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professionals_company_id_idx" ON "public"."professionals" USING "btree" ("company_id");
 
 
+--
+-- Name: professionals_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "professionals_user_id_idx" ON "public"."professionals" USING "btree" ("user_id");
 
 
+--
+-- Name: report_view_history_profile_recent_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "report_view_history_profile_recent_idx" ON "public"."report_view_history" USING "btree" ("profile_id", "viewed_at" DESC);
+
+
+--
+-- Name: reviews_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "reviews_client_id_idx" ON "public"."reviews" USING "btree" ("client_id");
 
 
+--
+-- Name: reviews_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "reviews_company_id_idx" ON "public"."reviews" USING "btree" ("company_id");
 
 
+--
+-- Name: reviews_professional_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "reviews_professional_id_idx" ON "public"."reviews" USING "btree" ("professional_id");
 
 
+--
+-- Name: reviews_service_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "reviews_service_id_idx" ON "public"."reviews" USING "btree" ("service_id");
 
 
+--
+-- Name: services_anamnesis_form_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "services_anamnesis_form_idx" ON "public"."services" USING "btree" ("anamnesis_form_id") WHERE ("anamnesis_form_id" IS NOT NULL);
+
+
+--
+-- Name: services_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "services_company_id_idx" ON "public"."services" USING "btree" ("company_id");
 
 
+--
+-- Name: subscription_payments_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "subscription_payments_company_id_idx" ON "public"."subscription_payments" USING "btree" ("company_id");
 
 
+--
+-- Name: subscription_payments_status_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "subscription_payments_status_idx" ON "public"."subscription_payments" USING "btree" ("status");
 
 
+--
+-- Name: subscription_payments_subscription_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "subscription_payments_subscription_id_idx" ON "public"."subscription_payments" USING "btree" ("subscription_id");
 
 
+--
+-- Name: subscriptions_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "subscriptions_company_id_idx" ON "public"."subscriptions" USING "btree" ("company_id");
 
 
+--
+-- Name: subscriptions_plan_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "subscriptions_plan_id_idx" ON "public"."subscriptions" USING "btree" ("plan_id");
 
 
+--
+-- Name: support_tickets_company_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "support_tickets_company_idx" ON "public"."support_tickets" USING "btree" ("company_id", "status");
+
+
+--
+-- Name: waitlist_entries_client_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "waitlist_entries_client_id_idx" ON "public"."waitlist_entries" USING "btree" ("client_id");
 
 
+--
+-- Name: waitlist_entries_company_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "waitlist_entries_company_id_idx" ON "public"."waitlist_entries" USING "btree" ("company_id");
 
 
+--
+-- Name: waitlist_entries_status_idx; Type: INDEX; Schema: public; Owner: postgres
+--
 
 CREATE INDEX "waitlist_entries_status_idx" ON "public"."waitlist_entries" USING "btree" ("status") WHERE ("status" = 'waiting'::"text");
 
 
+--
+-- Name: anamnesis_fields anamnesis_fields_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "anamnesis_fields_set_updated_at" BEFORE UPDATE ON "public"."anamnesis_fields" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "anamnesis_forms_set_updated_at" BEFORE UPDATE ON "public"."anamnesis_forms" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: campaign_rules campaign_rules_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "campaign_rules_set_updated_at" BEFORE UPDATE ON "public"."campaign_rules" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: campaigns campaigns_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE TRIGGER "campaigns_set_updated_at" BEFORE UPDATE ON "public"."campaigns" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
+
+
+--
+-- Name: coupons coupons_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "coupons_set_updated_at" BEFORE UPDATE ON "public"."coupons" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: custom_reports custom_reports_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE TRIGGER "custom_reports_set_updated_at" BEFORE UPDATE ON "public"."custom_reports" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
+
+
+--
+-- Name: anamnesis_fields enforce_anamnesis_customization_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_anamnesis_customization_trigger" BEFORE INSERT OR DELETE OR UPDATE ON "public"."anamnesis_fields" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_anamnesis_customization"();
 
 
+--
+-- Name: anamnesis_fields enforce_anamnesis_feature; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_anamnesis_feature" BEFORE INSERT OR UPDATE ON "public"."anamnesis_fields" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_anamnesis_feature"();
 
 
+--
+-- Name: anamnesis_forms enforce_anamnesis_feature; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_anamnesis_feature" BEFORE INSERT OR UPDATE ON "public"."anamnesis_forms" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_anamnesis_feature"();
 
 
+--
+-- Name: anamnesis_response_answers enforce_anamnesis_feature; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_anamnesis_feature" BEFORE INSERT OR UPDATE ON "public"."anamnesis_response_answers" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_anamnesis_feature"();
 
 
+--
+-- Name: anamnesis_responses enforce_anamnesis_feature; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_anamnesis_feature" BEFORE INSERT OR UPDATE ON "public"."anamnesis_responses" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_anamnesis_feature"();
 
 
+--
+-- Name: appointments enforce_client_appointment_update; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_client_appointment_update" BEFORE UPDATE ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_client_appointment_update"();
 
 
+--
+-- Name: anamnesis_forms enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."anamnesis_forms" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: anamnesis_responses enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."anamnesis_responses" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: appointments enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: campaign_rules enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."campaign_rules" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: campaigns enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."campaigns" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
+
+
+--
+-- Name: client_packages enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."client_packages" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: clients enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."clients" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: company_members enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."company_members" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: coupon_professionals enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."coupon_professionals" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: coupon_services enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."coupon_services" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: coupons enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."coupons" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: expenses enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."expenses" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: goals enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."goals" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: payments enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."payments" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: payout_periods enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."payout_periods" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: products enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."products" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: professional_blocks enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."professional_blocks" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: professional_commissions enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."professional_commissions" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: professional_weekly_hours enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."professional_weekly_hours" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: professionals enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."professionals" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: services enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."services" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: waitlist_entries enforce_company_access; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access" BEFORE INSERT OR UPDATE ON "public"."waitlist_entries" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access"();
 
 
+--
+-- Name: companies enforce_company_access_on_company; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access_on_company" BEFORE UPDATE ON "public"."companies" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access_on_company"();
 
 
+--
+-- Name: anamnesis_fields enforce_company_access_via_anamnesis_form; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_access_via_anamnesis_form" BEFORE INSERT OR DELETE OR UPDATE ON "public"."anamnesis_fields" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_access_via_anamnesis_form"();
 
 
+--
+-- Name: company_goals enforce_company_goals_exclusivity_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_goals_exclusivity_trigger" BEFORE INSERT ON "public"."company_goals" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_goals_exclusivity"();
 
 
+--
+-- Name: companies enforce_company_segment_consistency_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_company_segment_consistency_trigger" BEFORE INSERT OR UPDATE OF "segment_id", "other_segment" ON "public"."companies" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_company_segment_consistency"();
 
 
+--
+-- Name: appointments enforce_limit_appointments; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_limit_appointments" BEFORE INSERT ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_limit_appointments"();
 
 
+--
+-- Name: clients enforce_limit_clients; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_limit_clients" BEFORE INSERT ON "public"."clients" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_limit_clients"();
 
 
+--
+-- Name: company_members enforce_limit_company_members; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_limit_company_members" BEFORE INSERT ON "public"."company_members" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_limit_company_members"();
 
 
+--
+-- Name: professionals enforce_limit_professionals; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_limit_professionals" BEFORE INSERT ON "public"."professionals" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_limit_professionals"();
 
 
+--
+-- Name: companies enforce_loyalty_program_feature; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "enforce_loyalty_program_feature" BEFORE UPDATE ON "public"."companies" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_loyalty_program_feature"();
 
 
+--
+-- Name: goals goals_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "goals_set_updated_at" BEFORE UPDATE ON "public"."goals" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: appointments notify_appointment_change; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "notify_appointment_change" AFTER INSERT OR UPDATE OF "status", "scheduled_at" ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."notify_appointment_change"();
 
 
+--
+-- Name: companies on_company_created; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "on_company_created" AFTER INSERT ON "public"."companies" FOR EACH ROW EXECUTE FUNCTION "private"."add_creator_as_owner"();
 
 
+--
+-- Name: companies on_company_created_default_subscription; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "on_company_created_default_subscription" AFTER INSERT ON "public"."companies" FOR EACH ROW EXECUTE FUNCTION "private"."add_default_subscription"();
 
 
+--
+-- Name: payout_periods payout_periods_protect_closed; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "payout_periods_protect_closed" BEFORE UPDATE ON "public"."payout_periods" FOR EACH ROW EXECUTE FUNCTION "private"."protect_closed_payout_totals"();
 
 
+--
+-- Name: payout_periods payout_periods_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "payout_periods_set_updated_at" BEFORE UPDATE ON "public"."payout_periods" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: anamnesis_fields protect_answered_anamnesis_field; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE TRIGGER "protect_answered_anamnesis_field" BEFORE DELETE ON "public"."anamnesis_fields" FOR EACH ROW EXECUTE FUNCTION "private"."protect_answered_anamnesis_field"();
+
+
+--
+-- Name: reviews reviews_enforce_client_update; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "reviews_enforce_client_update" BEFORE UPDATE ON "public"."reviews" FOR EACH ROW EXECUTE FUNCTION "private"."enforce_client_review_update"();
 
 
+--
+-- Name: reviews reviews_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "reviews_set_updated_at" BEFORE UPDATE ON "public"."reviews" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: anamnesis_forms seed_default_anamnesis_fields_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "seed_default_anamnesis_fields_trigger" AFTER INSERT ON "public"."anamnesis_forms" FOR EACH ROW EXECUTE FUNCTION "private"."seed_default_anamnesis_fields"();
 
 
+--
+-- Name: appointments set_appointments_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_appointments_updated_at" BEFORE UPDATE ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: clients set_clients_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_clients_updated_at" BEFORE UPDATE ON "public"."clients" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: companies set_companies_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_companies_updated_at" BEFORE UPDATE ON "public"."companies" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: expenses set_expenses_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_expenses_updated_at" BEFORE UPDATE ON "public"."expenses" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: products set_products_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_products_updated_at" BEFORE UPDATE ON "public"."products" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: professional_weekly_hours set_professional_weekly_hours_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_professional_weekly_hours_updated_at" BEFORE UPDATE ON "public"."professional_weekly_hours" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: professionals set_professionals_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_professionals_updated_at" BEFORE UPDATE ON "public"."professionals" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: profiles set_profiles_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_profiles_updated_at" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: services set_services_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_services_updated_at" BEFORE UPDATE ON "public"."services" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: subscriptions set_subscriptions_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "set_subscriptions_updated_at" BEFORE UPDATE ON "public"."subscriptions" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: support_tickets support_tickets_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE OR REPLACE TRIGGER "support_tickets_set_updated_at" BEFORE UPDATE ON "public"."support_tickets" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
+
+
+--
+-- Name: appointments validate_appointment_tenant_scope; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "validate_appointment_tenant_scope" BEFORE INSERT OR UPDATE OF "company_id", "professional_id", "service_id" ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."validate_appointment_tenant_scope"();
 
 
+--
+-- Name: appointments validate_appointment_time_off_conflict; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "validate_appointment_time_off_conflict" BEFORE INSERT OR UPDATE OF "scheduled_at", "duration_min", "professional_id", "status" ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."validate_appointment_time_off_conflict"();
 
 
+--
+-- Name: appointments validate_appointment_working_hours; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "validate_appointment_working_hours" BEFORE INSERT OR UPDATE OF "scheduled_at", "duration_min", "professional_id" ON "public"."appointments" FOR EACH ROW EXECUTE FUNCTION "private"."validate_appointment_working_hours"();
 
 
+--
+-- Name: professional_blocks validate_block_tenant_scope; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "validate_block_tenant_scope" BEFORE INSERT OR UPDATE OF "company_id", "professional_id" ON "public"."professional_blocks" FOR EACH ROW EXECUTE FUNCTION "private"."validate_block_tenant_scope"();
 
 
+--
+-- Name: professional_weekly_hours validate_weekly_hours_tenant_scope; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "validate_weekly_hours_tenant_scope" BEFORE INSERT OR UPDATE OF "company_id", "professional_id" ON "public"."professional_weekly_hours" FOR EACH ROW EXECUTE FUNCTION "private"."validate_weekly_hours_tenant_scope"();
 
 
+--
+-- Name: appointments void_pending_payment_on_appointment_cancel; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "void_pending_payment_on_appointment_cancel" AFTER UPDATE OF "status" ON "public"."appointments" FOR EACH ROW WHEN ((("new"."status" = 'canceled'::"text") AND ("old"."status" IS DISTINCT FROM 'canceled'::"text"))) EXECUTE FUNCTION "private"."void_pending_payment_on_appointment_cancel"();
 
 
+--
+-- Name: waitlist_entries waitlist_entries_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
 
 CREATE OR REPLACE TRIGGER "waitlist_entries_set_updated_at" BEFORE UPDATE ON "public"."waitlist_entries" FOR EACH ROW EXECUTE FUNCTION "private"."set_updated_at"();
 
 
+--
+-- Name: anamnesis_fields anamnesis_fields_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_fields"
     ADD CONSTRAINT "anamnesis_fields_form_id_fkey" FOREIGN KEY ("form_id") REFERENCES "public"."anamnesis_forms"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_forms"
     ADD CONSTRAINT "anamnesis_forms_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_segment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_forms"
+    ADD CONSTRAINT "anamnesis_forms_segment_id_fkey" FOREIGN KEY ("segment_id") REFERENCES "public"."segments"("id");
+
+
+--
+-- Name: anamnesis_forms anamnesis_forms_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_forms"
+    ADD CONSTRAINT "anamnesis_forms_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "public"."anamnesis_templates"("id");
+
+
+--
+-- Name: anamnesis_response_answers anamnesis_response_answers_field_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_response_answers"
     ADD CONSTRAINT "anamnesis_response_answers_field_id_fkey" FOREIGN KEY ("field_id") REFERENCES "public"."anamnesis_fields"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_response_answers anamnesis_response_answers_response_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_response_answers"
     ADD CONSTRAINT "anamnesis_response_answers_response_id_fkey" FOREIGN KEY ("response_id") REFERENCES "public"."anamnesis_responses"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "public"."appointments"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_form_id_fkey" FOREIGN KEY ("form_id") REFERENCES "public"."anamnesis_forms"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."anamnesis_responses"
     ADD CONSTRAINT "anamnesis_responses_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: anamnesis_template_fields anamnesis_template_fields_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_template_fields"
+    ADD CONSTRAINT "anamnesis_template_fields_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "public"."anamnesis_templates"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: anamnesis_templates anamnesis_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_templates"
+    ADD CONSTRAINT "anamnesis_templates_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
+
+
+--
+-- Name: anamnesis_templates anamnesis_templates_segment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."anamnesis_templates"
+    ADD CONSTRAINT "anamnesis_templates_segment_id_fkey" FOREIGN KEY ("segment_id") REFERENCES "public"."segments"("id");
+
+
+--
+-- Name: appointment_notifications appointment_notifications_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointment_notifications"
     ADD CONSTRAINT "appointment_notifications_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "public"."appointments"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: appointment_notifications appointment_notifications_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointment_notifications"
     ADD CONSTRAINT "appointment_notifications_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: appointments appointments_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: appointments appointments_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: appointments appointments_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: appointments appointments_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE RESTRICT;
 
 
+--
+-- Name: appointments appointments_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."appointments"
     ADD CONSTRAINT "appointments_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE RESTRICT;
 
 
+--
+-- Name: audit_logs audit_logs_actor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."audit_logs"
     ADD CONSTRAINT "audit_logs_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: audit_logs audit_logs_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."audit_logs"
     ADD CONSTRAINT "audit_logs_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: campaign_rules campaign_rules_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_rules"
     ADD CONSTRAINT "campaign_rules_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: campaign_sends campaign_sends_campaign_rule_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_sends"
     ADD CONSTRAINT "campaign_sends_campaign_rule_id_fkey" FOREIGN KEY ("campaign_rule_id") REFERENCES "public"."campaign_rules"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: campaign_sends campaign_sends_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_sends"
     ADD CONSTRAINT "campaign_sends_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: campaign_sends campaign_sends_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."campaign_sends"
     ADD CONSTRAINT "campaign_sends_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: campaigns campaigns_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."campaigns"
+    ADD CONSTRAINT "campaigns_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: client_packages client_packages_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."client_packages"
     ADD CONSTRAINT "client_packages_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: client_packages client_packages_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."client_packages"
     ADD CONSTRAINT "client_packages_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: client_packages client_packages_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."client_packages"
     ADD CONSTRAINT "client_packages_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: clients clients_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."clients"
     ADD CONSTRAINT "clients_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: clients clients_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."clients"
     ADD CONSTRAINT "clients_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: companies companies_segment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."companies"
     ADD CONSTRAINT "companies_segment_id_fkey" FOREIGN KEY ("segment_id") REFERENCES "public"."segments"("id");
 
 
+--
+-- Name: company_goals company_goals_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_goals"
     ADD CONSTRAINT "company_goals_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: company_members company_members_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_members"
     ADD CONSTRAINT "company_members_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: company_members company_members_role_empresa_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_members"
     ADD CONSTRAINT "company_members_role_empresa_fkey" FOREIGN KEY ("role_empresa") REFERENCES "public"."roles"("key");
 
 
+--
+-- Name: company_members company_members_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."company_members"
     ADD CONSTRAINT "company_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_professionals coupon_professionals_coupon_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_professionals"
     ADD CONSTRAINT "coupon_professionals_coupon_id_fkey" FOREIGN KEY ("coupon_id") REFERENCES "public"."coupons"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_professionals coupon_professionals_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_professionals"
     ADD CONSTRAINT "coupon_professionals_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_redemptions coupon_redemptions_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_redemptions"
     ADD CONSTRAINT "coupon_redemptions_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "public"."appointments"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_redemptions coupon_redemptions_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_redemptions"
     ADD CONSTRAINT "coupon_redemptions_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_redemptions coupon_redemptions_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_redemptions"
     ADD CONSTRAINT "coupon_redemptions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_redemptions coupon_redemptions_coupon_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_redemptions"
     ADD CONSTRAINT "coupon_redemptions_coupon_id_fkey" FOREIGN KEY ("coupon_id") REFERENCES "public"."coupons"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_services coupon_services_coupon_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_services"
     ADD CONSTRAINT "coupon_services_coupon_id_fkey" FOREIGN KEY ("coupon_id") REFERENCES "public"."coupons"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupon_services coupon_services_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupon_services"
     ADD CONSTRAINT "coupon_services_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: coupons coupons_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."coupons"
     ADD CONSTRAINT "coupons_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: custom_reports custom_reports_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."custom_reports"
+    ADD CONSTRAINT "custom_reports_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: custom_reports custom_reports_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."custom_reports"
+    ADD CONSTRAINT "custom_reports_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
+
+
+--
+-- Name: device_tokens device_tokens_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."device_tokens"
     ADD CONSTRAINT "device_tokens_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: device_tokens device_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."device_tokens"
     ADD CONSTRAINT "device_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: expenses expenses_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."expenses"
     ADD CONSTRAINT "expenses_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: favorites favorites_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."favorites"
     ADD CONSTRAINT "favorites_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: favorites favorites_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."favorites"
     ADD CONSTRAINT "favorites_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: goals goals_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."goals"
     ADD CONSTRAINT "goals_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: goals goals_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."goals"
     ADD CONSTRAINT "goals_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: goals goals_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."goals"
     ADD CONSTRAINT "goals_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: impersonation_sessions impersonation_sessions_admin_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."impersonation_sessions"
     ADD CONSTRAINT "impersonation_sessions_admin_id_fkey" FOREIGN KEY ("admin_id") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: impersonation_sessions impersonation_sessions_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."impersonation_sessions"
     ADD CONSTRAINT "impersonation_sessions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: impersonation_sessions impersonation_sessions_target_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."impersonation_sessions"
     ADD CONSTRAINT "impersonation_sessions_target_user_id_fkey" FOREIGN KEY ("target_user_id") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: payment_webhook_events payment_webhook_events_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payment_webhook_events"
     ADD CONSTRAINT "payment_webhook_events_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: payments payments_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payments"
     ADD CONSTRAINT "payments_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "public"."appointments"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: payments payments_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payments"
     ADD CONSTRAINT "payments_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: payments payments_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payments"
     ADD CONSTRAINT "payments_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: payout_periods payout_periods_closed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payout_periods"
     ADD CONSTRAINT "payout_periods_closed_by_fkey" FOREIGN KEY ("closed_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: payout_periods payout_periods_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payout_periods"
     ADD CONSTRAINT "payout_periods_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: payout_periods payout_periods_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."payout_periods"
     ADD CONSTRAINT "payout_periods_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: plan_features plan_features_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."plan_features"
     ADD CONSTRAINT "plan_features_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: platform_announcements platform_announcements_audience_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."platform_announcements"
+    ADD CONSTRAINT "platform_announcements_audience_company_id_fkey" FOREIGN KEY ("audience_company_id") REFERENCES "public"."companies"("id");
+
+
+--
+-- Name: platform_announcements platform_announcements_audience_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."platform_announcements"
+    ADD CONSTRAINT "platform_announcements_audience_plan_id_fkey" FOREIGN KEY ("audience_plan_id") REFERENCES "public"."plans"("id");
+
+
+--
+-- Name: platform_announcements platform_announcements_audience_segment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."platform_announcements"
+    ADD CONSTRAINT "platform_announcements_audience_segment_id_fkey" FOREIGN KEY ("audience_segment_id") REFERENCES "public"."segments"("id");
+
+
+--
+-- Name: platform_announcements platform_announcements_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."platform_announcements"
+    ADD CONSTRAINT "platform_announcements_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
+
+
+--
+-- Name: products products_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."products"
     ADD CONSTRAINT "products_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professional_blocks professional_blocks_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_blocks"
     ADD CONSTRAINT "professional_blocks_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professional_blocks professional_blocks_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_blocks"
     ADD CONSTRAINT "professional_blocks_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: professional_blocks professional_blocks_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_blocks"
     ADD CONSTRAINT "professional_blocks_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professional_commissions professional_commissions_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_commissions"
     ADD CONSTRAINT "professional_commissions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professional_commissions professional_commissions_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_commissions"
     ADD CONSTRAINT "professional_commissions_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: professional_commissions professional_commissions_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_commissions"
     ADD CONSTRAINT "professional_commissions_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professional_segments professional_segments_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."professional_segments"
+    ADD CONSTRAINT "professional_segments_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: professional_segments professional_segments_segment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."professional_segments"
+    ADD CONSTRAINT "professional_segments_segment_id_fkey" FOREIGN KEY ("segment_id") REFERENCES "public"."segments"("id");
+
+
+--
+-- Name: professional_weekly_hours professional_weekly_hours_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_weekly_hours"
     ADD CONSTRAINT "professional_weekly_hours_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_weekly_hours"
     ADD CONSTRAINT "professional_weekly_hours_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
 
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professional_weekly_hours"
     ADD CONSTRAINT "professional_weekly_hours_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professionals professionals_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professionals"
     ADD CONSTRAINT "professionals_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: professionals professionals_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."professionals"
     ADD CONSTRAINT "professionals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: report_favorites report_favorites_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_favorites"
+    ADD CONSTRAINT "report_favorites_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: report_favorites report_favorites_profile_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_favorites"
+    ADD CONSTRAINT "report_favorites_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: report_view_history report_view_history_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_view_history"
+    ADD CONSTRAINT "report_view_history_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: report_view_history report_view_history_profile_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."report_view_history"
+    ADD CONSTRAINT "report_view_history_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "public"."appointments"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: reviews reviews_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: reviews reviews_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: reviews reviews_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: reviews reviews_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."reviews"
     ADD CONSTRAINT "reviews_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: services services_anamnesis_form_same_company_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."services"
+    ADD CONSTRAINT "services_anamnesis_form_same_company_fk" FOREIGN KEY ("anamnesis_form_id", "company_id") REFERENCES "public"."anamnesis_forms"("id", "company_id") ON DELETE SET NULL ("anamnesis_form_id");
+
+
+--
+-- Name: services services_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."services"
     ADD CONSTRAINT "services_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: subscription_payments subscription_payments_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscription_payments"
     ADD CONSTRAINT "subscription_payments_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: subscription_payments subscription_payments_subscription_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscription_payments"
     ADD CONSTRAINT "subscription_payments_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "public"."subscriptions"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: subscriptions subscriptions_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscriptions"
     ADD CONSTRAINT "subscriptions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: subscriptions subscriptions_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."subscriptions"
     ADD CONSTRAINT "subscriptions_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id");
 
 
+--
+-- Name: support_tickets support_tickets_assigned_to_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."support_tickets"
+    ADD CONSTRAINT "support_tickets_assigned_to_fkey" FOREIGN KEY ("assigned_to") REFERENCES "public"."profiles"("id");
+
+
+--
+-- Name: support_tickets support_tickets_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."support_tickets"
+    ADD CONSTRAINT "support_tickets_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: support_tickets support_tickets_opened_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."support_tickets"
+    ADD CONSTRAINT "support_tickets_opened_by_fkey" FOREIGN KEY ("opened_by") REFERENCES "public"."profiles"("id");
+
+
+--
+-- Name: terms_acceptances terms_acceptances_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."terms_acceptances"
     ADD CONSTRAINT "terms_acceptances_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: terms_acceptances terms_acceptances_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."terms_acceptances"
     ADD CONSTRAINT "terms_acceptances_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: waitlist_entries waitlist_entries_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."waitlist_entries"
     ADD CONSTRAINT "waitlist_entries_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: waitlist_entries waitlist_entries_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."waitlist_entries"
     ADD CONSTRAINT "waitlist_entries_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: waitlist_entries waitlist_entries_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."waitlist_entries"
     ADD CONSTRAINT "waitlist_entries_professional_id_fkey" FOREIGN KEY ("professional_id") REFERENCES "public"."professionals"("id") ON DELETE SET NULL;
 
 
+--
+-- Name: waitlist_entries waitlist_entries_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY "public"."waitlist_entries"
     ADD CONSTRAINT "waitlist_entries_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE CASCADE;
 
 
+--
+-- Name: anamnesis_response_answers anamnesis_answers_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_answers_delete_managers_or_admin" ON "public"."anamnesis_response_answers" FOR DELETE USING ((EXISTS ( SELECT 1
    FROM "public"."anamnesis_responses" "r"
   WHERE (("r"."id" = "anamnesis_response_answers"."response_id") AND ("private"."is_company_manager"("r"."company_id") OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: anamnesis_response_answers anamnesis_answers_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_answers_insert_members" ON "public"."anamnesis_response_answers" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
    FROM "public"."anamnesis_responses" "r"
   WHERE (("r"."id" = "anamnesis_response_answers"."response_id") AND ("private"."is_company_member"("r"."company_id") OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: anamnesis_response_answers anamnesis_answers_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_answers_select_members" ON "public"."anamnesis_response_answers" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."anamnesis_responses" "r"
   WHERE (("r"."id" = "anamnesis_response_answers"."response_id") AND (("private"."is_company_member"("r"."company_id") AND "private"."company_has_feature"("r"."company_id", 'anamnesis'::"text")) OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: anamnesis_response_answers anamnesis_answers_select_own_client; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_answers_select_own_client" ON "public"."anamnesis_response_answers" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM ("public"."anamnesis_responses" "r"
@@ -5290,15 +7543,24 @@ CREATE POLICY "anamnesis_answers_select_own_client" ON "public"."anamnesis_respo
   WHERE (("r"."id" = "anamnesis_response_answers"."response_id") AND ("c"."user_id" = "auth"."uid"())))));
 
 
+--
+-- Name: anamnesis_fields; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."anamnesis_fields" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: anamnesis_fields anamnesis_fields_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_fields_select_members" ON "public"."anamnesis_fields" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."anamnesis_forms" "f"
   WHERE (("f"."id" = "anamnesis_fields"."form_id") AND (("private"."is_company_member"("f"."company_id") AND "private"."company_has_feature"("f"."company_id", 'anamnesis'::"text")) OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: anamnesis_fields anamnesis_fields_select_own_client; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_fields_select_own_client" ON "public"."anamnesis_fields" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM ("public"."anamnesis_forms" "f"
@@ -5306,6 +7568,9 @@ CREATE POLICY "anamnesis_fields_select_own_client" ON "public"."anamnesis_fields
   WHERE (("f"."id" = "anamnesis_fields"."form_id") AND "f"."active" AND "private"."company_has_feature"("f"."company_id", 'anamnesis'::"text") AND ("c"."user_id" = "auth"."uid"())))));
 
 
+--
+-- Name: anamnesis_fields anamnesis_fields_write_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_fields_write_managers_or_admin" ON "public"."anamnesis_fields" USING ((EXISTS ( SELECT 1
    FROM "public"."anamnesis_forms" "f"
@@ -5314,81 +7579,164 @@ CREATE POLICY "anamnesis_fields_write_managers_or_admin" ON "public"."anamnesis_
   WHERE (("f"."id" = "anamnesis_fields"."form_id") AND ("private"."is_company_manager"("f"."company_id") OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: anamnesis_forms; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."anamnesis_forms" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: anamnesis_forms anamnesis_forms_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_forms_delete_managers_or_admin" ON "public"."anamnesis_forms" FOR DELETE USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_forms_select_members" ON "public"."anamnesis_forms" FOR SELECT USING ((("private"."is_company_member"("company_id") AND "private"."company_has_feature"("company_id", 'anamnesis'::"text")) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_select_own_client; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_forms_select_own_client" ON "public"."anamnesis_forms" FOR SELECT USING (("active" AND "private"."company_has_feature"("company_id", 'anamnesis'::"text") AND (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."company_id" = "anamnesis_forms"."company_id") AND ("c"."user_id" = "auth"."uid"()))))));
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_update_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_forms_update_managers_or_admin" ON "public"."anamnesis_forms" FOR UPDATE USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_forms anamnesis_forms_write_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_forms_write_managers_or_admin" ON "public"."anamnesis_forms" FOR INSERT WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_response_answers; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."anamnesis_response_answers" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: anamnesis_responses; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."anamnesis_responses" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: anamnesis_responses anamnesis_responses_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_responses_delete_managers_or_admin" ON "public"."anamnesis_responses" FOR DELETE USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_responses_insert_members" ON "public"."anamnesis_responses" FOR INSERT WITH CHECK (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_responses_select_members" ON "public"."anamnesis_responses" FOR SELECT USING ((("private"."is_company_member"("company_id") AND "private"."company_has_feature"("company_id", 'anamnesis'::"text")) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: anamnesis_responses anamnesis_responses_select_own_client; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "anamnesis_responses_select_own_client" ON "public"."anamnesis_responses" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "anamnesis_responses"."client_id") AND ("c"."user_id" = "auth"."uid"())))));
 
 
+--
+-- Name: anamnesis_template_fields; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."anamnesis_template_fields" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: anamnesis_template_fields anamnesis_template_fields_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "anamnesis_template_fields_admin_only" ON "public"."anamnesis_template_fields" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
+
+
+--
+-- Name: anamnesis_templates; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."anamnesis_templates" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: anamnesis_templates anamnesis_templates_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "anamnesis_templates_admin_only" ON "public"."anamnesis_templates" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
+
+
+--
+-- Name: appointment_notifications; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."appointment_notifications" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: appointment_notifications appointment_notifications_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "appointment_notifications_select_members" ON "public"."appointment_notifications" FOR SELECT USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: appointments; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."appointments" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: appointments appointments_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "appointments_delete_managers_or_admin" ON "public"."appointments" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: appointments appointments_insert_members_or_self; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "appointments_insert_members_or_self" ON "public"."appointments" FOR INSERT TO "authenticated" WITH CHECK (("private"."is_company_member"("company_id") OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "appointments"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
+--
+-- Name: appointments appointments_select_members_client_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "appointments_select_members_client_or_admin" ON "public"."appointments" FOR SELECT TO "authenticated" USING (("private"."is_company_member"("company_id") OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "appointments"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: appointments appointments_update_members_or_owning_client; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "appointments_update_members_or_owning_client" ON "public"."appointments" FOR UPDATE TO "authenticated" USING (("private"."is_company_member"("company_id") OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
@@ -5397,127 +7745,246 @@ CREATE POLICY "appointments_update_members_or_owning_client" ON "public"."appoin
   WHERE (("c"."id" = "appointments"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
+--
+-- Name: audit_logs; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."audit_logs" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: audit_logs audit_logs_select_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "audit_logs_select_admin_only" ON "public"."audit_logs" FOR SELECT TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: campaign_rules; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."campaign_rules" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: campaign_rules campaign_rules_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "campaign_rules_select_members" ON "public"."campaign_rules" FOR SELECT USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: campaign_rules campaign_rules_write_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "campaign_rules_write_managers_or_admin" ON "public"."campaign_rules" USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"())) WITH CHECK ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: campaign_sends; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."campaign_sends" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: campaign_sends campaign_sends_select_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "campaign_sends_select_managers_or_admin" ON "public"."campaign_sends" FOR SELECT USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: campaigns; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."campaigns" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: campaigns campaigns_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "campaigns_select_members" ON "public"."campaigns" FOR SELECT USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
+
+
+--
+-- Name: campaigns campaigns_write_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "campaigns_write_managers_or_admin" ON "public"."campaigns" USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"())) WITH CHECK ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"()));
+
+
+--
+-- Name: client_packages; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."client_packages" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: client_packages client_packages_select_own_or_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "client_packages_select_own_or_members" ON "public"."client_packages" FOR SELECT USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"() OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "client_packages"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
+--
+-- Name: client_packages client_packages_update_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "client_packages_update_managers_or_admin" ON "public"."client_packages" FOR UPDATE USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"())) WITH CHECK ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: client_packages client_packages_write_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "client_packages_write_managers_or_admin" ON "public"."client_packages" FOR INSERT WITH CHECK ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: clients; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."clients" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: clients clients_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "clients_delete_managers_or_admin" ON "public"."clients" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: clients clients_insert_members_or_self; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "clients_insert_members_or_self" ON "public"."clients" FOR INSERT TO "authenticated" WITH CHECK (("private"."is_company_member"("company_id") OR ("user_id" = ( SELECT "auth"."uid"() AS "uid"))));
 
 
+--
+-- Name: clients clients_select_members_self_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "clients_select_members_self_or_admin" ON "public"."clients" FOR SELECT TO "authenticated" USING (("private"."is_company_member"("company_id") OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: clients clients_update_members_or_self; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "clients_update_members_or_self" ON "public"."clients" FOR UPDATE TO "authenticated" USING (("private"."is_company_member"("company_id") OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")))) WITH CHECK (("private"."is_company_member"("company_id") OR ("user_id" = ( SELECT "auth"."uid"() AS "uid"))));
 
 
+--
+-- Name: companies; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."companies" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: companies companies_delete_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "companies_delete_admin_only" ON "public"."companies" FOR DELETE TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: companies companies_insert_self_service; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "companies_insert_self_service" ON "public"."companies" FOR INSERT TO "authenticated" WITH CHECK (true);
 
 
+--
+-- Name: companies companies_select_members_admin_or_public_active; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "companies_select_members_admin_or_public_active" ON "public"."companies" FOR SELECT TO "authenticated" USING ((("status" = ANY (ARRAY['active'::"text", 'trial'::"text"])) OR "private"."is_company_member"("id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: companies companies_select_public_active_anon; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "companies_select_public_active_anon" ON "public"."companies" FOR SELECT TO "anon" USING (("status" = ANY (ARRAY['active'::"text", 'trial'::"text"])));
 
 
+--
+-- Name: companies companies_update_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "companies_update_managers_or_admin" ON "public"."companies" FOR UPDATE TO "authenticated" USING (("private"."is_company_manager"("id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_goals; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."company_goals" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: company_goals company_goals_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_goals_delete_managers_or_admin" ON "public"."company_goals" FOR DELETE USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_goals company_goals_insert_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_goals_insert_managers_or_admin" ON "public"."company_goals" FOR INSERT WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_goals company_goals_select_members_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_goals_select_members_or_admin" ON "public"."company_goals" FOR SELECT USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_members; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."company_members" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: company_members company_members_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_members_delete_managers_or_admin" ON "public"."company_members" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_members company_members_insert_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_members_insert_managers_or_admin" ON "public"."company_members" FOR INSERT TO "authenticated" WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_members company_members_select_members_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_members_select_members_or_admin" ON "public"."company_members" FOR SELECT TO "authenticated" USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: company_members company_members_update_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "company_members_update_managers_or_admin" ON "public"."company_members" FOR UPDATE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: coupon_professionals; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."coupon_professionals" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: coupon_professionals coupon_professionals_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "coupon_professionals_all_managers_or_admin" ON "public"."coupon_professionals" USING ((EXISTS ( SELECT 1
    FROM "public"."coupons" "c"
@@ -5526,18 +7993,30 @@ CREATE POLICY "coupon_professionals_all_managers_or_admin" ON "public"."coupon_p
   WHERE (("c"."id" = "coupon_professionals"."coupon_id") AND ("private"."is_company_manager"("c"."company_id") OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: coupon_redemptions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."coupon_redemptions" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: coupon_redemptions coupon_redemptions_select_managers_owner_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "coupon_redemptions_select_managers_owner_or_admin" ON "public"."coupon_redemptions" FOR SELECT USING (("private"."is_company_manager"("company_id") OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "coupon_redemptions"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: coupon_services; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."coupon_services" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: coupon_services coupon_services_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "coupon_services_all_managers_or_admin" ON "public"."coupon_services" USING ((EXISTS ( SELECT 1
    FROM "public"."coupons" "c"
@@ -5546,253 +8025,536 @@ CREATE POLICY "coupon_services_all_managers_or_admin" ON "public"."coupon_servic
   WHERE (("c"."id" = "coupon_services"."coupon_id") AND ("private"."is_company_manager"("c"."company_id") OR "private"."is_super_admin"())))));
 
 
+--
+-- Name: coupons; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."coupons" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: coupons coupons_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "coupons_all_managers_or_admin" ON "public"."coupons" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: custom_reports; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."custom_reports" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: custom_reports custom_reports_delete_owner_or_manager; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "custom_reports_delete_owner_or_manager" ON "public"."custom_reports" FOR DELETE USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR "private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
+
+
+--
+-- Name: custom_reports custom_reports_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "custom_reports_insert_members" ON "public"."custom_reports" FOR INSERT WITH CHECK (("private"."is_company_member"("company_id") AND ("created_by" = ( SELECT "auth"."uid"() AS "uid"))));
+
+
+--
+-- Name: custom_reports custom_reports_select_members; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "custom_reports_select_members" ON "public"."custom_reports" FOR SELECT USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
+
+
+--
+-- Name: custom_reports custom_reports_update_owner_or_manager; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "custom_reports_update_owner_or_manager" ON "public"."custom_reports" FOR UPDATE USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR "private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
+
+
+--
+-- Name: device_tokens; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."device_tokens" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: device_tokens device_tokens_owner_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "device_tokens_owner_only" ON "public"."device_tokens" TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid"))) WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
+--
+-- Name: expenses; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."expenses" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: expenses expenses_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "expenses_all_managers_or_admin" ON "public"."expenses" TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: favorites; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."favorites" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: favorites favorites_delete_own; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "favorites_delete_own" ON "public"."favorites" FOR DELETE USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
+--
+-- Name: favorites favorites_insert_own; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "favorites_insert_own" ON "public"."favorites" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
+--
+-- Name: favorites favorites_select_own; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "favorites_select_own" ON "public"."favorites" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: goals; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."goals" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: goals goals_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "goals_all_managers_or_admin" ON "public"."goals" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: goals goals_select_own_professional; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "goals_select_own_professional" ON "public"."goals" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."professionals" "p"
   WHERE (("p"."id" = "goals"."professional_id") AND ("p"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
 
 
+--
+-- Name: impersonation_sessions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."impersonation_sessions" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: impersonation_sessions impersonation_sessions_select_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "impersonation_sessions_select_admin_only" ON "public"."impersonation_sessions" FOR SELECT TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: payment_webhook_events; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."payment_webhook_events" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: payments; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: payments payments_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "payments_delete_managers_or_admin" ON "public"."payments" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: payments payments_insert_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "payments_insert_managers_or_admin" ON "public"."payments" FOR INSERT TO "authenticated" WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: payments payments_select_managers_client_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "payments_select_managers_client_or_admin" ON "public"."payments" FOR SELECT TO "authenticated" USING (("private"."is_company_manager"("company_id") OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "payments"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: payments payments_update_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "payments_update_managers_or_admin" ON "public"."payments" FOR UPDATE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: payout_periods; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."payout_periods" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: payout_periods payout_periods_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "payout_periods_all_managers_or_admin" ON "public"."payout_periods" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: payout_periods payout_periods_select_own_professional; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "payout_periods_select_own_professional" ON "public"."payout_periods" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."professionals" "p"
   WHERE (("p"."id" = "payout_periods"."professional_id") AND ("p"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
 
 
+--
+-- Name: pending_onboarding; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."pending_onboarding" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: plan_features; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."plan_features" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: plan_features plan_features_delete_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plan_features_delete_admin_only" ON "public"."plan_features" FOR DELETE TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: plan_features plan_features_select_public_active; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plan_features_select_public_active" ON "public"."plan_features" FOR SELECT TO "authenticated", "anon" USING (((EXISTS ( SELECT 1
    FROM "public"."plans" "p"
   WHERE (("p"."id" = "plan_features"."plan_id") AND ("p"."active" = true)))) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: plan_features plan_features_update_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plan_features_update_admin_only" ON "public"."plan_features" FOR UPDATE TO "authenticated" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: plan_features plan_features_write_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plan_features_write_admin_only" ON "public"."plan_features" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: plans; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."plans" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: plans plans_delete_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plans_delete_admin_only" ON "public"."plans" FOR DELETE TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: plans plans_insert_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plans_insert_admin_only" ON "public"."plans" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: plans plans_select_active_public; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plans_select_active_public" ON "public"."plans" FOR SELECT TO "authenticated", "anon" USING ((("active" = true) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: plans plans_update_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "plans_update_admin_only" ON "public"."plans" FOR UPDATE TO "authenticated" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: platform_announcements; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."platform_announcements" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_announcements platform_announcements_all_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "platform_announcements_all_admin_only" ON "public"."platform_announcements" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
+
+
+--
+-- Name: products; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."products" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: products products_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "products_delete_managers_or_admin" ON "public"."products" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: products products_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "products_insert_members" ON "public"."products" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: products products_select_members_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "products_select_members_or_admin" ON "public"."products" FOR SELECT TO "authenticated" USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: products products_update_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "products_update_members" ON "public"."products" FOR UPDATE TO "authenticated" USING ("private"."is_company_member"("company_id")) WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: professional_blocks; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."professional_blocks" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: professional_blocks professional_blocks_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_blocks_delete_managers_or_admin" ON "public"."professional_blocks" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professional_blocks professional_blocks_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_blocks_insert_members" ON "public"."professional_blocks" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: professional_blocks professional_blocks_select_members_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_blocks_select_members_or_admin" ON "public"."professional_blocks" FOR SELECT TO "authenticated" USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professional_blocks professional_blocks_update_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_blocks_update_members" ON "public"."professional_blocks" FOR UPDATE TO "authenticated" USING ("private"."is_company_member"("company_id")) WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: professional_commissions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."professional_commissions" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: professional_commissions professional_commissions_all_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_commissions_all_managers_or_admin" ON "public"."professional_commissions" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"())) WITH CHECK (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professional_commissions professional_commissions_select_own; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_commissions_select_own" ON "public"."professional_commissions" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."professionals" "p"
   WHERE (("p"."id" = "professional_commissions"."professional_id") AND ("p"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
 
 
+--
+-- Name: professional_segments; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."professional_segments" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: professional_segments professional_segments_select; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "professional_segments_select" ON "public"."professional_segments" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."professionals" "p"
+  WHERE (("p"."id" = "professional_segments"."professional_id") AND ("private"."is_company_member"("p"."company_id") OR "private"."is_super_admin"())))));
+
+
+--
+-- Name: professional_weekly_hours; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."professional_weekly_hours" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_weekly_hours_delete_managers_or_admin" ON "public"."professional_weekly_hours" FOR DELETE USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_weekly_hours_insert_members" ON "public"."professional_weekly_hours" FOR INSERT WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_select_members_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_weekly_hours_select_members_or_admin" ON "public"."professional_weekly_hours" FOR SELECT USING (("private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professional_weekly_hours professional_weekly_hours_update_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professional_weekly_hours_update_members" ON "public"."professional_weekly_hours" FOR UPDATE USING ("private"."is_company_member"("company_id")) WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: professionals; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."professionals" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: professionals professionals_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professionals_delete_managers_or_admin" ON "public"."professionals" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professionals professionals_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professionals_insert_members" ON "public"."professionals" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: professionals professionals_select_members_admin_or_public_active; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professionals_select_members_admin_or_public_active" ON "public"."professionals" FOR SELECT TO "authenticated" USING ((("active" = true) OR "private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: professionals professionals_select_public_active_anon; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professionals_select_public_active_anon" ON "public"."professionals" FOR SELECT TO "anon" USING (("active" = true));
 
 
+--
+-- Name: professionals professionals_update_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "professionals_update_members" ON "public"."professionals" FOR UPDATE TO "authenticated" USING ("private"."is_company_member"("company_id")) WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: profiles profiles_select_own_or_super_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "profiles_select_own_or_super_admin" ON "public"."profiles" FOR SELECT TO "authenticated" USING ((("id" = ( SELECT "auth"."uid"() AS "uid")) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: profiles profiles_update_own; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "profiles_update_own" ON "public"."profiles" FOR UPDATE TO "authenticated" USING (("id" = ( SELECT "auth"."uid"() AS "uid"))) WITH CHECK (("id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
+--
+-- Name: report_favorites; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."report_favorites" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: report_favorites report_favorites_self; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "report_favorites_self" ON "public"."report_favorites" USING ((("profile_id" = ( SELECT "auth"."uid"() AS "uid")) AND "private"."is_company_member"("company_id"))) WITH CHECK ((("profile_id" = ( SELECT "auth"."uid"() AS "uid")) AND "private"."is_company_member"("company_id")));
+
+
+--
+-- Name: report_view_history; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."report_view_history" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: report_view_history report_view_history_self; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "report_view_history_self" ON "public"."report_view_history" USING ((("profile_id" = ( SELECT "auth"."uid"() AS "uid")) AND "private"."is_company_member"("company_id"))) WITH CHECK ((("profile_id" = ( SELECT "auth"."uid"() AS "uid")) AND "private"."is_company_member"("company_id")));
+
+
+--
+-- Name: reviews; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."reviews" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: reviews reviews_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "reviews_delete_managers_or_admin" ON "public"."reviews" FOR DELETE USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: reviews reviews_insert_own_completed_appointment; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "reviews_insert_own_completed_appointment" ON "public"."reviews" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
    FROM ("public"."appointments" "a"
@@ -5800,18 +8562,27 @@ CREATE POLICY "reviews_insert_own_completed_appointment" ON "public"."reviews" F
   WHERE (("a"."id" = "reviews"."appointment_id") AND ("a"."status" = 'completed'::"text") AND ("a"."company_id" = "reviews"."company_id") AND ("a"."client_id" = "reviews"."client_id") AND ("a"."professional_id" = "reviews"."professional_id") AND ("a"."service_id" = "reviews"."service_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
 
 
+--
+-- Name: reviews reviews_select_members_owner_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "reviews_select_members_owner_or_admin" ON "public"."reviews" FOR SELECT USING (("private"."is_company_member"("company_id") OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "reviews"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: reviews reviews_select_public_published; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "reviews_select_public_published" ON "public"."reviews" FOR SELECT USING ((("status" = 'published'::"text") AND (EXISTS ( SELECT 1
    FROM "public"."companies" "co"
   WHERE (("co"."id" = "reviews"."company_id") AND ("co"."status" = ANY (ARRAY['active'::"text", 'trial'::"text"])))))));
 
 
+--
+-- Name: reviews reviews_update_owner_or_manager; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "reviews_update_owner_or_manager" ON "public"."reviews" FOR UPDATE USING (((EXISTS ( SELECT 1
    FROM "public"."clients" "c"
@@ -5820,119 +8591,222 @@ CREATE POLICY "reviews_update_owner_or_manager" ON "public"."reviews" FOR UPDATE
   WHERE (("c"."id" = "reviews"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: roles; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."roles" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: roles roles_delete_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "roles_delete_admin_only" ON "public"."roles" FOR DELETE TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: roles roles_insert_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "roles_insert_admin_only" ON "public"."roles" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: roles roles_select_authenticated; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "roles_select_authenticated" ON "public"."roles" FOR SELECT TO "authenticated" USING (true);
 
 
+--
+-- Name: roles roles_update_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "roles_update_admin_only" ON "public"."roles" FOR UPDATE TO "authenticated" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: segments; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."segments" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: segments segments_delete_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "segments_delete_admin_only" ON "public"."segments" FOR DELETE TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: segments segments_insert_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "segments_insert_admin_only" ON "public"."segments" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: segments segments_select_public_active; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "segments_select_public_active" ON "public"."segments" FOR SELECT TO "authenticated", "anon" USING ((("active" = true) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: segments segments_update_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "segments_update_admin_only" ON "public"."segments" FOR UPDATE TO "authenticated" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: services; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."services" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: services services_delete_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "services_delete_managers_or_admin" ON "public"."services" FOR DELETE TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: services services_insert_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "services_insert_members" ON "public"."services" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: services services_select_members_admin_or_public_active; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "services_select_members_admin_or_public_active" ON "public"."services" FOR SELECT TO "authenticated" USING ((("active" = true) OR "private"."is_company_member"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: services services_select_public_active_anon; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "services_select_public_active_anon" ON "public"."services" FOR SELECT TO "anon" USING (("active" = true));
 
 
+--
+-- Name: services services_update_members; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "services_update_members" ON "public"."services" FOR UPDATE TO "authenticated" USING ("private"."is_company_member"("company_id")) WITH CHECK ("private"."is_company_member"("company_id"));
 
 
+--
+-- Name: subscription_payments; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."subscription_payments" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: subscription_payments subscription_payments_select_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "subscription_payments_select_admin_only" ON "public"."subscription_payments" FOR SELECT TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: subscription_payments subscription_payments_select_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "subscription_payments_select_managers_or_admin" ON "public"."subscription_payments" FOR SELECT TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: subscriptions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."subscriptions" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: subscriptions subscriptions_delete_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "subscriptions_delete_admin_only" ON "public"."subscriptions" FOR DELETE TO "authenticated" USING ("private"."is_super_admin"());
 
 
+--
+-- Name: subscriptions subscriptions_insert_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "subscriptions_insert_admin_only" ON "public"."subscriptions" FOR INSERT TO "authenticated" WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: subscriptions subscriptions_select_managers_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "subscriptions_select_managers_or_admin" ON "public"."subscriptions" FOR SELECT TO "authenticated" USING (("private"."is_company_manager"("company_id") OR "private"."is_super_admin"()));
 
 
+--
+-- Name: subscriptions subscriptions_update_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "subscriptions_update_admin_only" ON "public"."subscriptions" FOR UPDATE TO "authenticated" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
 
 
+--
+-- Name: support_tickets; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."support_tickets" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: support_tickets support_tickets_all_admin_only; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "support_tickets_all_admin_only" ON "public"."support_tickets" USING ("private"."is_super_admin"()) WITH CHECK ("private"."is_super_admin"());
+
+
+--
+-- Name: terms_acceptances; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."terms_acceptances" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: terms_acceptances terms_acceptances_select_own_or_admin; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "terms_acceptances_select_own_or_admin" ON "public"."terms_acceptances" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "private"."is_super_admin"()));
 
 
+--
+-- Name: waitlist_entries; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
 
 ALTER TABLE "public"."waitlist_entries" ENABLE ROW LEVEL SECURITY;
 
+--
+-- Name: waitlist_entries waitlist_insert_own_or_managers; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "waitlist_insert_own_or_managers" ON "public"."waitlist_entries" FOR INSERT WITH CHECK ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"() OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "waitlist_entries"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
+--
+-- Name: waitlist_entries waitlist_select_own_or_managers; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "waitlist_select_own_or_managers" ON "public"."waitlist_entries" FOR SELECT USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"() OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
   WHERE (("c"."id" = "waitlist_entries"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
+--
+-- Name: waitlist_entries waitlist_update_own_or_managers; Type: POLICY; Schema: public; Owner: postgres
+--
 
 CREATE POLICY "waitlist_update_own_or_managers" ON "public"."waitlist_entries" FOR UPDATE USING ((COALESCE("private"."is_company_manager"("company_id"), false) OR "private"."is_super_admin"() OR (EXISTS ( SELECT 1
    FROM "public"."clients" "c"
@@ -5941,22 +8815,9 @@ CREATE POLICY "waitlist_update_own_or_managers" ON "public"."waitlist_entries" F
   WHERE (("c"."id" = "waitlist_entries"."client_id") AND ("c"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
-
-
-
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
-
-
-
-
-
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."appointments";
-
-
-
-
-
+--
+-- Name: SCHEMA "public"; Type: ACL; Schema: -; Owner: pg_database_owner
+--
 
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
@@ -5964,955 +8825,373 @@ GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
-
-
-
+--
+-- Name: SCHEMA "private"; Type: ACL; Schema: -; Owner: postgres
+--
 
 GRANT USAGE ON SCHEMA "private" TO "anon";
 GRANT USAGE ON SCHEMA "private" TO "authenticated";
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--
+-- Name: FUNCTION "expire_trials"(); Type: ACL; Schema: private; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "private"."expire_trials"() FROM PUBLIC;
 
 
+--
+-- Name: FUNCTION "get_professional_hours_for_day"("p_professional_id" "uuid", "p_day" "date"); Type: ACL; Schema: private; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "private"."get_professional_hours_for_day"("p_professional_id" "uuid", "p_day" "date") TO "authenticated";
 
 
+--
+-- Name: TABLE "client_packages"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."client_packages" TO "service_role";
 GRANT SELECT,INSERT,UPDATE ON TABLE "public"."client_packages" TO "authenticated";
 
 
+--
+-- Name: TABLE "subscriptions"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."subscriptions" TO "anon";
 GRANT ALL ON TABLE "public"."subscriptions" TO "authenticated";
 GRANT ALL ON TABLE "public"."subscriptions" TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_change_plan"("company_id" "uuid", "new_plan_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_change_plan"("company_id" "uuid", "new_plan_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_change_plan"("company_id" "uuid", "new_plan_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."admin_change_plan"("company_id" "uuid", "new_plan_id" "uuid") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "admin_companies_by_plan"(); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_companies_by_plan"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_companies_by_plan"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_companies_by_plan"() TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_dashboard_summary"("p_from" timestamp with time zone, "p_to" timestamp with time zone); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_dashboard_summary"("p_from" timestamp with time zone, "p_to" timestamp with time zone) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "service_role";
 
 
+--
+-- Name: TABLE "impersonation_sessions"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."impersonation_sessions" TO "anon";
 GRANT ALL ON TABLE "public"."impersonation_sessions" TO "authenticated";
 GRANT ALL ON TABLE "public"."impersonation_sessions" TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_end_impersonation"("session_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_end_impersonation"("session_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_end_impersonation"("session_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_end_impersonation"("session_id" "uuid") TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_list_companies_owners"("p_company_ids" "uuid"[]); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_list_companies_owners"("p_company_ids" "uuid"[]) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_list_companies_owners"("p_company_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_list_companies_owners"("p_company_ids" "uuid"[]) TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_list_company_users"("target_company_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_list_company_users"("target_company_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_list_company_users"("target_company_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_list_company_users"("target_company_id" "uuid") TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_list_users"("p_search" "text", "p_company_id" "uuid", "p_page" integer, "p_page_size" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_list_users"("p_search" "text", "p_company_id" "uuid", "p_page" integer, "p_page_size" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_list_users"("p_search" "text", "p_company_id" "uuid", "p_page" integer, "p_page_size" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_list_users"("p_search" "text", "p_company_id" "uuid", "p_page" integer, "p_page_size" integer) TO "service_role";
 
 
+--
+-- Name: TABLE "anamnesis_templates"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."anamnesis_templates" TO "anon";
+GRANT ALL ON TABLE "public"."anamnesis_templates" TO "authenticated";
+GRANT ALL ON TABLE "public"."anamnesis_templates" TO "service_role";
+
+
+--
+-- Name: FUNCTION "admin_save_anamnesis_template"("p_segment_id" "uuid", "p_title" "text", "p_fields" "jsonb"); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."admin_save_anamnesis_template"("p_segment_id" "uuid", "p_title" "text", "p_fields" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."admin_save_anamnesis_template"("p_segment_id" "uuid", "p_title" "text", "p_fields" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."admin_save_anamnesis_template"("p_segment_id" "uuid", "p_title" "text", "p_fields" "jsonb") TO "service_role";
+
+
+--
+-- Name: TABLE "company_members"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."company_members" TO "anon";
 GRANT ALL ON TABLE "public"."company_members" TO "authenticated";
 GRANT ALL ON TABLE "public"."company_members" TO "service_role";
 
 
+--
+-- Name: FUNCTION "admin_set_member_active"("member_id" "uuid", "new_active" boolean); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_set_member_active"("member_id" "uuid", "new_active" boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_set_member_active"("member_id" "uuid", "new_active" boolean) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_set_member_active"("member_id" "uuid", "new_active" boolean) TO "service_role";
 
 
+--
+-- Name: TABLE "companies"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."companies" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."companies" TO "authenticated";
 GRANT ALL ON TABLE "public"."companies" TO "service_role";
 
 
+--
+-- Name: COLUMN "companies"."name"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("name") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."phone"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("phone") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."whatsapp"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("whatsapp") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."address"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("address") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."instagram"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("instagram") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."logo_url"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("logo_url") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."cover_url"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("cover_url") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."color_primary"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("color_primary") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."color_secondary"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("color_secondary") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."color_accent"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("color_accent") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."loyalty_program_enabled"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("loyalty_program_enabled") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."whatsapp_reminder_enabled"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("whatsapp_reminder_enabled") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."business_hours"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("business_hours") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."segment_id"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("segment_id") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."trade_name"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("trade_name") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."document"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("document") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."email"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("email") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."city"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("city") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."state"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("state") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: COLUMN "companies"."zip_code"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("zip_code") ON TABLE "public"."companies" TO "authenticated";
 
 
+--
+-- Name: FUNCTION "admin_update_company"("company_id" "uuid", "new_status" "text", "new_anamnesis_enabled" boolean, "new_name" "text", "new_segment_id" "uuid", "new_trade_name" "text", "new_document" "text", "new_email" "text", "new_phone" "text", "new_whatsapp" "text", "new_address" "text", "new_city" "text", "new_state" "text", "new_zip_code" "text", "new_street" "text", "new_neighborhood" "text", "new_address_number" "text", "new_complement" "text", "new_other_segment" "text"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."admin_update_company"("company_id" "uuid", "new_status" "text", "new_anamnesis_enabled" boolean, "new_name" "text", "new_segment_id" "uuid", "new_trade_name" "text", "new_document" "text", "new_email" "text", "new_phone" "text", "new_whatsapp" "text", "new_address" "text", "new_city" "text", "new_state" "text", "new_zip_code" "text", "new_street" "text", "new_neighborhood" "text", "new_address_number" "text", "new_complement" "text", "new_other_segment" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_update_company"("company_id" "uuid", "new_status" "text", "new_anamnesis_enabled" boolean, "new_name" "text", "new_segment_id" "uuid", "new_trade_name" "text", "new_document" "text", "new_email" "text", "new_phone" "text", "new_whatsapp" "text", "new_address" "text", "new_city" "text", "new_state" "text", "new_zip_code" "text", "new_street" "text", "new_neighborhood" "text", "new_address_number" "text", "new_complement" "text", "new_other_segment" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_update_company"("company_id" "uuid", "new_status" "text", "new_anamnesis_enabled" boolean, "new_name" "text", "new_segment_id" "uuid", "new_trade_name" "text", "new_document" "text", "new_email" "text", "new_phone" "text", "new_whatsapp" "text", "new_address" "text", "new_city" "text", "new_state" "text", "new_zip_code" "text", "new_street" "text", "new_neighborhood" "text", "new_address_number" "text", "new_complement" "text", "new_other_segment" "text") TO "service_role";
 
 
+--
+-- Name: FUNCTION "book_appointment"("p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_scheduled_at" timestamp with time zone, "p_payment_method" "text", "p_coupon_code" "text", "p_client_package_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."book_appointment"("p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_scheduled_at" timestamp with time zone, "p_payment_method" "text", "p_coupon_code" "text", "p_client_package_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."book_appointment"("p_company_id" "uuid", "p_client_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_scheduled_at" timestamp with time zone, "p_payment_method" "text", "p_coupon_code" "text", "p_client_package_id" "uuid") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "calculate_professional_payout"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."calculate_professional_payout"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") TO "service_role";
 GRANT ALL ON FUNCTION "public"."calculate_professional_payout"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") TO "authenticated";
 
 
+--
+-- Name: TABLE "payout_periods"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."payout_periods" TO "service_role";
 GRANT SELECT,INSERT,UPDATE ON TABLE "public"."payout_periods" TO "authenticated";
 
 
+--
+-- Name: FUNCTION "close_payout_period"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."close_payout_period"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") TO "service_role";
 GRANT ALL ON FUNCTION "public"."close_payout_period"("p_company_id" "uuid", "p_professional_id" "uuid", "p_period_start" "date", "p_period_end" "date") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "company_has_feature"("p_company_id" "uuid", "p_feature_key" "text"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."company_has_feature"("p_company_id" "uuid", "p_feature_key" "text") TO "service_role";
 
 
+--
+-- Name: FUNCTION "complete_company_onboarding"("p_name" "text", "p_slug" "text", "p_segment_id" "uuid", "p_other_segment" "text", "p_business_size" "text", "p_staff_size_range" "text", "p_phone" "text", "p_document" "text", "p_zip_code" "text", "p_street" "text", "p_neighborhood" "text", "p_address_number" "text", "p_complement" "text", "p_city" "text", "p_state" "text", "p_goals" "text"[]); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."complete_company_onboarding"("p_name" "text", "p_slug" "text", "p_segment_id" "uuid", "p_other_segment" "text", "p_business_size" "text", "p_staff_size_range" "text", "p_phone" "text", "p_document" "text", "p_zip_code" "text", "p_street" "text", "p_neighborhood" "text", "p_address_number" "text", "p_complement" "text", "p_city" "text", "p_state" "text", "p_goals" "text"[]) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."complete_company_onboarding"("p_name" "text", "p_slug" "text", "p_segment_id" "uuid", "p_other_segment" "text", "p_business_size" "text", "p_staff_size_range" "text", "p_phone" "text", "p_document" "text", "p_zip_code" "text", "p_street" "text", "p_neighborhood" "text", "p_address_number" "text", "p_complement" "text", "p_city" "text", "p_state" "text", "p_goals" "text"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."complete_company_onboarding"("p_name" "text", "p_slug" "text", "p_segment_id" "uuid", "p_other_segment" "text", "p_business_size" "text", "p_staff_size_range" "text", "p_phone" "text", "p_document" "text", "p_zip_code" "text", "p_street" "text", "p_neighborhood" "text", "p_address_number" "text", "p_complement" "text", "p_city" "text", "p_state" "text", "p_goals" "text"[]) TO "service_role";
 
 
+--
+-- Name: FUNCTION "generate_unique_slug"("base_name" "text"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."generate_unique_slug"("base_name" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."generate_unique_slug"("base_name" "text") TO "service_role";
 GRANT ALL ON FUNCTION "public"."generate_unique_slug"("base_name" "text") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "get_availability_day"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_day" "date"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_availability_day"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_day" "date") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_availability_day"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_day" "date") TO "anon";
@@ -6920,6 +9199,9 @@ GRANT ALL ON FUNCTION "public"."get_availability_day"("p_company_id" "uuid", "p_
 GRANT ALL ON FUNCTION "public"."get_availability_day"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_day" "date") TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_availability_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_month" "date"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_availability_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_month" "date") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_availability_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_month" "date") TO "anon";
@@ -6927,98 +9209,161 @@ GRANT ALL ON FUNCTION "public"."get_availability_month"("p_company_id" "uuid", "
 GRANT ALL ON FUNCTION "public"."get_availability_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_service_id" "uuid", "p_month" "date") TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_birthday_candidates"("p_company_id" "uuid", "p_date" "date"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_birthday_candidates"("p_company_id" "uuid", "p_date" "date") TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_birthday_candidates"("p_company_id" "uuid", "p_date" "date") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date", "p_days" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date", "p_days" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_birthday_candidates_range"("p_company_id" "uuid", "p_start_date" "date", "p_days" integer) TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_block_conflicts"("p_company_id" "uuid", "p_professional_id" "uuid", "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_block_conflicts"("p_company_id" "uuid", "p_professional_id" "uuid", "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_block_conflicts"("p_company_id" "uuid", "p_professional_id" "uuid", "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_block_conflicts"("p_company_id" "uuid", "p_professional_id" "uuid", "p_starts_at" timestamp with time zone, "p_ends_at" timestamp with time zone) TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_company_access_status"("p_company_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_company_access_status"("p_company_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_company_access_status"("p_company_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_company_access_status"("p_company_id" "uuid") TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_company_plan_limits"("p_company_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_company_plan_limits"("p_company_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_company_plan_limits"("p_company_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_company_plan_limits"("p_company_id" "uuid") TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_company_rating_summary"("p_company_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_company_rating_summary"("p_company_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_company_rating_summary"("p_company_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_company_rating_summary"("p_company_id" "uuid") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "get_inactive_client_candidates"("p_company_id" "uuid", "p_days_inactive" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_inactive_client_candidates"("p_company_id" "uuid", "p_days_inactive" integer) TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_inactive_client_candidates"("p_company_id" "uuid", "p_days_inactive" integer) TO "authenticated";
 
 
+--
+-- Name: FUNCTION "get_my_inactive_membership"(); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_my_inactive_membership"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_inactive_membership"() TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_new_client_candidates"("p_company_id" "uuid", "p_days" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_new_client_candidates"("p_company_id" "uuid", "p_days" integer) TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_new_client_candidates"("p_company_id" "uuid", "p_days" integer) TO "authenticated";
 
 
+--
+-- Name: FUNCTION "get_pending_onboarding"(); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_pending_onboarding"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_pending_onboarding"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_pending_onboarding"() TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_professional_occupancy_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_month" "date"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."get_professional_occupancy_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_month" "date") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_professional_occupancy_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_month" "date") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_professional_occupancy_month"("p_company_id" "uuid", "p_professional_id" "uuid", "p_month" "date") TO "service_role";
 
 
+--
+-- Name: FUNCTION "get_recovery_candidates"("p_company_id" "uuid", "p_days_since_last" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_recovery_candidates"("p_company_id" "uuid", "p_days_since_last" integer) TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_recovery_candidates"("p_company_id" "uuid", "p_days_since_last" integer) TO "authenticated";
 
 
+--
+-- Name: FUNCTION "get_recurring_client_candidates"("p_company_id" "uuid", "p_min_appointments" integer, "p_period_days" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."get_recurring_client_candidates"("p_company_id" "uuid", "p_min_appointments" integer, "p_period_days" integer) TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_recurring_client_candidates"("p_company_id" "uuid", "p_min_appointments" integer, "p_period_days" integer) TO "authenticated";
 
 
+--
+-- Name: FUNCTION "list_company_clients"("p_company_id" "uuid", "p_search" "text", "p_filter" "text", "p_page" integer, "p_page_size" integer); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."list_company_clients"("p_company_id" "uuid", "p_search" "text", "p_filter" "text", "p_page" integer, "p_page_size" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."list_company_clients"("p_company_id" "uuid", "p_search" "text", "p_filter" "text", "p_page" integer, "p_page_size" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."list_company_clients"("p_company_id" "uuid", "p_search" "text", "p_filter" "text", "p_page" integer, "p_page_size" integer) TO "service_role";
 
 
+--
+-- Name: FUNCTION "list_company_payments"("p_company_id" "uuid", "p_search" "text", "p_status" "text", "p_method" "text", "p_professional_id" "uuid", "p_service_id" "uuid", "p_period_start" timestamp with time zone, "p_period_end" timestamp with time zone, "p_page" integer, "p_page_size" integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."list_company_payments"("p_company_id" "uuid", "p_search" "text", "p_status" "text", "p_method" "text", "p_professional_id" "uuid", "p_service_id" "uuid", "p_period_start" timestamp with time zone, "p_period_end" timestamp with time zone, "p_page" integer, "p_page_size" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."list_company_payments"("p_company_id" "uuid", "p_search" "text", "p_status" "text", "p_method" "text", "p_professional_id" "uuid", "p_service_id" "uuid", "p_period_start" timestamp with time zone, "p_period_end" timestamp with time zone, "p_page" integer, "p_page_size" integer) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."list_company_payments"("p_company_id" "uuid", "p_search" "text", "p_status" "text", "p_method" "text", "p_professional_id" "uuid", "p_service_id" "uuid", "p_period_start" timestamp with time zone, "p_period_end" timestamp with time zone, "p_page" integer, "p_page_size" integer) TO "service_role";
+
+
+--
+-- Name: FUNCTION "mark_payout_paid"("p_payout_period_id" "uuid", "p_paid_at" timestamp with time zone, "p_payment_method" "text", "p_notes" "text"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."mark_payout_paid"("p_payout_period_id" "uuid", "p_paid_at" timestamp with time zone, "p_payment_method" "text", "p_notes" "text") TO "service_role";
 GRANT ALL ON FUNCTION "public"."mark_payout_paid"("p_payout_period_id" "uuid", "p_paid_at" timestamp with time zone, "p_payment_method" "text", "p_notes" "text") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "preview_coupon"("p_company_id" "uuid", "p_code" "text", "p_client_id" "uuid", "p_service_id" "uuid", "p_professional_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."preview_coupon"("p_company_id" "uuid", "p_code" "text", "p_client_id" "uuid", "p_service_id" "uuid", "p_professional_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."preview_coupon"("p_company_id" "uuid", "p_code" "text", "p_client_id" "uuid", "p_service_id" "uuid", "p_professional_id" "uuid") TO "authenticated";
 
 
+--
+-- Name: FUNCTION "process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."process_asaas_webhook_event"("p_event_hash" "text", "p_event" "text", "p_payment" "jsonb") TO "service_role";
 
 
+--
+-- Name: FUNCTION "public_company_is_bookable"("p_company_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."public_company_is_bookable"("p_company_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."public_company_is_bookable"("p_company_id" "uuid") TO "authenticated";
@@ -7026,6 +9371,9 @@ GRANT ALL ON FUNCTION "public"."public_company_is_bookable"("p_company_id" "uuid
 GRANT ALL ON FUNCTION "public"."public_company_is_bookable"("p_company_id" "uuid") TO "anon";
 
 
+--
+-- Name: FUNCTION "public_directory_companies"(); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."public_directory_companies"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."public_directory_companies"() TO "authenticated";
@@ -7033,33 +9381,69 @@ GRANT ALL ON FUNCTION "public"."public_directory_companies"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."public_directory_companies"() TO "anon";
 
 
+--
+-- Name: TABLE "appointments"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."appointments" TO "anon";
 GRANT ALL ON TABLE "public"."appointments" TO "authenticated";
 GRANT ALL ON TABLE "public"."appointments" TO "service_role";
 
 
+--
+-- Name: FUNCTION "reschedule_appointment"("p_appointment_id" "uuid", "p_new_scheduled_at" timestamp with time zone); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."reschedule_appointment"("p_appointment_id" "uuid", "p_new_scheduled_at" timestamp with time zone) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."reschedule_appointment"("p_appointment_id" "uuid", "p_new_scheduled_at" timestamp with time zone) TO "service_role";
 GRANT ALL ON FUNCTION "public"."reschedule_appointment"("p_appointment_id" "uuid", "p_new_scheduled_at" timestamp with time zone) TO "authenticated";
 
 
+--
+-- Name: FUNCTION "rls_auto_enable"(); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."rls_auto_enable"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "service_role";
 
 
+--
+-- Name: TABLE "professional_commissions"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."professional_commissions" TO "service_role";
 GRANT SELECT,INSERT,UPDATE ON TABLE "public"."professional_commissions" TO "authenticated";
 
 
+--
+-- Name: FUNCTION "set_professional_commission"("p_professional_id" "uuid", "p_commission_type" "text", "p_commission_value" numeric); Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON FUNCTION "public"."set_professional_commission"("p_professional_id" "uuid", "p_commission_type" "text", "p_commission_value" numeric) TO "service_role";
 GRANT ALL ON FUNCTION "public"."set_professional_commission"("p_professional_id" "uuid", "p_commission_type" "text", "p_commission_value" numeric) TO "authenticated";
 
 
+--
+-- Name: TABLE "segments"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."segments" TO "anon";
+GRANT ALL ON TABLE "public"."segments" TO "authenticated";
+GRANT ALL ON TABLE "public"."segments" TO "service_role";
+
+
+--
+-- Name: FUNCTION "set_professional_segments"("p_professional_id" "uuid", "p_segment_ids" "uuid"[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."set_professional_segments"("p_professional_id" "uuid", "p_segment_ids" "uuid"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_professional_segments"("p_professional_id" "uuid", "p_segment_ids" "uuid"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_professional_segments"("p_professional_id" "uuid", "p_segment_ids" "uuid"[]) TO "service_role";
+
+
+--
+-- Name: FUNCTION "stage_pending_onboarding"("p_email" "text", "p_payload" "jsonb"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."stage_pending_onboarding"("p_email" "text", "p_payload" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."stage_pending_onboarding"("p_email" "text", "p_payload" "jsonb") TO "authenticated";
@@ -7067,6 +9451,9 @@ GRANT ALL ON FUNCTION "public"."stage_pending_onboarding"("p_email" "text", "p_p
 GRANT ALL ON FUNCTION "public"."stage_pending_onboarding"("p_email" "text", "p_payload" "jsonb") TO "anon";
 
 
+--
+-- Name: FUNCTION "stage_terms_acceptance"("p_email" "text", "p_document_type" "text", "p_document_version" "text", "p_user_agent" "text"); Type: ACL; Schema: public; Owner: postgres
+--
 
 REVOKE ALL ON FUNCTION "public"."stage_terms_acceptance"("p_email" "text", "p_document_type" "text", "p_document_version" "text", "p_user_agent" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."stage_terms_acceptance"("p_email" "text", "p_document_type" "text", "p_document_version" "text", "p_user_agent" "text") TO "authenticated";
@@ -7074,252 +9461,412 @@ GRANT ALL ON FUNCTION "public"."stage_terms_acceptance"("p_email" "text", "p_doc
 GRANT ALL ON FUNCTION "public"."stage_terms_acceptance"("p_email" "text", "p_document_type" "text", "p_document_version" "text", "p_user_agent" "text") TO "anon";
 
 
+--
+-- Name: FUNCTION "submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_service_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
 
-GRANT ALL ON FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb") TO "service_role";
-GRANT ALL ON FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb") TO "authenticated";
-
-
-
-REVOKE ALL ON FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb") TO "service_role";
+REVOKE ALL ON FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_service_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_service_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."submit_anamnesis_response"("p_client_id" "uuid", "p_professional_id" "uuid", "p_appointment_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_service_id" "uuid") TO "service_role";
 
 
+--
+-- Name: FUNCTION "submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_appointment_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_appointment_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_appointment_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."submit_anamnesis_response_as_client"("p_company_id" "uuid", "p_answers" "jsonb", "p_form_id" "uuid", "p_appointment_id" "uuid") TO "service_role";
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--
+-- Name: TABLE "anamnesis_fields"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."anamnesis_fields" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."anamnesis_fields" TO "authenticated";
 
 
+--
+-- Name: TABLE "anamnesis_forms"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."anamnesis_forms" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."anamnesis_forms" TO "authenticated";
 
 
+--
+-- Name: TABLE "anamnesis_response_answers"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."anamnesis_response_answers" TO "service_role";
 GRANT SELECT,INSERT,DELETE ON TABLE "public"."anamnesis_response_answers" TO "authenticated";
 
 
+--
+-- Name: TABLE "anamnesis_responses"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."anamnesis_responses" TO "service_role";
 GRANT SELECT,INSERT,DELETE ON TABLE "public"."anamnesis_responses" TO "authenticated";
 
 
+--
+-- Name: TABLE "anamnesis_template_fields"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."anamnesis_template_fields" TO "anon";
+GRANT ALL ON TABLE "public"."anamnesis_template_fields" TO "authenticated";
+GRANT ALL ON TABLE "public"."anamnesis_template_fields" TO "service_role";
+
+
+--
+-- Name: TABLE "appointment_notifications"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."appointment_notifications" TO "service_role";
 GRANT SELECT ON TABLE "public"."appointment_notifications" TO "authenticated";
 
 
+--
+-- Name: TABLE "audit_logs"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."audit_logs" TO "anon";
 GRANT ALL ON TABLE "public"."audit_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."audit_logs" TO "service_role";
 
 
+--
+-- Name: TABLE "campaign_rules"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."campaign_rules" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."campaign_rules" TO "authenticated";
 
 
+--
+-- Name: TABLE "campaign_sends"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."campaign_sends" TO "service_role";
 GRANT SELECT ON TABLE "public"."campaign_sends" TO "authenticated";
 
 
+--
+-- Name: TABLE "campaigns"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."campaigns" TO "anon";
+GRANT ALL ON TABLE "public"."campaigns" TO "authenticated";
+GRANT ALL ON TABLE "public"."campaigns" TO "service_role";
+
+
+--
+-- Name: TABLE "clients"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."clients" TO "anon";
 GRANT ALL ON TABLE "public"."clients" TO "authenticated";
 GRANT ALL ON TABLE "public"."clients" TO "service_role";
 
 
+--
+-- Name: TABLE "company_goals"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."company_goals" TO "anon";
 GRANT ALL ON TABLE "public"."company_goals" TO "authenticated";
 GRANT ALL ON TABLE "public"."company_goals" TO "service_role";
 
 
+--
+-- Name: TABLE "coupon_professionals"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."coupon_professionals" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."coupon_professionals" TO "authenticated";
 
 
+--
+-- Name: TABLE "coupon_redemptions"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."coupon_redemptions" TO "service_role";
 GRANT SELECT ON TABLE "public"."coupon_redemptions" TO "authenticated";
 
 
+--
+-- Name: TABLE "coupon_services"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."coupon_services" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."coupon_services" TO "authenticated";
 
 
+--
+-- Name: TABLE "coupons"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."coupons" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."coupons" TO "authenticated";
 
 
+--
+-- Name: TABLE "custom_reports"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."custom_reports" TO "anon";
+GRANT ALL ON TABLE "public"."custom_reports" TO "authenticated";
+GRANT ALL ON TABLE "public"."custom_reports" TO "service_role";
+
+
+--
+-- Name: TABLE "device_tokens"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."device_tokens" TO "anon";
 GRANT ALL ON TABLE "public"."device_tokens" TO "authenticated";
 GRANT ALL ON TABLE "public"."device_tokens" TO "service_role";
 
 
+--
+-- Name: TABLE "expenses"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."expenses" TO "anon";
 GRANT ALL ON TABLE "public"."expenses" TO "authenticated";
 GRANT ALL ON TABLE "public"."expenses" TO "service_role";
 
 
+--
+-- Name: TABLE "favorites"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."favorites" TO "service_role";
 GRANT SELECT,INSERT,DELETE ON TABLE "public"."favorites" TO "authenticated";
 
 
+--
+-- Name: TABLE "goals"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."goals" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."goals" TO "authenticated";
 
 
+--
+-- Name: TABLE "payment_webhook_events"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."payment_webhook_events" TO "anon";
 GRANT ALL ON TABLE "public"."payment_webhook_events" TO "authenticated";
 GRANT ALL ON TABLE "public"."payment_webhook_events" TO "service_role";
 
 
+--
+-- Name: TABLE "payments"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."payments" TO "anon";
 GRANT ALL ON TABLE "public"."payments" TO "authenticated";
 GRANT ALL ON TABLE "public"."payments" TO "service_role";
 
 
+--
+-- Name: TABLE "pending_onboarding"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."pending_onboarding" TO "anon";
 GRANT ALL ON TABLE "public"."pending_onboarding" TO "authenticated";
 GRANT ALL ON TABLE "public"."pending_onboarding" TO "service_role";
 
 
+--
+-- Name: TABLE "plan_features"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."plan_features" TO "anon";
 GRANT ALL ON TABLE "public"."plan_features" TO "authenticated";
 GRANT ALL ON TABLE "public"."plan_features" TO "service_role";
 
 
+--
+-- Name: TABLE "plans"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."plans" TO "anon";
 GRANT ALL ON TABLE "public"."plans" TO "authenticated";
 GRANT ALL ON TABLE "public"."plans" TO "service_role";
 
 
+--
+-- Name: TABLE "platform_announcements"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."platform_announcements" TO "anon";
+GRANT ALL ON TABLE "public"."platform_announcements" TO "authenticated";
+GRANT ALL ON TABLE "public"."platform_announcements" TO "service_role";
+
+
+--
+-- Name: TABLE "products"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."products" TO "anon";
 GRANT ALL ON TABLE "public"."products" TO "authenticated";
 GRANT ALL ON TABLE "public"."products" TO "service_role";
 
 
+--
+-- Name: TABLE "professional_blocks"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."professional_blocks" TO "anon";
 GRANT ALL ON TABLE "public"."professional_blocks" TO "authenticated";
 GRANT ALL ON TABLE "public"."professional_blocks" TO "service_role";
 
 
+--
+-- Name: TABLE "professional_segments"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."professional_segments" TO "anon";
+GRANT ALL ON TABLE "public"."professional_segments" TO "authenticated";
+GRANT ALL ON TABLE "public"."professional_segments" TO "service_role";
+
+
+--
+-- Name: TABLE "professional_weekly_hours"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."professional_weekly_hours" TO "anon";
 GRANT ALL ON TABLE "public"."professional_weekly_hours" TO "authenticated";
 GRANT ALL ON TABLE "public"."professional_weekly_hours" TO "service_role";
 
 
+--
+-- Name: TABLE "professionals"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."professionals" TO "anon";
 GRANT ALL ON TABLE "public"."professionals" TO "authenticated";
 GRANT ALL ON TABLE "public"."professionals" TO "service_role";
 
 
+--
+-- Name: TABLE "profiles"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
 
 
+--
+-- Name: COLUMN "profiles"."full_name"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("full_name") ON TABLE "public"."profiles" TO "authenticated";
 
 
+--
+-- Name: COLUMN "profiles"."phone"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("phone") ON TABLE "public"."profiles" TO "authenticated";
 
 
+--
+-- Name: COLUMN "profiles"."avatar_url"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT UPDATE("avatar_url") ON TABLE "public"."profiles" TO "authenticated";
 
 
+--
+-- Name: TABLE "report_favorites"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."report_favorites" TO "anon";
+GRANT ALL ON TABLE "public"."report_favorites" TO "authenticated";
+GRANT ALL ON TABLE "public"."report_favorites" TO "service_role";
+
+
+--
+-- Name: TABLE "report_view_history"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."report_view_history" TO "anon";
+GRANT ALL ON TABLE "public"."report_view_history" TO "authenticated";
+GRANT ALL ON TABLE "public"."report_view_history" TO "service_role";
+
+
+--
+-- Name: TABLE "reviews"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."reviews" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."reviews" TO "authenticated";
 GRANT SELECT ON TABLE "public"."reviews" TO "anon";
 
 
+--
+-- Name: TABLE "roles"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."roles" TO "anon";
 GRANT ALL ON TABLE "public"."roles" TO "authenticated";
 GRANT ALL ON TABLE "public"."roles" TO "service_role";
 
 
-
-GRANT ALL ON TABLE "public"."segments" TO "anon";
-GRANT ALL ON TABLE "public"."segments" TO "authenticated";
-GRANT ALL ON TABLE "public"."segments" TO "service_role";
-
-
+--
+-- Name: TABLE "services"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."services" TO "anon";
 GRANT ALL ON TABLE "public"."services" TO "authenticated";
 GRANT ALL ON TABLE "public"."services" TO "service_role";
 
 
+--
+-- Name: TABLE "subscription_payments"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."subscription_payments" TO "anon";
 GRANT ALL ON TABLE "public"."subscription_payments" TO "authenticated";
 GRANT ALL ON TABLE "public"."subscription_payments" TO "service_role";
 
 
+--
+-- Name: TABLE "support_tickets"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."support_tickets" TO "anon";
+GRANT ALL ON TABLE "public"."support_tickets" TO "authenticated";
+GRANT ALL ON TABLE "public"."support_tickets" TO "service_role";
+
+
+--
+-- Name: TABLE "terms_acceptances"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."terms_acceptances" TO "anon";
 GRANT ALL ON TABLE "public"."terms_acceptances" TO "authenticated";
 GRANT ALL ON TABLE "public"."terms_acceptances" TO "service_role";
 
 
+--
+-- Name: TABLE "waitlist_entries"; Type: ACL; Schema: public; Owner: postgres
+--
 
 GRANT ALL ON TABLE "public"."waitlist_entries" TO "service_role";
 GRANT SELECT,INSERT,UPDATE ON TABLE "public"."waitlist_entries" TO "authenticated";
 
 
-
-
-
-
-
-
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
@@ -7327,18 +9874,38 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
 
 
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+--
+
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
 
 
-
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
 
 
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+--
+
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
 
 
-
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
@@ -7346,36 +9913,19 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
 
 
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+--
+
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
+-- ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
 
 
+--
+-- PostgreSQL database dump complete
+--
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- \unrestrict 9djvIrGmcuueEe2Mcufhx7whk2yX9snKcChbrr4hM0pCplJCqlPqnDZQH4Knhsv
 

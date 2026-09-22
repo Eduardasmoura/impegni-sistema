@@ -33,7 +33,7 @@ export function Footer() {
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
                 <Scissors className="w-3.5 h-3.5 text-primary-foreground" aria-hidden="true" />
               </div>
-              <span className="font-heading text-[15px] font-semibold">InovaFlow</span>
+              <span className="font-heading text-[15px] font-semibold">Impegni</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               Agenda, clientes, serviços e financeiro em um só lugar — pra profissionais autônomos que cuidam do próprio negócio.
@@ -78,7 +78,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row gap-3 justify-between text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} InovaFlow. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} Impegni. Todos os direitos reservados.</p>
           <p>Seus dados são tratados de acordo com a Lei Geral de Proteção de Dados (LGPD).</p>
         </div>
       </div>

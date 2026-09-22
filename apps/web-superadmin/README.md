@@ -1,4 +1,4 @@
-# InovaFlow — Super Admin
+# Impegni — Super Admin
 
 Painel restrito à equipe da plataforma (não das empresas clientes). Primeira
 versão: gestão de empresas (status, e liberar/bloquear a Ficha de Anamnese —

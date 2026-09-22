@@ -49,11 +49,11 @@ export function Hero() {
             <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
             <span className="w-2.5 h-2.5 rounded-full bg-chart-4/50" />
             <span className="w-2.5 h-2.5 rounded-full bg-chart-2/50" />
-            <span className="ml-3 text-xs text-muted-foreground">app.inovaflow.com.br/dashboard</span>
+            <span className="ml-3 text-xs text-muted-foreground">app.impegni.com.br/dashboard</span>
           </div>
           <Image
             src="/screenshots/dashboard.png"
-            alt="Painel do InovaFlow mostrando faturamento, próximos atendimentos e agenda do dia"
+            alt="Painel do Impegni mostrando faturamento, próximos atendimentos e agenda do dia"
             width={1600}
             height={1000}
             priority

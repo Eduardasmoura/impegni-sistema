@@ -252,7 +252,7 @@ Deno.serve(async (req: Request) => {
       value: valorCobradoCents / 100,
       nextDueDate: new Date().toISOString().slice(0, 10),
       cycle: "MONTHLY",
-      description: `Assinatura InovaFlow — plano ${newPlan.name}`,
+      description: `Assinatura Impegni — plano ${newPlan.name}`,
     });
     if (!subscriptionResult.ok) {
       return jsonResponse({ error: `Asaas: falha ao criar assinatura recorrente (${subscriptionResult.error})` }, 502);

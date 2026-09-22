@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 
-const TITLE = "InovaFlow — Agenda e gestão para profissionais autônomos";
+const TITLE = "Impegni — Agenda e gestão para profissionais autônomos";
 const DESCRIPTION =
   "Agenda, clientes, serviços e financeiro em um só lugar, com sua própria página de agendamento. Teste grátis por 14 dias, sem cartão de crédito.";
 

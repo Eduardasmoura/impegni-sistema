@@ -52,7 +52,7 @@ export function RelatoriosView({ summary, porPlano, de, ate, loadError }: { summ
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `relatorio-inovaflow-${de}-a-${ate}.csv`;
+    a.download = `relatorio-impegni-${de}-a-${ate}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

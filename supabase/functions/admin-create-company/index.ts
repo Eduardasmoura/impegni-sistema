@@ -201,7 +201,7 @@ Deno.serve(async (req: Request) => {
         value: plan.price_cents / 100,
         nextDueDate: trialEndsAt.toISOString().slice(0, 10),
         cycle: "MONTHLY",
-        description: `Assinatura InovaFlow — plano ${plan.name}`,
+        description: `Assinatura Impegni — plano ${plan.name}`,
       });
       if (subscriptionResult.ok) {
         await admin.from("companies").update({ asaas_customer_id: asaasCustomerId }).eq("id", company.id);

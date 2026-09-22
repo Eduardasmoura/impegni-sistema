@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { DEFAULT_TIMEZONE } from "@/lib/timezone";
 import { AnamneseFicha } from "@/components/anamnese-ficha";
 import { ReagendarDialog } from "./reagendar-dialog";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
@@ -296,6 +297,13 @@ export function MeusAgendamentosView({ userId, agendadoId }: { userId: string; a
           onOpenChange={(o) => !o && setReagendando(null)}
           appointmentId={reagendando.id}
           companyId={reagendando.company_id}
+          // TODO(pós-migration 20260922000000_company_timezone): pedir
+          // `companies(timezone)` de volta neste select assim que a coluna
+          // existir em produção — hoje ela ainda não existe (PostgREST
+          // recusa o select inteiro com "column does not exist" se ela for
+          // pedida explicitamente), e 100% das empresas usam o mesmo fuso
+          // de qualquer forma até a migration ser aplicada.
+          companyTimezone={DEFAULT_TIMEZONE}
           professionalId={reagendando.professional_id}
           serviceId={reagendando.service_id}
           servicoNome={reagendando.services?.name ?? "Atendimento"}

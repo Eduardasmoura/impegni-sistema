@@ -1,0 +1,17 @@
+# Usado só pelo `vercel deploy` (upload do monorepo inteiro, já que os 4
+# projetos apontam pra apps/* via "Root Directory" nas configurações da
+# Vercel — precisam do repo inteiro pro npm workspaces resolver certo).
+#
+# mobile/ nunca é usado por nenhum dos 4 apps Next.js. Excluir aqui importa
+# de verdade: o Flutter gera até 1.6GB em mobile/barber_inova_app/build/,
+# ignorado pelo Git só por um .gitignore ANINHADO dentro da própria pasta
+# do Flutter (mobile/barber_inova_app/.gitignore) — a Vercel CLI não lê
+# .gitignore aninhado, só o da raiz, então sem esta regra ela tenta subir
+# esse build inteiro e o upload falha ("Upload aborted").
+mobile/
+
+# Redundante com .gitignore (que a Vercel lê na raiz), mas explícito aqui
+# por segurança — nunca subir isso mesmo se algum dia virar untracked.
+node_modules/
+.next/
+.vercel/

@@ -6,5 +6,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // robots.txt/sitemap.xml (rotas de metadata do Next.js, criadas na
+  // preparação de produção) precisam ficar de fora do gate de auth — sem
+  // isso, um visitante sem sessão era redirecionado pro /login ao tentar
+  // buscá-las, e um crawler nunca via a regra de disallow de verdade.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

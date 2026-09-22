@@ -47,7 +47,7 @@ export function Solucao() {
           <Reveal className="lg:col-span-2">
             <ScreenshotCard
               img="/screenshots/agenda.png"
-              alt="Tela de agenda do InovaFlow com os horários do dia organizados por profissional"
+              alt="Tela de agenda do Impegni com os horários do dia organizados por profissional"
               title="Agenda"
               body="Organize seus horários e visualize seus atendimentos do dia, da semana ou do mês."
             />
@@ -66,7 +66,7 @@ export function Solucao() {
           <Reveal delay={160} className="lg:col-span-2 lg:order-2">
             <ScreenshotCard
               img="/screenshots/financeiro.png"
-              alt="Relatório financeiro do InovaFlow mostrando receita, despesas e margem de lucro"
+              alt="Relatório financeiro do Impegni mostrando receita, despesas e margem de lucro"
               title="Financeiro"
               body="Tenha uma visão mais organizada dos seus recebimentos, sem depender de planilha."
             />

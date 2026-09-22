@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
+import { zonedTimeToUtcIso } from "@/lib/timezone";
 import { AvailabilityCalendar } from "./availability-calendar";
 
 /**
@@ -26,6 +27,7 @@ export function ReagendarStaffDialog({
   onOpenChange,
   appointmentId,
   companyId,
+  companyTimezone,
   professionalId,
   serviceId,
   servicoNome,
@@ -36,6 +38,7 @@ export function ReagendarStaffDialog({
   onOpenChange: (open: boolean) => void;
   appointmentId: string;
   companyId: string;
+  companyTimezone: string;
   professionalId: string;
   serviceId: string;
   servicoNome: string;
@@ -90,7 +93,7 @@ export function ReagendarStaffDialog({
   async function confirmar() {
     if (!data || !hora) return;
     setSalvando(true);
-    const novoHorario = new Date(`${data}T${hora}:00`).toISOString();
+    const novoHorario = zonedTimeToUtcIso(data, hora, companyTimezone);
     const { error } = await supabase.rpc("reschedule_appointment", { p_appointment_id: appointmentId, p_new_scheduled_at: novoHorario });
     setSalvando(false);
     if (error) {

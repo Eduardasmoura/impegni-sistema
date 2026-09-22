@@ -1,0 +1,14 @@
+import type { MetadataRoute } from "next";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003";
+
+// As 3 páginas reais deste app hoje (/, /termos, /privacidade). Atualizar
+// esta lista se novas rotas públicas forem adicionadas ao site.
+export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date();
+  return [
+    { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE_URL}/termos`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${SITE_URL}/privacidade`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+  ];
+}

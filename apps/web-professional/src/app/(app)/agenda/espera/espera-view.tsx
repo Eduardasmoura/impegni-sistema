@@ -38,7 +38,7 @@ const ABAS = [
 /**
  * Fase 5, Parte 9 — visão do profissional sobre a lista de espera.
  * Notificar o cliente aqui é uma ação MANUAL (ligar/mandar mensagem por
- * fora) — o InovaFlow não tem canal automático pro cliente (só push pro
+ * fora) — o Impegni não tem canal automático pro cliente (só push pro
  * profissional funciona hoje), então o botão só registra que o contato
  * foi feito, não dispara nada sozinho.
  */

@@ -3,20 +3,20 @@ import type { Metadata } from "next";
 import { Scissors } from "lucide-react";
 import { CURRENT_TERMS_VERSION } from "@/lib/terms";
 
-export const metadata: Metadata = { title: "Contrato de Prestação de Serviços — InovaFlow" };
+export const metadata: Metadata = { title: "Contrato de Prestação de Serviços — Impegni" };
 
 const SECOES = [
   {
     titulo: "1. Identificação das partes",
-    corpo: `De um lado, a InovaFlow ("Plataforma"), responsável pelo fornecimento do sistema de gestão descrito neste contrato. De outro, a pessoa física ou jurídica que realiza o cadastro ("Cliente" ou "Contratante"), representada pelo responsável identificado no momento da criação da conta.`,
+    corpo: `De um lado, a Impegni ("Plataforma"), responsável pelo fornecimento do sistema de gestão descrito neste contrato. De outro, a pessoa física ou jurídica que realiza o cadastro ("Cliente" ou "Contratante"), representada pelo responsável identificado no momento da criação da conta.`,
   },
   {
     titulo: "2. Objeto do serviço",
-    corpo: `Este contrato regula o uso da plataforma InovaFlow, disponibilizada como Software as a Service (SaaS) para gestão de agenda, clientes, equipe, serviços, estoque e financeiro de negócios de beleza e estética.`,
+    corpo: `Este contrato regula o uso da plataforma Impegni, disponibilizada como Software as a Service (SaaS) para gestão de agenda, clientes, equipe, serviços, estoque e financeiro de negócios de beleza e estética.`,
   },
   {
     titulo: "3. Descrição geral da plataforma",
-    corpo: `A InovaFlow está disponível hoje na versão Web, acessível por navegador em qualquer computador, tablet ou celular, incluindo uma página pública de agendamento para os clientes do Contratante. Um aplicativo Mobile dedicado está em desenvolvimento e será anunciado quando disponível.`,
+    corpo: `A Impegni está disponível hoje na versão Web, acessível por navegador em qualquer computador, tablet ou celular, incluindo uma página pública de agendamento para os clientes do Contratante. Um aplicativo Mobile dedicado está em desenvolvimento e será anunciado quando disponível.`,
   },
   {
     titulo: "4. Criação da conta",
@@ -56,7 +56,7 @@ const SECOES = [
   },
   {
     titulo: "13. Responsabilidades da plataforma",
-    corpo: `Cabe à InovaFlow: manter a plataforma em funcionamento dentro de padrões razoáveis de disponibilidade; proteger os dados armazenados com controles de acesso e isolamento entre diferentes contas (multi-tenant); e comunicar alterações relevantes nestes termos.`,
+    corpo: `Cabe à Impegni: manter a plataforma em funcionamento dentro de padrões razoáveis de disponibilidade; proteger os dados armazenados com controles de acesso e isolamento entre diferentes contas (multi-tenant); e comunicar alterações relevantes nestes termos.`,
   },
   {
     titulo: "14. Disponibilidade do serviço",
@@ -121,14 +121,14 @@ export default function ContratoPage() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Scissors className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-semibold">InovaFlow</span>
+            <span className="font-heading text-lg font-semibold">Impegni</span>
           </Link>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14">
         <h1 className="font-heading text-3xl font-semibold mb-1">Contrato de Prestação de Serviços</h1>
-        <p className="text-sm text-muted-foreground mb-6">Termos de Uso da plataforma InovaFlow — versão {CURRENT_TERMS_VERSION}</p>
+        <p className="text-sm text-muted-foreground mb-6">Termos de Uso da plataforma Impegni — versão {CURRENT_TERMS_VERSION}</p>
 
         <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground mb-10">
           Este documento descreve como a plataforma funciona hoje e as condições de uso do período de teste e dos

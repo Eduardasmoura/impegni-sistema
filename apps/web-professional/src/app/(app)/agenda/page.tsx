@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/company";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_TIMEZONE } from "@/lib/timezone";
 import { AgendaView } from "./agenda-view";
 
 export default async function AgendaPage() {
@@ -12,5 +13,11 @@ export default async function AgendaPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <AgendaView companyId={current.company.id} currentUserId={user?.id ?? null} />;
+  return (
+    <AgendaView
+      companyId={current.company.id}
+      companyTimezone={current.company.timezone ?? DEFAULT_TIMEZONE}
+      currentUserId={user?.id ?? null}
+    />
+  );
 }

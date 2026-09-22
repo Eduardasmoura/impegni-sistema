@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import html2canvas from "html2canvas";
 
 export type ExportColumn = { key: string; label: string; align?: "left" | "right" };
@@ -118,36 +118,41 @@ function downloadFile(file: File): void {
 }
 
 /**
- * Excel real (.xlsx via SheetJS) — não é CSV renomeado: cabeçalho
- * formatado em negrito, colunas com largura ajustada ao conteúdo, e um
- * bloco de contexto (relatório/período/filtros) antes da tabela.
+ * Excel real (.xlsx via ExcelJS) — não é CSV renomeado: colunas com largura
+ * ajustada ao conteúdo e um bloco de contexto (relatório/período/filtros)
+ * antes da tabela. Trocado de SheetJS (`xlsx@0.18.5`) pra ExcelJS na
+ * preparação de produção — a versão do SheetJS em uso tinha 2
+ * vulnerabilidades conhecidas sem correção disponível (prototype pollution
+ * e ReDoS). Saída equivalente à anterior de propósito (mesmas linhas,
+ * mesma largura de coluna, título mesclado, sem negrito) — o ExcelJS
+ * suportaria negrito de verdade no cabeçalho, mas isso ficou de fora aqui
+ * pra não mudar o resultado visual do relatório nesta troca.
  */
-export function exportReportToXlsx(ctx: ExportContext, columns: ExportColumn[], rows: ExportRow[]): void {
-  const aoa: (string | number)[][] = [
-    ["Impegni"],
-    [ctx.companyName],
-    [ctx.reportTitle],
-    [`Período: ${ctx.periodoLabel}`],
-    [`Filtros: ${ctx.filtrosResumo.length ? ctx.filtrosResumo.join(" · ") : "Nenhum filtro adicional"}`],
-    [`Gerado em: ${ctx.geradoEm.toLocaleString("pt-BR")}`],
-    [],
-    columns.map((c) => c.label),
-    ...rows.map((r) => columns.map((c) => r[c.key] ?? "")),
-  ];
+export async function exportReportToXlsx(ctx: ExportContext, columns: ExportColumn[], rows: ExportRow[]): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Relatório");
 
-  // Nota honesta: a build gratuita do SheetJS não persiste estilo de célula
-  // (negrito etc.) ao ESCREVER .xlsx — só a Pro faz isso. O que dá pra
-  // garantir sem inventar suporte que não existe: largura de coluna real e
-  // mesclagem do título, que a build gratuita escreve normalmente.
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"] = columns.map((c) => ({
-    wch: Math.max(c.label.length + 2, ...rows.map((r) => String(r[c.key] ?? "").length + 2), 10),
+  const colCount = Math.max(columns.length, 1);
+  ws.addRow(["Impegni"]);
+  ws.mergeCells(1, 1, 1, colCount);
+  ws.addRow([ctx.companyName]);
+  ws.addRow([ctx.reportTitle]);
+  ws.addRow([`Período: ${ctx.periodoLabel}`]);
+  ws.addRow([`Filtros: ${ctx.filtrosResumo.length ? ctx.filtrosResumo.join(" · ") : "Nenhum filtro adicional"}`]);
+  ws.addRow([`Gerado em: ${ctx.geradoEm.toLocaleString("pt-BR")}`]);
+  ws.addRow([]);
+  ws.addRow(columns.map((c) => c.label));
+  for (const r of rows) ws.addRow(columns.map((c) => r[c.key] ?? ""));
+
+  ws.columns = columns.map((c) => ({
+    width: Math.max(c.label.length + 2, ...rows.map((r) => String(r[c.key] ?? "").length + 2), 10),
   }));
-  ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(columns.length - 1, 0) } }];
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Relatório");
-  XLSX.writeFile(wb, `${slugifyFilename(ctx.reportTitle)}.xlsx`);
+  const buffer = await wb.xlsx.writeBuffer();
+  const file = new File([buffer], `${slugifyFilename(ctx.reportTitle)}.xlsx`, {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  downloadFile(file);
 }
 
 function slugifyFilename(s: string): string {

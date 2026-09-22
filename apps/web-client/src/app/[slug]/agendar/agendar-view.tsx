@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useSupabaseUser } from "@/lib/use-supabase-user";
+import { zonedTimeToUtcIso, DEFAULT_TIMEZONE } from "@/lib/timezone";
 import { AvailabilityCalendar } from "./availability-calendar";
 import type { Tables } from "@/lib/supabase/database.types";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
@@ -295,7 +296,7 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
         await supabase.from("clients").update({ name: nome, phone: telefone }).eq("id", clientRow.id);
       }
 
-      const scheduledAt = new Date(`${data}T${hora}:00`).toISOString();
+      const scheduledAt = zonedTimeToUtcIso(data, hora, company.timezone ?? DEFAULT_TIMEZONE);
       // Agendamento + pagamento numa RPC só (transação atômica) — antes eram
       // dois inserts separados e o segundo (payments) sempre falhava por RLS
       // pra um cliente comum, deixando o agendamento órfão sem pagamento.

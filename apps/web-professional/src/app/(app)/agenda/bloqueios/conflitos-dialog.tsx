@@ -32,6 +32,7 @@ export function ConflitosDialog({
   open,
   conflitos,
   companyId,
+  companyTimezone,
   professionalId,
   onVoltar,
   onCriarMesmoAssim,
@@ -40,6 +41,7 @@ export function ConflitosDialog({
   open: boolean;
   conflitos: Conflito[];
   companyId: string;
+  companyTimezone: string;
   professionalId: string;
   onVoltar: () => void;
   onCriarMesmoAssim: () => void;
@@ -131,6 +133,7 @@ export function ConflitosDialog({
           onOpenChange={(o) => !o && setReagendando(null)}
           appointmentId={reagendando.appointment_id}
           companyId={companyId}
+          companyTimezone={companyTimezone}
           professionalId={professionalId}
           serviceId={reagendando.service_id}
           servicoNome={reagendando.service_name}

@@ -7,7 +7,7 @@
 //
 // Diferença importante pro Asaas cobrar QUALQUER coisa, ele exige um
 // "customer" já cadastrado lá, e criar esse customer exige cpfCnpj — dado
-// que o InovaFlow nunca coletou de cliente nenhum até agora. Por isso este
+// que o Impegni nunca coletou de cliente nenhum até agora. Por isso este
 // endpoint aceita opcionalmente `cpf_cnpj` no corpo: se o cliente ainda não
 // tem um Asaas customer, usa o valor recebido (e persiste em
 // clients.cpf_cnpj) pra criar um. Sem CPF/CNPJ (nem já salvo, nem enviado
@@ -18,7 +18,7 @@
 //
 // billingType: 'UNDEFINED' — deixa o próprio cliente escolher Pix, boleto
 // ou cartão na página hospedada do Asaas (invoiceUrl), em vez do
-// InovaFlow decidir ou precisar processar dado de cartão diretamente.
+// Impegni decidir ou precisar processar dado de cartão diretamente.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -193,7 +193,7 @@ Deno.serve(async (req: Request) => {
       billingType: "UNDEFINED",
       value: Number(payment.amount),
       dueDate,
-      description: `Agendamento — ${company?.name ?? "InovaFlow"}`,
+      description: `Agendamento — ${company?.name ?? "Impegni"}`,
       externalReference: payment.id,
     }),
   });

@@ -44,12 +44,12 @@ export function InterfaceProduto() {
             <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
             <span className="w-2.5 h-2.5 rounded-full bg-chart-4/50" />
             <span className="w-2.5 h-2.5 rounded-full bg-chart-2/50" />
-            <span className="ml-3 text-xs text-muted-foreground">app.inovaflow.com.br/{modulo.key}</span>
+            <span className="ml-3 text-xs text-muted-foreground">app.impegni.com.br/{modulo.key}</span>
           </div>
           <Image
             key={modulo.key}
             src={modulo.img}
-            alt={`Tela de ${modulo.label.toLowerCase()} do InovaFlow`}
+            alt={`Tela de ${modulo.label.toLowerCase()} do Impegni`}
             width={1440}
             height={900}
             className="w-full h-auto"

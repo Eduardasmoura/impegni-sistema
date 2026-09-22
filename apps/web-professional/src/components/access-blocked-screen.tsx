@@ -20,14 +20,14 @@ const REASON_COPY: Record<
   trial_expired: {
     icon: Clock,
     title: "Seu período de teste terminou",
-    subtitle: "Continue usando todos os recursos do InovaFlow escolhendo o plano ideal para o seu negócio.",
+    subtitle: "Continue usando todos os recursos do Impegni escolhendo o plano ideal para o seu negócio.",
     reassurance: "Seus dados, clientes e agendamentos continuam salvos.",
     showPlans: true,
   },
   payment_overdue: {
     icon: AlertTriangle,
     title: "Seu pagamento está atrasado",
-    subtitle: "Não conseguimos confirmar o pagamento da sua assinatura. Regularize abaixo para voltar a usar o InovaFlow.",
+    subtitle: "Não conseguimos confirmar o pagamento da sua assinatura. Regularize abaixo para voltar a usar o Impegni.",
     reassurance: "Seus dados, clientes e agendamentos continuam salvos.",
     showPlans: true,
   },
@@ -88,7 +88,7 @@ export function AccessBlockedScreen({
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 py-8 sm:py-12">
       <div className={mostrarEscolhaDePlanos ? "w-full max-w-4xl" : "w-full max-w-lg"}>
-        {/* Wordmark — mesmo bloco (marca + "InovaFlow") usado no topo das
+        {/* Wordmark — mesmo bloco (marca + "Impegni") usado no topo das
             telas de autenticação (`auth-layout.tsx`), pra essa tela não
             parecer um estado de erro solto, e sim uma etapa do próprio
             produto. */}
@@ -96,7 +96,7 @@ export function AccessBlockedScreen({
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <Scissors className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-heading text-base font-semibold">InovaFlow</span>
+          <span className="font-heading text-base font-semibold">Impegni</span>
         </div>
 
         <div className="text-center mb-6">

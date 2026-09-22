@@ -1,4 +1,4 @@
-# InovaFlow — Web Cliente
+# Impegni — Web Cliente
 
 App público (sem login pra navegar) que atende **todos os estabelecimentos**
 através do mesmo código — multi-tenant por subdomínio.
