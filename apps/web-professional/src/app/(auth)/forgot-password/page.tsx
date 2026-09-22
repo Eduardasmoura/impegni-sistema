@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ export default function ForgotPasswordPage() {
     });
     setLoading(false);
     if (resetError) {
-      setError(resetError.message);
+      setError(friendlyError(resetError, "enviar o link de redefinição"));
       return;
     }
     setSent(true);

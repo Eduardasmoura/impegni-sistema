@@ -6,8 +6,9 @@ import '../../data/supabase_client.dart';
 class NovoAgendamentoSheet extends StatefulWidget {
   final String companyId;
   final String dia; // yyyy-MM-dd
+  final String? initialProfessionalId;
 
-  const NovoAgendamentoSheet({super.key, required this.companyId, required this.dia});
+  const NovoAgendamentoSheet({super.key, required this.companyId, required this.dia, this.initialProfessionalId});
 
   @override
   State<NovoAgendamentoSheet> createState() => _NovoAgendamentoSheetState();
@@ -29,6 +30,7 @@ class _NovoAgendamentoSheetState extends State<NovoAgendamentoSheet> {
   @override
   void initState() {
     super.initState();
+    _professionalId = widget.initialProfessionalId;
     _loadOptions();
   }
 
@@ -41,22 +43,17 @@ class _NovoAgendamentoSheetState extends State<NovoAgendamentoSheet> {
   }
 
   Future<void> _loadOptions() async {
-    final services = await supabase
-        .from('services')
-        .select('id, name, price, duration_min')
-        .eq('company_id', widget.companyId)
-        .eq('active', true)
-        .order('name');
-    final professionals = await supabase
-        .from('professionals')
-        .select('id, name')
-        .eq('company_id', widget.companyId)
-        .eq('active', true)
-        .order('name');
+    // FASE 7 (performance): serviços e profissionais são consultas
+    // independentes — paralelo em vez de sequencial economiza uma rodada
+    // de rede inteira antes do sheet ficar usável.
+    final resultados = await Future.wait<List<Map<String, dynamic>>>([
+      supabase.from('services').select('id, name, price, duration_min').eq('company_id', widget.companyId).eq('active', true).order('name', ascending: true),
+      supabase.from('professionals').select('id, name').eq('company_id', widget.companyId).eq('active', true).order('name', ascending: true),
+    ]);
     if (!mounted) return;
     setState(() {
-      _services = List<Map<String, dynamic>>.from(services);
-      _professionals = List<Map<String, dynamic>>.from(professionals);
+      _services = resultados[0];
+      _professionals = resultados[1];
       _loadingOptions = false;
     });
   }
@@ -93,7 +90,14 @@ class _NovoAgendamentoSheetState extends State<NovoAgendamentoSheet> {
         clientId = novoCliente['id'] as String;
       }
 
-      final scheduledAt = DateTime.parse('${widget.dia}T${_timeController.text}:00').toIso8601String();
+      // MOB-03: `DateTime.parse` sem offset gera um DateTime local — mas
+      // `toIso8601String()` num DateTime local não anexa 'Z'/offset, então o
+      // Postgres interpretava a string como se já fosse UTC (gravando o
+      // agendamento com o horário errado, algumas horas adiantado/atrasado
+      // conforme o fuso do aparelho). `.toUtc()` converte o mesmo instante
+      // real pra UTC antes de serializar — mesmo padrão que os apps web já
+      // usam (`new Date(...).toISOString()`).
+      final scheduledAt = DateTime.parse('${widget.dia}T${_timeController.text}:00').toUtc().toIso8601String();
       await supabase.from('appointments').insert({
         'company_id': widget.companyId,
         'client_id': clientId,

@@ -1,4 +1,21 @@
 import 'package:flutter/material.dart';
+import '../data/company_service.dart';
+
+/// Identidade visual da empresa: se ela customizou a paleta (Meu negócio >
+/// cores, `companies.color_primary/secondary/accent` — mesmos 3 campos que
+/// o app web já salva), usa essa cor de verdade em vez do tema fixo do
+/// segmento. Antes disso o mobile só tinha as 2 paletas por segmento; a cor
+/// customizável ficava salva no banco sem nunca aparecer em lugar nenhum
+/// (mesma lacuna que existia no web, corrigida junto — ver `lib/color.ts`
+/// do lado web e o comentário em `globals.css`).
+ThemeData themeForCompany(CurrentCompany company) {
+  final primaryHex = company.colorPrimary;
+  if (primaryHex == null) return themeForSegment(company.themeKey);
+  return _customTheme(
+    primary: _hexToColor(primaryHex),
+    secondary: company.colorSecondary != null ? _hexToColor(company.colorSecondary!) : const Color(0xFF1C1917),
+  );
+}
 
 /// Identidade visual por segmento (ver `segments.theme_key`, escolhido pelo
 /// Super Admin ou pelo próprio profissional ao cadastrar a empresa):
@@ -9,6 +26,53 @@ import 'package:flutter/material.dart';
 /// antes disso (tela de login), o app usa um tema neutro (ver `main.dart`).
 ThemeData themeForSegment(String themeKey) {
   return themeKey == 'soft_purple' ? _estudioEsteticaTheme() : _barbeariaTheme();
+}
+
+Color _hexToColor(String hex) {
+  final clean = hex.replaceAll('#', '');
+  return Color(int.parse('FF$clean', radix: 16));
+}
+
+/// Preto ou branco por cima da cor escolhida, pelo mesmo critério de
+/// contraste (luminância relativa, WCAG) que o `hexForeground` do web usa —
+/// os dois lados decidem a legibilidade da mesma forma.
+Color _foregroundFor(Color background) {
+  return background.computeLuminance() > 0.45 ? const Color(0xFF171717) : const Color(0xFFFFFFFF);
+}
+
+ThemeData _customTheme({required Color primary, required Color secondary}) {
+  final onPrimary = _foregroundFor(primary);
+  final onSecondary = _foregroundFor(secondary);
+  const branco = Color(0xFFFFFFFF);
+
+  final colorScheme = ColorScheme.light(
+    primary: primary,
+    onPrimary: onPrimary,
+    secondary: secondary,
+    onSecondary: onSecondary,
+    surface: branco,
+    onSurface: const Color(0xFF1C1917),
+    error: const Color(0xFFDC2626),
+    onError: branco,
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: colorScheme,
+    scaffoldBackgroundColor: branco,
+    appBarTheme: AppBarTheme(backgroundColor: secondary, foregroundColor: onSecondary, elevation: 0),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: secondary,
+      indicatorColor: primary.withValues(alpha: 0.25),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(color: states.contains(WidgetState.selected) ? primary : onSecondary.withValues(alpha: 0.7)),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(fontSize: 11, color: states.contains(WidgetState.selected) ? primary : onSecondary.withValues(alpha: 0.7)),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: primary, foregroundColor: onPrimary)),
+  );
 }
 
 ThemeData _barbeariaTheme() {

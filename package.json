@@ -1,5 +1,5 @@
 {
-  "name": "barber-inova",
+  "name": "inovaflow",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
@@ -9,9 +9,11 @@
     "dev:professional": "npm run dev --workspace=apps/web-professional",
     "dev:client": "npm run dev --workspace=apps/web-client",
     "dev:admin": "npm run dev --workspace=apps/web-superadmin",
+    "dev:site": "npm run dev --workspace=apps/site",
     "build:professional": "npm run build --workspace=apps/web-professional",
     "build:client": "npm run build --workspace=apps/web-client",
     "build:admin": "npm run build --workspace=apps/web-superadmin",
-    "build": "npm run build:professional && npm run build:client && npm run build:admin"
+    "build:site": "npm run build --workspace=apps/site",
+    "build": "npm run build:professional && npm run build:client && npm run build:admin && npm run build:site"
   }
 }

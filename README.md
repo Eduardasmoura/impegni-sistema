@@ -1,4 +1,4 @@
-# Barber iNova
+# InovaFlow
 
 SaaS multi-tenant para barbearias/salões. Três experiências:
 

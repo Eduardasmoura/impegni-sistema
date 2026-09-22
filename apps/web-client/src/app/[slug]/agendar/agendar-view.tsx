@@ -1,37 +1,61 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, User, Scissors, Calendar as CalIcon, Check, ChevronLeft, LogIn, UserPlus } from "lucide-react";
+import { Clock, User, Calendar as CalIcon, Check, ChevronLeft, LogIn, UserPlus, Tag, X as XIcon, ListPlus, ExternalLink } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useSupabaseUser } from "@/lib/use-supabase-user";
+import { AvailabilityCalendar } from "./availability-calendar";
 import type { Tables } from "@/lib/supabase/database.types";
+import { AddToCalendarButton } from "@/components/add-to-calendar";
 
-const STEPS = ["Serviço", "Profissional", "Horário", "Confirmação"];
+// Ordem pedida: profissional -> serviço -> calendário/horário -> confirmação.
+const STEPS = ["Profissional", "Serviço", "Horário", "Confirmação"];
 const METODOS = [
   { chave: "pix", label: "Pix" },
   { chave: "card", label: "Cartão" },
   { chave: "cash", label: "Dinheiro" },
+  { chave: "online", label: "Pagar online" },
 ];
 
-function toDateStr(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// Traduz os erros conhecidos que o banco pode devolver na hora de confirmar
+// (conflito de horário, bloqueio, fora do expediente) pra uma mensagem que
+// faz sentido pro cliente — o resto (erro genérico) cai na mensagem padrão.
+function mensagemDeErro(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (raw.includes("exclusion constraint") || raw.includes("appointments_no_overlap")) {
+    return "Esse horário acabou de ser reservado por outra pessoa. Escolha outro horário.";
+  }
+  if (raw.includes("blocked")) {
+    return "O profissional não está disponível nesse horário.";
+  }
+  if (raw.includes("working hours")) {
+    return "Esse horário está fora do expediente do profissional.";
+  }
+  return raw;
 }
 
 export function AgendarView({ company }: { company: Tables<"companies"> }) {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useSupabaseUser();
   const supabase = createClient();
+  // Serviço vindo do clique num card na página pública (/[slug]?service=id
+  // ...agendar?service=id) — já pré-seleciona o serviço, mas o fluxo novo
+  // ainda exige escolher o profissional primeiro (etapa 0).
+  const serviceFromUrl = searchParams.get("service");
 
+  const storageKey = `agendar:${company.id}`;
   const [step, setStep] = useState(0);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
@@ -41,6 +65,54 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
   const [telefone, setTelefone] = useState("");
   const [metodo, setMetodo] = useState("pix");
   const [loading, setLoading] = useState(false);
+  const [cupomCodigo, setCupomCodigo] = useState("");
+  const [cupomAplicado, setCupomAplicado] = useState<{ code: string; discount_amount: number; final_amount: number } | null>(null);
+  const [aplicandoCupom, setAplicandoCupom] = useState(false);
+  const [erroCupom, setErroCupom] = useState("");
+  const [entrandoNaFila, setEntrandoNaFila] = useState(false);
+  const [naFilaDeEspera, setNaFilaDeEspera] = useState(false);
+  const [cpfCliente, setCpfCliente] = useState("");
+  const [pagamentoOnline, setPagamentoOnline] = useState<{ invoiceUrl: string; appointmentId?: string } | null>(null);
+
+  const agora = useMemo(() => new Date(), []);
+  const [viewYear, setViewYear] = useState(agora.getFullYear());
+  const [viewMonth, setViewMonth] = useState(agora.getMonth());
+
+  // Recupera a seleção em andamento (profissional/serviço/data/hora) — sem
+  // isso, um usuário que precisa logar/cadastrar no meio do fluxo (etapa 3)
+  // perdia tudo ao voltar, porque o login navega pra outra página e
+  // remonta este componente do zero.
+  useEffect(() => {
+    // Clicou num serviço específico (card da página pública) — é uma nova
+    // intenção, então essa tem prioridade sobre qualquer rascunho antigo em
+    // andamento; ainda assim precisa escolher o profissional (etapa 0).
+    if (serviceFromUrl) {
+      setServiceId(serviceFromUrl);
+      setStep(0);
+      return;
+    }
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as Partial<{ step: number; serviceId: string; professionalId: string | null; data: string; hora: string }>;
+      if (saved.serviceId) setServiceId(saved.serviceId);
+      if (saved.professionalId !== undefined) setProfessionalId(saved.professionalId);
+      if (saved.data) setData(saved.data);
+      if (saved.hora) setHora(saved.hora);
+      if (typeof saved.step === "number") setStep(saved.step);
+    } catch {
+      // sessionStorage indisponível (modo privado etc.) — segue sem restaurar.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify({ step, serviceId, professionalId, data, hora }));
+    } catch {
+      // idem — falha silenciosa, não é crítico.
+    }
+  }, [storageKey, step, serviceId, professionalId, data, hora]);
 
   const { data: services = [] } = useQuery({
     queryKey: ["public-services", company.id],
@@ -62,69 +134,146 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
   const servico = services.find((s) => s.id === serviceId);
   const professional = professionals.find((p) => p.id === professionalId);
 
-  // Agendamentos do dia selecionado, só pra checar conflito de horário (a
-  // policy pública de SELECT em `appointments` não existe — por isso este
-  // cálculo roda com a sessão do usuário quando logado; sem login, mostramos
-  // o dia inteiro como "disponível" e o INSERT final é quem garante
-  // integridade via RLS + o trigger de negócio do lado do servidor).
-  const { data: agendaDoDia = [] } = useQuery({
-    queryKey: ["appointments-day", company.id, data, professionalId],
-    enabled: !!data && !!user,
+  // Se o id vindo da URL não corresponder a nenhum serviço ativo da empresa
+  // (link velho/inválido), volta pra etapa de escolha em vez de travar num
+  // estado inconsistente.
+  useEffect(() => {
+    if (serviceFromUrl && services.length > 0 && !services.some((s) => s.id === serviceFromUrl)) {
+      setServiceId(null);
+      setStep(0);
+    }
+  }, [serviceFromUrl, services]);
+
+  // Volta o calendário pro mês atual sempre que profissional ou serviço
+  // mudam — evita mostrar o mês de julho pro profissional novo só porque o
+  // usuário tinha navegado pra lá com o profissional anterior.
+  useEffect(() => {
+    setViewYear(agora.getFullYear());
+    setViewMonth(agora.getMonth());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professionalId, serviceId]);
+
+  // Disponibilidade do MÊS visível — contagem real por dia (expediente do
+  // profissional menos agendamentos/bloqueios existentes), calculada no
+  // banco via get_availability_month (reaproveita as mesmas regras das
+  // triggers de agendamento). Nunca é uma contagem feita no front.
+  const monthKey = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-01`;
+  const { data: monthRows = [], isFetching: carregandoMes } = useQuery({
+    queryKey: ["availability-month", company.id, professionalId, serviceId, monthKey],
+    enabled: !!professionalId && !!serviceId,
     queryFn: async () => {
-      const inicio = new Date(`${data}T00:00:00`).toISOString();
-      const fim = new Date(`${data}T23:59:59`).toISOString();
-      let query = supabase
-        .from("appointments")
-        .select("*")
-        .eq("company_id", company.id)
-        .gte("scheduled_at", inicio)
-        .lte("scheduled_at", fim)
-        .neq("status", "canceled");
-      if (professionalId) query = query.eq("professional_id", professionalId);
-      const { data: rows, error } = await query;
-      if (error) return [];
-      return rows as Tables<"appointments">[];
+      const { data: rows, error } = await supabase.rpc("get_availability_month", {
+        p_company_id: company.id,
+        p_professional_id: professionalId!,
+        p_service_id: serviceId!,
+        p_month: monthKey,
+      });
+      if (error) throw error;
+      return rows ?? [];
     },
   });
+  const countsByDay = useMemo(() => new Map(monthRows.map((r) => [r.day, r.available_count])), [monthRows]);
 
-  const slots = useMemo(() => {
-    if (!servico || !data) return [];
-    const profs = professional ? [professional] : professionals;
-    if (profs.length === 0) return [];
-    const resultado = new Map<string, boolean>();
-
-    for (const prof of profs) {
-      const [hIni, mIni] = (prof.start_time || "09:00").slice(0, 5).split(":").map(Number);
-      const [hFim, mFim] = (prof.end_time || "18:00").slice(0, 5).split(":").map(Number);
-      const fimExpediente = new Date(`${data}T${String(hFim).padStart(2, "0")}:${String(mFim).padStart(2, "0")}:00`);
-
-      for (let h = hIni, m = mIni; h < hFim || (h === hFim && m === 0); ) {
-        const inicioSlot = new Date(`${data}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
-        const fimSlot = new Date(inicioSlot.getTime() + servico.duration_min * 60000);
-        if (fimSlot > fimExpediente) break;
-        const horaSlot = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-        if (!resultado.has(horaSlot)) resultado.set(horaSlot, false);
-
-        const conflito = agendaDoDia.some((a) => {
-          if (!professional && a.professional_id !== prof.id) return false;
-          const inicioA = new Date(a.scheduled_at);
-          const fimA = new Date(inicioA.getTime() + (a.duration_min || 30) * 60000);
-          return inicioSlot < fimA && fimSlot > inicioA;
-        });
-        if (!conflito) resultado.set(horaSlot, true);
-
-        m += 30;
-        if (m >= 60) { h += Math.floor(m / 60); m %= 60; }
-      }
-    }
-    return Array.from(resultado.entries()).map(([hora, disponivel]) => ({ hora, disponivel })).sort((a, b) => a.hora.localeCompare(b.hora));
-  }, [servico, data, professional, professionals, agendaDoDia]);
+  // Horários do DIA selecionado — recalculados no banco no momento do
+  // clique (nunca reaproveita a contagem do mês), já excluindo horários
+  // ocupados/bloqueados/fora de expediente/passados.
+  const { data: horariosDoDia = [], isFetching: carregandoHorarios } = useQuery({
+    queryKey: ["availability-day", company.id, professionalId, serviceId, data],
+    enabled: !!professionalId && !!serviceId && !!data,
+    queryFn: async () => {
+      const { data: rows, error } = await supabase.rpc("get_availability_day", {
+        p_company_id: company.id,
+        p_professional_id: professionalId!,
+        p_service_id: serviceId!,
+        p_day: data,
+      });
+      if (error) throw error;
+      return (rows ?? []).map((r) => r.slot_time.slice(0, 5));
+    },
+  });
 
   const termino = useMemo(() => {
     if (!hora || !servico) return null;
     const inicio = new Date(`${data}T${hora}:00`);
     return new Date(inicio.getTime() + servico.duration_min * 60000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   }, [hora, data, servico]);
+
+  async function aplicarCupom() {
+    if (!cupomCodigo.trim() || !servico || !user) return;
+    setAplicandoCupom(true);
+    setErroCupom("");
+    // p_client_id vai vazio de propósito: quem ainda não tem cadastro nesta
+    // empresa (1ª vez agendando aqui) também precisa poder ver o desconto.
+    // O limite por cliente é aplicado de verdade em book_appointment, com o
+    // client_id real, no momento da confirmação.
+    const { data, error } = await supabase.rpc("preview_coupon", {
+      p_company_id: company.id,
+      p_code: cupomCodigo.trim(),
+      p_service_id: serviceId!,
+      p_professional_id: professionalId!,
+    });
+    setAplicandoCupom(false);
+    // preview_coupon não lança mais exceção pra "cupom inválido" — devolve
+    // sempre uma linha com valid/reason; só error de verdade é falha de uso
+    // da API (sem login, serviço inexistente).
+    if (error || !data?.[0]) {
+      setErroCupom(mensagemDeErro(error));
+      setCupomAplicado(null);
+      return;
+    }
+    const resultado = data[0];
+    if (!resultado.valid) {
+      setErroCupom(resultado.reason || "Cupom inválido");
+      setCupomAplicado(null);
+      return;
+    }
+    setCupomAplicado({ code: cupomCodigo.trim(), discount_amount: Number(resultado.discount_amount), final_amount: Number(resultado.final_amount) });
+  }
+
+  // Cliente já cadastrado nesta empresa? Decide se o botão "Entrar na lista
+  // de espera" pede nome/telefone antes (1ª vez) ou age direto (já é
+  // cliente cadastrado, mesmo dado que o passo de confirmação reaproveita).
+  const { data: clienteExistente } = useQuery({
+    queryKey: ["client-lookup", company.id, user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase.from("clients").select("id, name, phone").eq("company_id", company.id).eq("user_id", user!.id).maybeSingle();
+      return data;
+    },
+  });
+
+  async function entrarNaListaDeEspera() {
+    if (!user || !serviceId) return;
+    if (!clienteExistente && (!nome.trim() || !telefone.trim())) return;
+    setEntrandoNaFila(true);
+    try {
+      let clientId = clienteExistente?.id;
+      if (!clientId) {
+        const { data: novoCliente, error: clientError } = await supabase
+          .from("clients")
+          .insert({ company_id: company.id, user_id: user.id, name: nome, phone: telefone })
+          .select("id")
+          .single();
+        if (clientError) throw clientError;
+        clientId = novoCliente.id;
+      }
+      const { error } = await supabase.from("waitlist_entries").insert({
+        company_id: company.id,
+        client_id: clientId,
+        service_id: serviceId,
+        professional_id: professionalId,
+        preferred_date: data || null,
+        status: "waiting",
+      });
+      if (error) throw error;
+      setNaFilaDeEspera(true);
+      toast({ title: "Você entrou na lista de espera!", description: "Avisamos assim que uma vaga abrir nesse dia." });
+    } catch (e) {
+      toast({ title: "Erro ao entrar na lista de espera", description: mensagemDeErro(e), variant: "destructive" });
+    } finally {
+      setEntrandoNaFila(false);
+    }
+  }
 
   async function confirmar() {
     if (!servico || !user) return;
@@ -147,37 +296,62 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
       }
 
       const scheduledAt = new Date(`${data}T${hora}:00`).toISOString();
-      const { data: appointment, error: appointmentError } = await supabase
-        .from("appointments")
-        .insert({
-          company_id: company.id,
-          client_id: clientRow.id,
-          professional_id: professionalId!,
-          service_id: serviceId!,
-          scheduled_at: scheduledAt,
-          duration_min: servico.duration_min,
-          price: servico.price,
-          origin: "client_web",
-          payment_method: metodo,
-          created_by: user.id,
-        })
-        .select()
-        .single();
-      if (appointmentError) throw appointmentError;
-
-      await supabase.from("payments").insert({
-        company_id: company.id,
-        appointment_id: appointment.id,
-        client_id: clientRow.id,
-        amount: servico.price,
-        method: metodo,
-        status: "pending",
+      // Agendamento + pagamento numa RPC só (transação atômica) — antes eram
+      // dois inserts separados e o segundo (payments) sempre falhava por RLS
+      // pra um cliente comum, deixando o agendamento órfão sem pagamento.
+      const { data: bookData, error: bookError } = await supabase.rpc("book_appointment", {
+        p_company_id: company.id,
+        p_client_id: clientRow.id,
+        p_professional_id: professionalId!,
+        p_service_id: serviceId!,
+        p_scheduled_at: scheduledAt,
+        p_payment_method: metodo,
+        p_coupon_code: cupomAplicado?.code || undefined,
       });
+      if (bookError) throw bookError;
+      const desconto = Number(bookData?.[0]?.discount_amount || 0);
+      const paymentId = bookData?.[0]?.payment_id as string | undefined;
+      const appointmentId = bookData?.[0]?.appointment_id as string | undefined;
+      // a tela de "Meus agendamentos" abre a confirmação com "Adicionar à minha agenda"
+      const destino = appointmentId ? `/meus-agendamentos?agendado=${appointmentId}` : "/meus-agendamentos";
 
-      toast({ title: "Agendamento confirmado!", description: `${servico.name} em ${new Date(scheduledAt).toLocaleString("pt-BR")}` });
-      router.push("/meus-agendamentos");
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {
+        // não crítico
+      }
+
+      // Pagamento online: o agendamento já foi confirmado (payment fica
+      // "pending" até o Asaas avisar via webhook) — aqui só criamos a
+      // cobrança e mostramos o link de pagamento, sem sair da tela ainda.
+      if (metodo === "online" && paymentId) {
+        const { data: chargeData, error: chargeError } = await supabase.functions.invoke("create-appointment-charge", {
+          body: { payment_id: paymentId, cpf_cnpj: cpfCliente || undefined },
+        });
+        if (chargeError) {
+          const context = (chargeError as { context?: { json?: () => Promise<{ error?: string }> } }).context;
+          const body = await context?.json?.().catch(() => null);
+          toast({
+            title: "Agendamento confirmado, mas a cobrança online falhou",
+            description: `${body?.error || chargeError.message} — combine o pagamento direto com o estabelecimento.`,
+            variant: "destructive",
+          });
+          router.push(destino);
+          return;
+        }
+        setPagamentoOnline({ invoiceUrl: chargeData.invoice_url, appointmentId });
+        return;
+      }
+
+      toast({
+        title: "Agendamento confirmado!",
+        description: desconto > 0
+          ? `${servico.name} em ${new Date(scheduledAt).toLocaleString("pt-BR")} — cupom aplicado, você economizou ${formatCurrency(desconto)}`
+          : `${servico.name} em ${new Date(scheduledAt).toLocaleString("pt-BR")}`,
+      });
+      router.push(destino);
     } catch (e) {
-      toast({ title: "Erro ao agendar", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+      toast({ title: "Erro ao agendar", description: mensagemDeErro(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -188,7 +362,7 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
       <SiteHeader />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="font-heading text-3xl font-semibold mb-1">Agendar em {company.name}</h1>
-        <p className="text-muted-foreground text-sm mb-6">Escolha o serviço, profissional e horário.</p>
+        <p className="text-muted-foreground text-sm mb-6">Escolha o profissional, o serviço e o horário.</p>
 
         <div className="flex items-center gap-2 mb-8">
           {STEPS.map((label, i) => (
@@ -205,41 +379,48 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
         </div>
 
         {step === 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            {services.map((s) => (
-              <button key={s.id} onClick={() => { setServiceId(s.id); setStep(1); }} className="text-left">
-                <Card className={cn("hover:shadow-md transition-shadow h-full", serviceId === s.id && "ring-2 ring-primary")}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-0.5"><Clock className="w-3 h-3" />{s.duration_min} min</div>
-                    <p className="font-medium text-sm">{s.name}</p>
-                    <p className="font-semibold text-primary text-sm mt-1">{formatCurrency(Number(s.price))}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {professionals.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => { setProfessionalId(p.id); setData(""); setHora(""); setStep(serviceId ? 2 : 1); }}
+                className="text-left"
+              >
+                <Card className={cn("overflow-hidden hover:shadow-md transition-shadow h-full", professionalId === p.id && "ring-2 ring-primary")}>
+                  <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden text-2xl text-muted-foreground">
+                    {p.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      p.name?.[0]
+                    )}
+                  </div>
+                  <CardContent className="p-2">
+                    <p className="font-medium text-sm text-center">{p.name}</p>
+                    <p className="text-xs text-muted-foreground text-center capitalize">{p.role_title}</p>
                   </CardContent>
                 </Card>
               </button>
             ))}
+            {professionals.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Nenhum profissional disponível no momento.</p>}
           </div>
         )}
 
         {step === 1 && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <button onClick={() => { setProfessionalId(null); setData(""); setHora(""); setStep(2); }} className="text-left">
-                <Card className={cn("p-4 hover:shadow-md transition-shadow h-full", !professionalId && "ring-2 ring-primary")}>
-                  <div className="aspect-square rounded-xl bg-muted flex items-center justify-center text-muted-foreground"><Scissors className="w-8 h-8" /></div>
-                  <p className="font-medium text-sm mt-2 text-center">Qualquer profissional</p>
-                </Card>
-              </button>
-              {professionals.map((p) => (
-                <button key={p.id} onClick={() => { setProfessionalId(p.id); setData(""); setHora(""); setStep(2); }} className="text-left">
-                  <Card className={cn("overflow-hidden hover:shadow-md transition-shadow h-full", professionalId === p.id && "ring-2 ring-primary")}>
-                    <div className="aspect-square bg-muted flex items-center justify-center text-2xl text-muted-foreground">{p.name?.[0]}</div>
-                    <CardContent className="p-2">
-                      <p className="font-medium text-sm text-center">{p.name}</p>
-                      <p className="text-xs text-muted-foreground text-center capitalize">{p.role_title}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {services.map((s) => (
+                <button key={s.id} onClick={() => { setServiceId(s.id); setData(""); setHora(""); setStep(2); }} className="text-left">
+                  <Card className={cn("hover:shadow-md transition-shadow h-full", serviceId === s.id && "ring-2 ring-primary")}>
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-0.5"><Clock className="w-3 h-3" />{s.duration_min} min</div>
+                      <p className="font-medium text-sm">{s.name}</p>
+                      <p className="font-semibold text-primary text-sm mt-1">{formatCurrency(Number(s.price))}</p>
                     </CardContent>
                   </Card>
                 </button>
               ))}
+              {services.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Nenhum serviço disponível no momento.</p>}
             </div>
             <BackBtn onClick={() => setStep(0)} />
           </>
@@ -247,39 +428,68 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
 
         {step === 2 && (
           <>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="text-sm font-medium">Data</label>
-                <input
-                  type="date"
-                  min={toDateStr(new Date())}
-                  value={data}
-                  onChange={(e) => { setData(e.target.value); setHora(""); }}
-                  className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
-                />
+                <label className="text-sm font-medium mb-2 block">Escolha o dia</label>
+                <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+                  <AvailabilityCalendar
+                    year={viewYear}
+                    month={viewMonth}
+                    onMonthChange={(y, m) => { setViewYear(y); setViewMonth(m); }}
+                    countsByDay={countsByDay}
+                    loading={carregandoMes}
+                    selectedDate={data || null}
+                    onSelectDate={(d) => { setData(d); setHora(""); setNaFilaDeEspera(false); }}
+                  />
+                </div>
               </div>
+
               {data && (
                 <div>
                   <label className="text-sm font-medium">Horários disponíveis</label>
-                  {slots.length === 0 ? (
-                    <p className="text-sm text-muted-foreground mt-2">Nenhum horário disponível neste dia.</p>
+                  {carregandoHorarios ? (
+                    <p className="text-sm text-muted-foreground mt-2">Carregando horários...</p>
+                  ) : horariosDoDia.length === 0 ? (
+                    <div className="mt-2 space-y-3">
+                      <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia.</p>
+                      <div className="rounded-xl border border-dashed border-primary/40 p-3">
+                        {naFilaDeEspera ? (
+                          <p className="text-sm text-primary flex items-center gap-1.5"><Check className="w-4 h-4 shrink-0" /> Você está na lista de espera pra esse dia — avisamos se abrir vaga.</p>
+                        ) : !user ? (
+                          <div className="text-center space-y-2">
+                            <p className="text-sm text-muted-foreground">Quer entrar na lista de espera pra esse dia?</p>
+                            <Link href={`/login?returnTo=/${company.slug}/agendar`}>
+                              <Button size="sm" variant="outline" className="gap-1.5"><LogIn className="w-3.5 h-3.5" /> Entrar pra participar</Button>
+                            </Link>
+                          </div>
+                        ) : !clienteExistente && (!nome.trim() || !telefone.trim()) ? (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground">Seus dados pra entrar na lista de espera:</p>
+                            <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
+                            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="Telefone / WhatsApp" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
+                            <Button size="sm" variant="outline" className="gap-1.5 w-full" onClick={entrarNaListaDeEspera} disabled={entrandoNaFila || !nome.trim() || !telefone.trim()}>
+                              <ListPlus className="w-3.5 h-3.5" /> {entrandoNaFila ? "Entrando..." : "Entrar na lista de espera"}
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" className="gap-1.5 w-full" onClick={entrarNaListaDeEspera} disabled={entrandoNaFila}>
+                            <ListPlus className="w-3.5 h-3.5" /> {entrandoNaFila ? "Entrando..." : "Entrar na lista de espera pra esse dia"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {slots.map((slot) => (
+                      {horariosDoDia.map((h) => (
                         <button
-                          key={slot.hora}
-                          disabled={!slot.disponivel}
-                          onClick={() => setHora(slot.hora)}
+                          key={h}
+                          onClick={() => setHora(h)}
                           className={cn(
                             "px-4 py-2 rounded-full text-sm border transition-colors",
-                            !slot.disponivel
-                              ? "bg-muted text-muted-foreground/40 line-through cursor-not-allowed border-border"
-                              : hora === slot.hora
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-primary/40 text-primary hover:bg-primary/10"
+                            hora === h ? "bg-primary text-primary-foreground border-primary" : "border-primary/40 text-primary hover:bg-primary/10"
                           )}
                         >
-                          {slot.hora}
+                          {h}
                         </button>
                       ))}
                     </div>
@@ -294,12 +504,33 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
           </>
         )}
 
-        {step === 3 && servico && (
+        {pagamentoOnline && (
+          <Card className="overflow-hidden">
+            <CardContent className="p-6 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-heading text-lg font-semibold">Agendamento confirmado!</h3>
+                <p className="text-sm text-muted-foreground mt-1">Falta só o pagamento — escolha Pix, boleto ou cartão na página segura do Asaas.</p>
+              </div>
+              <a href={pagamentoOnline.invoiceUrl} target="_blank" rel="noopener noreferrer" className="block">
+                <Button className="w-full gap-2"><ExternalLink className="w-4 h-4" /> Pagar agora</Button>
+              </a>
+              {pagamentoOnline.appointmentId && (
+                <AddToCalendarButton appointmentId={pagamentoOnline.appointmentId} audience="client" className="w-full gap-1.5" size="default" />
+              )}
+              <Button variant="outline" className="w-full" onClick={() => router.push(pagamentoOnline.appointmentId ? `/meus-agendamentos?agendado=${pagamentoOnline.appointmentId}` : "/meus-agendamentos")}>Pagar depois — ver meus agendamentos</Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && servico && !pagamentoOnline && (
           <>
             <Card className="overflow-hidden">
               <div className="p-4">
                 <h3 className="font-heading text-lg font-semibold">{servico.name}</h3>
-                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><User className="w-3.5 h-3.5" />{professional?.name || "Qualquer profissional"}</p>
+                <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><User className="w-3.5 h-3.5" />{professional?.name}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><CalIcon className="w-3.5 h-3.5" />{new Date(`${data}T${hora}`).toLocaleString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><Clock className="w-3.5 h-3.5" />{hora} — {termino}</p>
               </div>
@@ -325,17 +556,75 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Total</span>
-                  <span className="font-heading text-2xl font-bold text-primary">{formatCurrency(Number(servico.price))}</span>
+                {user && (
+                  <div>
+                    <label htmlFor="cupom" className="text-xs font-medium text-muted-foreground">Cupom de desconto</label>
+                    {cupomAplicado ? (
+                      <div className="mt-1 flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+                        <span className="flex items-center gap-1.5 font-medium text-primary"><Tag className="w-3.5 h-3.5" /> {cupomAplicado.code}</span>
+                        <button onClick={() => { setCupomAplicado(null); setCupomCodigo(""); }} aria-label="Remover cupom" className="text-muted-foreground hover:text-destructive">
+                          <XIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 mt-1">
+                        <Input id="cupom" value={cupomCodigo} onChange={(e) => { setCupomCodigo(e.target.value.toUpperCase()); setErroCupom(""); }} placeholder="Ex: VERAO10" className="flex-1" />
+                        <Button type="button" variant="outline" onClick={aplicarCupom} disabled={!cupomCodigo.trim() || aplicandoCupom}>
+                          {aplicandoCupom ? "Validando..." : "Aplicar"}
+                        </Button>
+                      </div>
+                    )}
+                    {erroCupom && <p className="text-xs text-destructive mt-1">{erroCupom}</p>}
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  {cupomAplicado && (
+                    <>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Valor original</span>
+                        <span>{formatCurrency(Number(servico.price))}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-primary">
+                        <span>Desconto ({cupomAplicado.code})</span>
+                        <span>− {formatCurrency(cupomAplicado.discount_amount)}</span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total</span>
+                    <span className="font-heading text-2xl font-bold text-primary">{formatCurrency(cupomAplicado ? cupomAplicado.final_amount : Number(servico.price))}</span>
+                  </div>
                 </div>
                 {user && (
                   <>
-                    <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
-                    <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="Telefone / WhatsApp" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
+                    <div>
+                      <label htmlFor="nome-cliente" className="text-xs font-medium text-muted-foreground">Seu nome *</label>
+                      <input
+                        id="nome-cliente"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        placeholder="Seu nome"
+                        required
+                        className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="telefone-cliente" className="text-xs font-medium text-muted-foreground">Telefone / WhatsApp *</label>
+                      <input
+                        id="telefone-cliente"
+                        type="tel"
+                        inputMode="tel"
+                        value={telefone}
+                        onChange={(e) => setTelefone(e.target.value)}
+                        placeholder="(11) 99999-9999"
+                        required
+                        className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
+                      />
+                    </div>
                     <div>
                       <label className="text-sm font-medium">Forma de pagamento</label>
-                      <div className="grid grid-cols-3 gap-2 mt-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                         {METODOS.map((m) => (
                           <button
                             key={m.chave}
@@ -346,6 +635,21 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
                           </button>
                         ))}
                       </div>
+                      {metodo === "online" && (
+                        <div className="mt-2">
+                          <label htmlFor="cpf-cliente" className="text-xs font-medium text-muted-foreground">CPF (necessário pra gerar a cobrança) *</label>
+                          <input
+                            id="cpf-cliente"
+                            inputMode="numeric"
+                            value={cpfCliente}
+                            onChange={(e) => setCpfCliente(e.target.value)}
+                            placeholder="000.000.000-00"
+                            required
+                            className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground mt-1">Você vai escolher Pix, boleto ou cartão na página de pagamento, no próximo passo.</p>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -354,7 +658,7 @@ export function AgendarView({ company }: { company: Tables<"companies"> }) {
             <div className="flex justify-between mt-6">
               <BackBtn onClick={() => setStep(2)} />
               {user && (
-                <Button disabled={!nome || !telefone || loading} onClick={confirmar} className="gap-2">
+                <Button disabled={!nome || !telefone || loading || (metodo === "online" && !cpfCliente.trim())} onClick={confirmar} className="gap-2">
                   {loading ? "Confirmando..." : <><Check className="w-4 h-4" /> Confirmar agendamento</>}
                 </Button>
               )}

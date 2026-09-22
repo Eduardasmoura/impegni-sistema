@@ -1,5 +1,5 @@
 import { requireSuperAdmin } from "@/lib/require-super-admin";
-import { AdminNav } from "@/components/admin-nav";
+import { AdminShell } from "@/components/admin-nav";
 import { EmpresasView, type CompanyRow } from "./empresas-view";
 
 const PAGE_SIZE = 15;
@@ -35,7 +35,7 @@ export default async function EmpresasPage({
 
   let query = supabase
     .from("companies")
-    .select("*, segments(name, theme_key), subscriptions(status, plan_id, plans(name))", { count: "exact" })
+    .select("*, segments(name, theme_key), subscriptions(status, plan_id, trial_ends_at, plans(name))", { count: "exact" })
     .order("created_at", { ascending: false })
     .order("created_at", { foreignTable: "subscriptions", ascending: false });
 
@@ -49,11 +49,18 @@ export default async function EmpresasPage({
 
   const { data: companies, count, error } = await query.range(from, to);
 
+  // Responsável de cada empresa da página — 1 round-trip pra todas, não 1
+  // por linha. Só decora a listagem; a fonte de verdade continua sendo
+  // `company_members`/`admin_list_company_users` (usado no detalhe).
+  const companyIds = (companies ?? []).map((c) => c.id);
+  const { data: owners } = companyIds.length > 0 ? await supabase.rpc("admin_list_companies_owners", { p_company_ids: companyIds }) : { data: [] };
+  const ownerByCompany = Object.fromEntries((owners ?? []).map((o) => [o.company_id, { full_name: o.full_name, email: o.email }]));
+
   return (
-    <div className="min-h-screen bg-background">
-      <AdminNav userEmail={user.email} />
+    <AdminShell userEmail={user.email}>
       <EmpresasView
         companies={(companies as CompanyRow[]) ?? []}
+        owners={ownerByCompany}
         total={count ?? 0}
         page={page}
         pageSize={PAGE_SIZE}
@@ -62,6 +69,6 @@ export default async function EmpresasPage({
         filters={{ q, status, plano, segmento }}
         loadError={error?.message}
       />
-    </div>
+    </AdminShell>
   );
 }

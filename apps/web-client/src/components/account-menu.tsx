@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { ChevronDown, CalendarCheck, User as UserIcon, LogOut } from "lucide-react";
+import { ChevronDown, CalendarCheck, User as UserIcon, LogOut, Heart, ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -72,6 +72,22 @@ export function AccountMenu({ user }: { user: User }) {
             role="menuitem"
           >
             <CalendarCheck className="w-4 h-4" /> Meus agendamentos
+          </Link>
+          <Link
+            href="/anamnese"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+            role="menuitem"
+          >
+            <ClipboardList className="w-4 h-4" /> Ficha de anamnese
+          </Link>
+          <Link
+            href="/favoritos"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+            role="menuitem"
+          >
+            <Heart className="w-4 h-4" /> Favoritos
           </Link>
           <Link
             href="/perfil"

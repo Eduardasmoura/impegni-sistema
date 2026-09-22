@@ -67,8 +67,8 @@ export function NovaEmpresaView({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim() || !form.segment_id || !form.plan_id || !form.owner_email.trim()) {
-      toast({ title: "Preencha os campos obrigatórios", description: "Nome, segmento, plano e e-mail do dono são obrigatórios.", variant: "destructive" });
+    if (!form.name.trim() || !form.segment_id || !form.plan_id || !form.owner_email.trim() || !form.document.trim()) {
+      toast({ title: "Preencha os campos obrigatórios", description: "Nome, CNPJ/CPF, segmento, plano e e-mail do dono são obrigatórios.", variant: "destructive" });
       return;
     }
 
@@ -96,9 +96,11 @@ export function NovaEmpresaView({
       return;
     }
 
-    const result = data as { company?: { id: string }; owner_invited?: boolean; error?: string } | null;
+    const result = data as { company?: { id: string }; owner_invited?: boolean; error?: string; asaas_warning?: string } | null;
     if (result?.error) {
       toast({ title: "Empresa criada com ressalvas", description: result.error, variant: "destructive" });
+    } else if (result?.asaas_warning) {
+      toast({ title: "Empresa criada — cobrança pendente", description: result.asaas_warning, variant: "destructive" });
     } else {
       toast({ title: "Empresa criada com sucesso", description: result?.owner_invited ? "Um e-mail de convite foi enviado ao dono." : "O dono já tinha conta e foi vinculado." });
     }
@@ -128,8 +130,9 @@ export function NovaEmpresaView({
               <Input id="trade_name" value={form.trade_name} onChange={(e) => set("trade_name", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="document">CNPJ/CPF</Label>
-              <Input id="document" value={form.document} onChange={(e) => set("document", e.target.value)} />
+              <Label htmlFor="document">CNPJ/CPF *</Label>
+              <Input id="document" value={form.document} onChange={(e) => set("document", e.target.value)} required />
+              <p className="text-xs text-muted-foreground">Necessário para criar a cobrança recorrente da assinatura no Asaas.</p>
             </div>
             <div className="space-y-1.5">
               <Label>Segmento *</Label>

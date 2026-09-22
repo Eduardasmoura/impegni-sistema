@@ -48,7 +48,7 @@ function LoginForm() {
     <AuthLayout
       icon={ShieldCheck}
       title="Super Admin"
-      subtitle="Acesso restrito à equipe do Barber iNova"
+      subtitle="Acesso restrito à equipe do InovaFlow"
     >
       {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 

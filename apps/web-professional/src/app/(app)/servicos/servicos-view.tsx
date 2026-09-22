@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Scissors, Pencil, Trash2, Clock, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,9 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useToast } from "@/components/ui/use-toast";
+import { LoadingState, ErrorState } from "@/components/ui/query-state";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { uploadCompanyAsset } from "@/lib/upload";
+import { friendlyError } from "@/lib/errors";
 import type { Tables } from "@/lib/supabase/database.types";
 
 const CATEGORIAS = ["cabelo", "barba", "combo", "estetica", "unhas", "maquiagem", "outros"];
@@ -23,18 +27,30 @@ const TIPOS = [
   { value: "avulso", label: "Serviço avulso" },
   { value: "pacote", label: "Pacote" },
 ];
-const FORM_VAZIO = { name: "", description: "", category: "cabelo", type: "avulso", duration_min: "30", price: "", photo_url: "", active: true };
+const FORM_VAZIO = { name: "", description: "", category: "cabelo", type: "avulso", duration_min: "30", price: "", photo_url: "", active: true, anamnesis_form_id: "" };
 
 export function ServicosView({ companyId }: { companyId: string }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const supabase = createClient();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+
+  // Deep link do onboarding guiado (Fase 6) — chegar em /servicos?onboarding=1
+  // já abre o diálogo de cadastro, poupando 1 clique de quem veio do passo
+  // "Cadastre seu primeiro serviço" do checklist.
+  useEffect(() => {
+    if (searchParams.get("onboarding") === "1") setOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [editando, setEditando] = useState<Tables<"services"> | null>(null);
   const [form, setForm] = useState(FORM_VAZIO);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [excluindo, setExcluindo] = useState<Tables<"services"> | null>(null);
+  const [salvandoExclusao, setSalvandoExclusao] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
-  const { data: servicos = [] } = useQuery({
+  const { data: servicos = [], isLoading, isError } = useQuery({
     queryKey: ["services", companyId],
     queryFn: async () => {
       const { data, error } = await supabase.from("services").select("*").eq("company_id", companyId).order("name");
@@ -43,19 +59,39 @@ export function ServicosView({ companyId }: { companyId: string }) {
     },
   });
 
+  // Fichas de anamnese da própria empresa (RLS + FK composta no banco garantem
+  // que nunca aparece/é aceita ficha de outra empresa). Só mostra o campo se a
+  // empresa tem alguma ficha visível (recurso ligado no plano).
+  const { data: fichas = [] } = useQuery({
+    queryKey: ["anamnesis-forms", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("anamnesis_forms")
+        .select("id, title, active, segments(name)")
+        .eq("company_id", companyId)
+        .order("created_at");
+      if (error) throw error;
+      return data as unknown as { id: string; title: string; active: boolean; segments: { name: string } | null }[];
+    },
+  });
+  const fichasSelecionaveis = fichas.filter((f) => f.active || f.id === form.anamnesis_form_id);
+
   async function uploadFoto(file: File) {
+    if (enviandoFoto) return;
     setEnviandoFoto(true);
     try {
       const url = await uploadCompanyAsset(supabase, companyId, "services", file);
       setForm((f) => ({ ...f, photo_url: url }));
     } catch (e) {
-      toast({ title: "Erro no upload", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+      toast({ title: "Erro no upload", description: friendlyError(e, "enviar a imagem"), variant: "destructive" });
     } finally {
       setEnviandoFoto(false);
     }
   }
 
   async function salvar() {
+    if (salvando) return;
+    setSalvando(true);
     const payload = {
       company_id: companyId,
       name: form.name,
@@ -66,12 +102,16 @@ export function ServicosView({ companyId }: { companyId: string }) {
       price: Number(form.price) || 0,
       photo_url: form.photo_url || null,
       active: form.active,
+      // só toca no vínculo quando o campo está visível — evita apagar um vínculo
+      // existente se a lista de fichas não pôde ser carregada
+      ...(fichas.length > 0 ? { anamnesis_form_id: form.anamnesis_form_id || null } : {}),
     };
     const { error } = editando
       ? await supabase.from("services").update(payload).eq("id", editando.id)
       : await supabase.from("services").insert(payload);
+    setSalvando(false);
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: friendlyError(error, "salvar o serviço"), variant: "destructive" });
       return;
     }
     qc.invalidateQueries({ queryKey: ["services", companyId] });
@@ -81,14 +121,18 @@ export function ServicosView({ companyId }: { companyId: string }) {
     setForm(FORM_VAZIO);
   }
 
-  async function excluir(servico: Tables<"services">) {
-    const { error } = await supabase.from("services").delete().eq("id", servico.id);
+  async function excluir() {
+    if (!excluindo) return;
+    setSalvandoExclusao(true);
+    const { error } = await supabase.from("services").delete().eq("id", excluindo.id);
+    setSalvandoExclusao(false);
     if (error) {
-      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao excluir", description: friendlyError(error, "excluir o serviço"), variant: "destructive" });
       return;
     }
     qc.invalidateQueries({ queryKey: ["services", companyId] });
     toast({ title: "Serviço removido" });
+    setExcluindo(null);
   }
 
   function editar(servico: Tables<"services">) {
@@ -102,6 +146,7 @@ export function ServicosView({ companyId }: { companyId: string }) {
       price: String(servico.price),
       photo_url: servico.photo_url || "",
       active: servico.active,
+      anamnesis_form_id: servico.anamnesis_form_id || "",
     });
     setOpen(true);
   }
@@ -156,18 +201,38 @@ export function ServicosView({ companyId }: { companyId: string }) {
                 <div><Label>Duração (min)</Label><Input type="number" value={form.duration_min} onChange={(e) => setForm({ ...form, duration_min: e.target.value })} /></div>
                 <div><Label>Preço</Label><CurrencyInput value={form.price} onValueChange={(v) => setForm({ ...form, price: v })} /></div>
               </div>
+              {fichas.length > 0 && (
+                <div>
+                  <Label>Ficha de anamnese</Label>
+                  <Select value={form.anamnesis_form_id || "__nenhuma__"} onValueChange={(v) => setForm({ ...form, anamnesis_form_id: v === "__nenhuma__" ? "" : v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__nenhuma__">Nenhuma</SelectItem>
+                      {fichasSelecionaveis.map((f) => (
+                        <SelectItem key={f.id} value={f.id}>{f.segments?.name ?? f.title}{!f.active && " (inativa)"}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Ao atender este serviço, essa ficha é escolhida automaticamente. Sem ficha, você escolhe na hora.</p>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <Label>Ativo (aparece pro cliente agendar)</Label>
                 <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={salvar} disabled={!form.name}>{editando ? "Salvar" : "Cadastrar"}</Button>
+              <Button onClick={salvar} disabled={!form.name || salvando}>{salvando ? "Salvando..." : editando ? "Salvar" : "Cadastrar"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
+      {isLoading ? (
+        <LoadingState text="Carregando serviços..." />
+      ) : isError ? (
+        <ErrorState message="Não foi possível carregar seus serviços." />
+      ) : (
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {servicos.map((s) => (
           <Card key={s.id}>
@@ -191,8 +256,8 @@ export function ServicosView({ companyId }: { companyId: string }) {
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => editar(s)} className="p-1.5 rounded-lg hover:bg-muted"><Pencil className="w-3.5 h-3.5 text-muted-foreground" /></button>
-                  <button onClick={() => excluir(s)} className="p-1.5 rounded-lg hover:bg-muted"><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
+                  <button onClick={() => editar(s)} title="Editar" aria-label="Editar serviço" className="p-1.5 rounded-lg hover:bg-muted"><Pencil className="w-3.5 h-3.5 text-muted-foreground" /></button>
+                  <button onClick={() => setExcluindo(s)} title="Excluir" aria-label="Excluir serviço" className="p-1.5 rounded-lg hover:bg-muted"><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
                 </div>
               </div>
               {s.description && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{s.description}</p>}
@@ -207,11 +272,22 @@ export function ServicosView({ companyId }: { companyId: string }) {
           <Card className="sm:col-span-2 lg:col-span-3">
             <CardContent className="py-16 text-center text-muted-foreground">
               <Scissors className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              Nenhum serviço cadastrado.
+              <p className="mb-4">Você ainda não possui serviços cadastrados.</p>
+              <Button className="gap-2" onClick={() => setOpen(true)}><Plus className="w-4 h-4" /> Adicionar primeiro serviço</Button>
             </CardContent>
           </Card>
         )}
       </div>
+      )}
+
+      <ConfirmDeleteDialog
+        open={!!excluindo}
+        title="Excluir serviço?"
+        description={excluindo ? `"${excluindo.name}" deixa de aparecer no catálogo e pro cliente agendar. Essa ação não pode ser desfeita.` : ""}
+        loading={salvandoExclusao}
+        onConfirm={excluir}
+        onCancel={() => setExcluindo(null)}
+      />
     </div>
   );
 }

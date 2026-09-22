@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UserPlus, Mail, Lock, User, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/auth-layout";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,23 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
+  // useSearchParams() exige um Suspense boundary — mesmo padrão do login.
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Preserva o destino original (ex: voltar pro /agendar de onde veio) —
+  // sign-up não gera sessão até o email ser confirmado, então o melhor que
+  // dá pra fazer aqui é repassar o returnTo pro login, pra não se perder
+  // depois que o usuário confirmar o email e entrar.
+  const returnTo = searchParams.get("returnTo");
+  const loginHref = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login";
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +56,7 @@ export default function RegisterPage() {
   if (sent) {
     return (
       <AuthLayout icon={Mail} title="Confirme seu email" subtitle={`Enviamos um link de confirmação para ${email}.`}>
-        <Button className="w-full h-12" onClick={() => router.push("/login")}>
+        <Button className="w-full h-12" onClick={() => router.push(loginHref)}>
           Voltar para o login
         </Button>
       </AuthLayout>
@@ -55,7 +71,7 @@ export default function RegisterPage() {
       footer={
         <>
           Já tem conta?{" "}
-          <Link href="/login" className="text-primary font-medium hover:underline">
+          <Link href={loginHref} className="text-primary font-medium hover:underline">
             Entrar
           </Link>
         </>

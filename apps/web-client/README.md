@@ -1,4 +1,4 @@
-# Barber iNova — Web Cliente
+# InovaFlow — Web Cliente
 
 App público (sem login pra navegar) que atende **todos os estabelecimentos**
 através do mesmo código — multi-tenant por subdomínio.

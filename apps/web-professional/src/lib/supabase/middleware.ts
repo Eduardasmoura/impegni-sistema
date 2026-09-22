@@ -2,7 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
 
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+// /auth/callback fica público porque, no primeiro request, a sessão do
+// magic link ainda não existe em cookie nenhum — ela chega no fragmento da
+// URL (#access_token=...), que só o supabase-js rodando no navegador
+// consegue ler; o middleware bloquear essa rota pra quem "ainda não está
+// logado" impediria exatamente o login acontecer.
+const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
+
+// /contrato é público mas, diferente das rotas acima, faz sentido ler
+// estando logado também (não é uma rota "só pra quem não tem conta") — por
+// isso fica fora de PUBLIC_PATHS (que redireciona pro dashboard quem já
+// está logado) e entra só na checagem de "não exige login". O link "Ler
+// contrato completo" da Etapa 5 do cadastro abre em nova aba sem sessão
+// nenhuma (signUp exige confirmação de e-mail antes de logar).
+const ALWAYS_PUBLIC_PATHS = ["/contrato"];
 
 // Renova o cookie de sessão em toda request e redireciona quem não está
 // logado para /login (rotas públicas de auth ficam de fora dessa guarda).
@@ -31,8 +44,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isPublicPath = PUBLIC_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
+  const isAlwaysPublicPath = ALWAYS_PUBLIC_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
 
-  if (!user && !isPublicPath) {
+  if (!user && !isPublicPath && !isAlwaysPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("returnTo", request.nextUrl.pathname);

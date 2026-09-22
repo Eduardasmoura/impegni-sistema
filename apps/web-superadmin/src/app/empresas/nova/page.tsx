@@ -1,5 +1,5 @@
 import { requireSuperAdmin } from "@/lib/require-super-admin";
-import { AdminNav } from "@/components/admin-nav";
+import { AdminShell } from "@/components/admin-nav";
 import { NovaEmpresaView } from "./nova-empresa-view";
 
 export default async function NovaEmpresaPage() {
@@ -11,9 +11,8 @@ export default async function NovaEmpresaPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <AdminNav userEmail={user.email} />
+    <AdminShell userEmail={user.email}>
       <NovaEmpresaView segments={segments ?? []} plans={plans ?? []} />
-    </div>
+    </AdminShell>
   );
 }

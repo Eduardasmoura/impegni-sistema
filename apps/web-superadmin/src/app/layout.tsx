@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Barber iNova — Super Admin",
+  title: "InovaFlow — Super Admin",
   description: "Administração da plataforma: empresas, planos e recursos.",
 };
 

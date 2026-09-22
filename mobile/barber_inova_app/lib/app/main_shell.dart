@@ -1,81 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/company_service.dart';
-import '../features/agenda/agenda_screen.dart';
-import '../features/company/no_company_screen.dart';
-import '../features/finance/finance_summary_screen.dart';
-import '../features/inventory/inventory_screen.dart';
-import '../features/notifications/push_service.dart';
-import '../features/profile/profile_screen.dart';
+import '../features/access/access_blocked_screen.dart';
+import 'access_provider.dart';
+import 'biometric_gate.dart';
 import 'theme.dart';
 
-/// Casca do app já autenticado: resolve a empresa do profissional uma vez e
-/// monta a navegação por abas (Agenda / Financeiro / Estoque / Perfil).
-class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+/// Casca do app autenticado — só tema por empresa + biometria + checagem de
+/// acesso/trial, igual antes. O menu lateral (`Drawer`) NÃO mora aqui: cada
+/// tela de nível superior já é o dono do próprio `Scaffold`/`AppBar` (com
+/// título e ações específicas — o filtro do Dashboard, a busca de
+/// Clientes etc.), então o `drawer:` foi pra dentro de cada uma delas
+/// (`AppDrawer`, `lib/app/app_drawer.dart`, que resolve a empresa sozinha
+/// via `companyProvider` — não precisa receber por parâmetro). Colocar o
+/// Drawer aqui, num Scaffold próprio deste shell, empilharia uma segunda
+/// AppBar por cima da AppBar de cada tela — por isso este widget só entrega
+/// `child` direto, sem Scaffold próprio (mesma ideia de antes, quando este
+/// shell só existia pra desenhar a bottom nav ao redor da tela ativa —
+/// agora não há mais chrome nenhum pra desenhar aqui).
+class MainShell extends ConsumerWidget {
+  final CurrentCompany company;
+  final Widget child;
+
+  const MainShell({super.key, required this.company, required this.child});
 
   @override
-  State<MainShell> createState() => _MainShellState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accessAsync = ref.watch(accessStatusProvider);
 
-class _MainShellState extends State<MainShell> {
-  int _tab = 0;
-  CurrentCompany? _company;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCompany();
-  }
-
-  Future<void> _loadCompany() async {
-    final company = await fetchCurrentCompany();
-    if (!mounted) return;
-    setState(() {
-      _company = company;
-      _loading = false;
-    });
-    if (company != null) {
-      // Se o Firebase não foi configurado ainda (sem `firebase_options.dart`,
-      // gerado por `flutterfire configure`), isso falha silenciosamente — o
-      // resto do app funciona normalmente sem push.
-      PushService.init(companyId: company.id).catchError((_) {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    final company = _company;
-    if (company == null) {
-      return const NoCompanyScreen();
-    }
-
-    final screens = [
-      AgendaScreen(company: company),
-      FinanceSummaryScreen(company: company),
-      InventoryScreen(company: company),
-      ProfileScreen(company: company),
-    ];
-
-    // O tema muda por empresa (barbearia vs. studio/estética) — só dá pra
-    // saber depois de carregar a empresa, por isso o override fica aqui e
-    // não no MaterialApp (ver main.dart, que usa um tema neutro até aqui).
     return Theme(
-      data: themeForSegment(company.themeKey),
-      child: Scaffold(
-        body: IndexedStack(index: _tab, children: screens),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _tab,
-          onDestinationSelected: (index) => setState(() => _tab = index),
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: 'Agenda'),
-            NavigationDestination(icon: Icon(Icons.attach_money_outlined), selectedIcon: Icon(Icons.attach_money), label: 'Financeiro'),
-            NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Estoque'),
-            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
-          ],
+      // O tema muda por empresa: paleta customizada (Meu negócio > cores) se
+      // ela configurou, senão o padrão do segmento (barbearia vs. studio/
+      // estética) — ver `themeForCompany`. Aplicado mesmo na tela de
+      // bloqueio, pra manter a identidade visual da empresa mesmo ali.
+      data: themeForCompany(company),
+      // Biometria envolve tudo (inclusive a tela de bloqueio de acesso
+      // abaixo) — trava o app inteiro, não só uma tela.
+      child: BiometricGate(
+        child: accessAsync.when(
+          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+          error: (e, _) => child, // erro ao checar acesso não deve travar quem já tinha acesso — mesma filosofia "falha aberta" da RPC
+          data: (access) {
+            if (access != null && !access.allowed) {
+              return AccessBlockedScreen(
+                access: access,
+                companyId: company.id,
+                companyName: company.name,
+                roleEmpresa: company.roleEmpresa,
+              );
+            }
+            return child;
+          },
         ),
       ),
     );

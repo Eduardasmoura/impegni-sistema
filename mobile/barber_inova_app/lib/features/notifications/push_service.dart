@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../app/messenger.dart';
+import '../../app/router.dart';
 import '../../data/supabase_client.dart';
 
 /// Handler de mensagens em background precisa ser uma função top-level (não
@@ -71,5 +72,64 @@ class PushService {
         ),
       );
     });
+
+    // Deep link do push: a Edge Function que dispara a notificação inclui
+    // `data: {route: "/agenda"}` (ou outra rota endereçável, ver
+    // `router.dart` — toda tela hoje já tem uma) — cobre os dois jeitos que
+    // um toque em notificação pode abrir o app: com ele já em segundo
+    // plano (`onMessageOpenedApp`) ou totalmente fechado
+    // (`getInitialMessage`, verificado uma vez só no boot).
+    FirebaseMessaging.onMessageOpenedApp.listen(_abrirRotaDoPush);
+    final mensagemInicial = await messaging.getInitialMessage();
+    if (mensagemInicial != null) _abrirRotaDoPush(mensagemInicial);
+  }
+
+  // FASE 7: lista fechada das rotas que o app realmente sabe abrir (mesmo
+  // conjunto de `router.dart`). A Edge Function que monta o payload do push
+  // não está neste repositório pra garantir que `route` é sempre válido —
+  // em vez de confiar cegamente no valor e deixar uma rota inválida/
+  // desatualizada quebrar a navegação, validamos contra essa lista e caímos
+  // num fallback seguro quando não bate.
+  static const _rotasValidas = {
+    '/agenda',
+    '/dashboard',
+    '/clientes',
+    '/financeiro',
+    '/mais',
+    '/mais/perfil',
+    '/mais/estoque',
+    '/mais/negocio',
+    '/mais/servicos',
+    '/mais/equipe',
+    '/mais/meu-plano',
+    '/mais/pagamentos',
+    '/mais/configuracoes',
+    '/mais/notificacoes',
+    '/mais/seguranca',
+    '/mais/avaliacoes',
+    '/mais/repasse',
+    '/mais/cupons',
+    '/mais/marketing',
+  };
+  static const _rotaFallback = '/agenda';
+
+  static void _abrirRotaDoPush(RemoteMessage message) {
+    final rota = message.data['route'] as String?;
+    if (rota == null) return;
+    final destino = _rotasValidas.contains(rota) ? rota : _rotaFallback;
+    try {
+      router.go(destino);
+    } catch (_) {
+      // Defesa em profundidade: mesmo uma rota validada pode falhar por
+      // motivo inesperado (ex: app ainda não terminou de montar a árvore de
+      // rotas) — nunca deixa a exceção subir e travar a abertura do app.
+      if (destino != _rotaFallback) {
+        try {
+          router.go(_rotaFallback);
+        } catch (_) {
+          // Sem mais o que fazer aqui — só garante que não sobe exceção.
+        }
+      }
+    }
   }
 }

@@ -7,7 +7,11 @@ import type { Tables } from "@/lib/supabase/database.types";
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data: companies } = await supabase.from("companies").select("*").eq("status", "active").order("name");
+  // Lista só quem está aceitando agendamento agora (ativo ou trial dentro
+  // dos 14 dias) — a RPC aplica a mesma regra de acesso do resto do
+  // sistema. Empresa com trial vencido some daqui, mas a página dela por
+  // link direto continua abrindo (com aviso).
+  const { data: companies } = await supabase.rpc("public_directory_companies");
 
   return (
     <div className="min-h-screen bg-background">

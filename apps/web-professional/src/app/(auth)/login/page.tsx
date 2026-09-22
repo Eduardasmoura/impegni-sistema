@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 
 export default function LoginPage() {
   // useSearchParams() exige um Suspense boundary para o Next.js poder
@@ -37,7 +38,7 @@ function LoginForm() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (signInError) {
-      setError(signInError.message === "Invalid login credentials" ? "Email ou senha inválidos" : signInError.message);
+      setError(friendlyError(signInError, "entrar"));
       return;
     }
     router.push(returnTo);

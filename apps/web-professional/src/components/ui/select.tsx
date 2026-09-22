@@ -15,7 +15,11 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+      // "[&>span]:truncate" mira o <span> que o Radix usa pro valor
+      // selecionado — sem isso, um nome de profissional/serviço comprido
+      // empurra o ícone da seta pra fora da caixa (o mesmo tipo de
+      // "vazamento" já visto nos cards de KPI: filho sem min-width:0).
+      "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:truncate",
       className
     )}
     {...props}

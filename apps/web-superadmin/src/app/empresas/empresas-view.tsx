@@ -29,16 +29,22 @@ const STATUS_COLOR: Record<string, string> = {
   expired: "bg-muted text-muted-foreground",
   deleted: "bg-muted text-muted-foreground",
 };
-const STATUS_OPTIONS = ["trial", "active", "past_due", "suspended", "canceled", "expired"] as const;
+// companies.status só aceita esses 4 valores (CHECK constraint) — os
+// demais (past_due/canceled/expired) são status de ASSINATURA, não de
+// empresa; filtrar companies por eles sempre voltaria vazio. Ver /assinaturas
+// pra filtrar por status de assinatura.
+const STATUS_OPTIONS = ["trial", "active", "suspended", "deleted"] as const;
 const ALL = "__all__";
 
 export type CompanyRow = Tables<"companies"> & {
   segments: Pick<Tables<"segments">, "name" | "theme_key"> | null;
-  subscriptions: (Pick<Tables<"subscriptions">, "status" | "plan_id"> & { plans: Pick<Tables<"plans">, "name"> | null })[];
+  subscriptions: (Pick<Tables<"subscriptions">, "status" | "plan_id" | "trial_ends_at"> & { plans: Pick<Tables<"plans">, "name"> | null })[];
 };
+type Owner = { full_name: string | null; email: string | null };
 
 export function EmpresasView({
   companies,
+  owners,
   total,
   page,
   pageSize,
@@ -48,6 +54,7 @@ export function EmpresasView({
   loadError,
 }: {
   companies: CompanyRow[];
+  owners: Record<string, Owner>;
   total: number;
   page: number;
   pageSize: number;
@@ -149,6 +156,7 @@ export function EmpresasView({
       <div className="space-y-3">
         {companies.map((c) => {
           const sub = c.subscriptions?.[0];
+          const owner = owners[c.id];
           return (
             <Link key={c.id} href={`/empresas/${c.id}`}>
               <Card className="hover:border-primary/40 transition-colors">
@@ -157,7 +165,7 @@ export function EmpresasView({
                     {c.name.charAt(0).toUpperCase()}
                   </div>
 
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 min-w-[220px]">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium text-sm">{c.name}</p>
                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[c.status] ?? ""}`}>
@@ -165,11 +173,18 @@ export function EmpresasView({
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      /{c.slug} · {c.segments?.name ?? "—"} · desde {formatDate(c.created_at)}
+                      {owner?.full_name ?? "Sem responsável"}
+                      {owner?.email ? ` · ${owner.email}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {c.segments?.name ?? "—"} · desde {formatDate(c.created_at)}
                     </p>
                   </div>
 
-                  <div className="text-xs text-muted-foreground shrink-0">{sub?.plans?.name ?? "Sem plano"}</div>
+                  <div className="text-xs text-muted-foreground shrink-0 text-right">
+                    <p>{sub?.plans?.name ?? "Sem plano"}</p>
+                    {sub?.trial_ends_at && <p>Teste até {formatDate(sub.trial_ends_at)}</p>}
+                  </div>
                 </CardContent>
               </Card>
             </Link>

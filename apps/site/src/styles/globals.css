@@ -1,0 +1,158 @@
+@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Tokens de tema (claro/escuro) — identidade própria do site de vendas,
+ * pedida explicitamente pelo usuário: roxo + cinza claro + branco + Work
+ * Sans. Deliberadamente diferente da paleta âmbar/creme do painel
+ * (`apps/web-professional`) — o pedido foi escopado só pra landing page,
+ * não pro produto autenticado, que mantém sua identidade oficial.
+ */
+@layer base {
+  :root {
+    --background: 240 20% 99%;
+    --foreground: 240 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 12%;
+    /* Roxo oficial pedido pelo usuário: #341539 (≈ hsl(292 46% 15%)) — bem
+       escuro e denso (plum), não o roxo médio/vibrante da primeira versão. */
+    --primary: 292 46% 15%;
+    --primary-foreground: 0 0% 100%;
+    /* mesmo par de --primary, ainda mais escuro — pra texto/ícone sobre um
+       fundo tintado clarinho (bg-primary/10 etc.) manter contraste AA. */
+    --primary-emphasis: 292 50% 11%;
+    --secondary: 240 15% 95%;
+    --secondary-foreground: 240 10% 15%;
+    --muted: 240 15% 95%;
+    --muted-foreground: 240 8% 45%;
+    --accent: 292 40% 95%;
+    --accent-foreground: 292 46% 20%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 12% 90%;
+    --input: 240 12% 90%;
+    --ring: 292 46% 15%;
+    --chart-1: 292 46% 15%;
+    --chart-2: 160 55% 38%;
+    --chart-3: 200 70% 45%;
+    --chart-4: 43 90% 55%;
+    --chart-5: 280 55% 55%;
+    --radius: 0.625rem;
+    --font-heading: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .dark {
+    --background: 240 16% 8%;
+    --foreground: 240 15% 95%;
+    --card: 240 13% 12%;
+    --card-foreground: 240 15% 95%;
+    --popover: 240 13% 12%;
+    --popover-foreground: 240 15% 95%;
+    --primary: 292 55% 62%;
+    --primary-foreground: 292 46% 10%;
+    --secondary: 240 10% 18%;
+    --secondary-foreground: 240 15% 95%;
+    --muted: 240 10% 16%;
+    --muted-foreground: 240 8% 65%;
+    --accent: 292 30% 20%;
+    --accent-foreground: 292 60% 88%;
+    --destructive: 0 63% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 292 55% 62%;
+    --chart-1: 292 55% 62%;
+    --chart-2: 160 50% 48%;
+    --chart-3: 200 70% 55%;
+    --chart-4: 43 90% 60%;
+    --chart-5: 280 55% 65%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Microinterações da landing (redesign inspirado em referência visual de
+   SaaS premium — ver componentes em src/components). Deliberadamente
+   poucas e discretas: entrada suave do Hero, flutuação sutil dos blobs
+   orgânicos atrás da foto, e o pulso do botão de WhatsApp. A regra
+   `prefers-reduced-motion` já definida acima neutraliza todas elas
+   automaticamente (duração 0.01ms), então não repetimos o guard aqui. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes whatsapp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+.animate-whatsapp-pulse {
+  animation: whatsapp-pulse 2.4s ease-out infinite;
+}
+
+/* Estado inicial/final do componente <Reveal> (src/components/ui/reveal.tsx)
+   — cards e títulos de seção entram com um leve fade + slide-up assim que
+   cruzam a viewport (IntersectionObserver no hook use-reveal), em vez de já
+   nascerem visíveis. `prefers-reduced-motion` abaixo já anula a transição. */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* FASE 6 (auditoria UX, Section 10 — acessibilidade) — respeita a
+   preferência do sistema por menos movimento. Sem isso, todo spinner
+   (Loader2 com animate-spin) e skeleton (animate-pulse) do app girava/
+   pulsava sem parar pra quem ativou essa opção no SO, independente do
+   motivo (enjoo, vestibular, só preferência). Continua indicando "está
+   carregando" — só troca o giro/pulso por uma leve variação de opacidade. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

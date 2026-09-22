@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Barber iNova — Agendamento",
+  title: "InovaFlow — Agendamento",
   description: "Agende, consulte e gerencie seus horários no salão que você escolher.",
 };
 

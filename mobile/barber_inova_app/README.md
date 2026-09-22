@@ -1,4 +1,4 @@
-# Barber iNova — App do Profissional (Flutter)
+# InovaFlow — App do Profissional (Flutter)
 
 App mobile do **Profissional** (Android/iOS): agenda do dia, cadastro rápido de
 cliente/agendamento, resumo financeiro simplificado, estoque e perfil. Mesma

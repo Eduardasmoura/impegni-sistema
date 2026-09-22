@@ -21,7 +21,7 @@ export function AuthLayout({
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
             <Scissors className="w-4.5 h-4.5 text-primary-foreground" />
           </div>
-          <span className="font-heading text-lg font-semibold">Barber iNova Admin</span>
+          <span className="font-heading text-lg font-semibold">InovaFlow Admin</span>
         </Link>
 
         <div className="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm">

@@ -20,6 +20,14 @@
     --popover-foreground: 20 14% 10%;
     --primary: 27 87% 37%;
     --primary-foreground: 40 38% 98%;
+    /* FASE 6 (auditoria UX, Section 10 — acessibilidade) — mesmo tom de
+       --primary, mais escuro: o item ativo da sidebar usa texto na cor
+       primária sobre um fundo com só 10% dela (bg-primary/10) — medido via
+       axe-core, esse par ficava em ~4.2:1 de contraste, abaixo do mínimo
+       AA (4.5:1) pra texto normal. Este token só existe pra esse uso
+       específico (texto sobre fundo tintado clarinho), não substitui
+       --primary em botões/ícones sólidos, que já têm contraste próprio. */
+    --primary-emphasis: 27 87% 30%;
     --secondary: 20 14% 12%;
     --secondary-foreground: 40 38% 98%;
     --muted: 30 20% 93%;
@@ -83,4 +91,21 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* FASE 6 (auditoria UX, Section 10 — acessibilidade) — respeita a
+   preferência do sistema por menos movimento. Sem isso, todo spinner
+   (Loader2 com animate-spin) e skeleton (animate-pulse) do app girava/
+   pulsava sem parar pra quem ativou essa opção no SO, independente do
+   motivo (enjoo, vestibular, só preferência). Continua indicando "está
+   carregando" — só troca o giro/pulso por uma leve variação de opacidade. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

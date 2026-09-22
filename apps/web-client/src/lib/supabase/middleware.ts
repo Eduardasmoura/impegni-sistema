@@ -10,6 +10,20 @@ const PROTECTED_PATHS = ["/meus-agendamentos", "/perfil"];
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3001";
 
+// Auditoria ETAPA 1: sem essa variável configurada em produção, TODA
+// página pública de agendamento ({empresa}.{domínio}) cai silenciosamente
+// na home da plataforma em vez da página da empresa — sem erro, sem
+// crash, só mostra a coisa errada. Isso troca "silencioso" por "visível
+// nos logs do primeiro request", pra pegar esse esquecimento no primeiro
+// smoke-test em produção, não meses depois com um cliente reclamando que
+// o link dele não funciona. Roda uma vez por cold start do servidor
+// (middleware é carregado uma vez, não a cada request).
+if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
+  console.error(
+    "[web-client] NEXT_PUBLIC_ROOT_DOMAIN não configurado em produção — todas as páginas públicas de agendamento (ex.: empresa.seudominio.com) vão cair na home da plataforma em vez da página da empresa. Configure essa variável de ambiente no provedor de hospedagem."
+  );
+}
+
 // Em `kellyrein.inova.app`, reescreve internamente pra `/kellyrein` (home) ou
 // `/kellyrein/agendar` — as mesmas rotas dinâmicas que já atendem o acesso
 // por path (`inova.app/kellyrein`), sem duplicar nenhuma página. Qualquer

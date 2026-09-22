@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json.schemastore.org/design-tokens.json",
+  "_readme": [
+    "Fonte única dos tokens de marca do InovaFlow — cor, tipografia, raio,",
+    "espaçamento — usada pra manter web (apps/web-professional/src/app/globals.css",
+    "+ tailwind.config.ts) e mobile (mobile/barber_inova_app/lib/app/theme.dart)",
+    "visualmente consistentes sem compartilhar código entre TypeScript e Dart",
+    "(ver plano de paridade Web↔Mobile, seção 3 — 'compartilhar' aqui significa",
+    "uma fonte de verdade documentada, não um pacote de código importável nos",
+    "dois lados).",
+    "",
+    "Hoje isto é mantido manualmente em sincronia (sem codegen automático) —",
+    "ao mudar um valor aqui, replicar à mão no CSS e no theme.dart. Automatizar",
+    "isso (um script que gera as duas saídas a partir deste arquivo) é uma",
+    "melhoria futura, não implementada nesta fase.",
+    "",
+    "IMPORTANTE — limitação conhecida documentada aqui, não corrigida nesta",
+    "fase: `companies.color_primary/secondary/accent` (cor customizável por",
+    "empresa, editável em Meu negócio/web e mobile) ainda não é aplicada em",
+    "tempo real em NENHUM dos dois apps — os dois usam hoje só os valores",
+    "estáticos abaixo (globals.css comenta isso como TODO; o mobile usa só as",
+    "2 paletas fixas por segmento). Ligar a cor de verdade da empresa nos dois",
+    "lugares é trabalho futuro, fora do escopo de 'paridade de funcionalidade'",
+    "desta fase — é uma funcionalidade que falta no web também, não uma",
+    "divergência introduzida pelo mobile."
+  ],
+  "color": {
+    "light": {
+      "background": { "hsl": "40 38% 97%", "hex": "#FBF8F2" },
+      "foreground": { "hsl": "20 14% 10%", "hex": "#1E1A17" },
+      "card": { "hsl": "0 0% 100%", "hex": "#FFFFFF" },
+      "primary": { "hsl": "27 87% 37%", "hex": "#B4530B", "note": "âmbar — cor de marca padrão do segmento barbearia" },
+      "primary-foreground": { "hsl": "40 38% 98%", "hex": "#FDFBF8" },
+      "secondary": { "hsl": "20 14% 12%", "hex": "#211D1A" },
+      "muted": { "hsl": "30 20% 93%", "hex": "#EFE9E1" },
+      "muted-foreground": { "hsl": "25 8% 42%", "hex": "#766E67" },
+      "accent": { "hsl": "33 55% 89%", "hex": "#F1E2D0" },
+      "destructive": { "hsl": "0 72% 51%", "hex": "#DC2626" },
+      "border": { "hsl": "30 15% 87%", "hex": "#E3DCD3" },
+      "chart-1": { "hsl": "27 87% 47%", "hex": "#D9690E" },
+      "chart-2": { "hsl": "160 55% 38%", "hex": "#26946B" },
+      "chart-3": { "hsl": "200 70% 45%", "hex": "#2296C4" },
+      "chart-4": { "hsl": "43 90% 55%", "hex": "#EFB328" },
+      "chart-5": { "hsl": "280 55% 55%", "hex": "#9440D1" }
+    },
+    "dark": {
+      "background": { "hsl": "20 15% 7%", "hex": "#181412" },
+      "foreground": { "hsl": "40 20% 95%", "hex": "#F3EFE9" },
+      "primary": { "hsl": "27 90% 58%", "hex": "#EF8A29" },
+      "destructive": { "hsl": "0 63% 48%", "hex": "#C62A2A" }
+    },
+    "business-palette-presets": [
+      { "name": "Âmbar", "primary": "#B45309", "secondary": "#1C1917", "accent": "#F5E6D3" },
+      { "name": "Rosa", "primary": "#BE185D", "secondary": "#3B0764", "accent": "#FCE7F3" },
+      { "name": "Esmeralda", "primary": "#047857", "secondary": "#064E3B", "accent": "#D1FAE5" },
+      { "name": "Azul", "primary": "#1D4ED8", "secondary": "#0F172A", "accent": "#DBEAFE" },
+      { "name": "Roxo", "primary": "#7C3AED", "secondary": "#1E1B4B", "accent": "#EDE9FE" },
+      { "name": "Preto", "primary": "#171717", "secondary": "#000000", "accent": "#F5F5F5" }
+    ],
+    "mobile-segment-themes": {
+      "_note": "Paletas fixas do app mobile (theme.dart) — hoje independentes da paleta customizável da empresa (ver limitação acima).",
+      "dark_blue": { "name": "Barbearia", "primary": "#2563EB", "secondary": "#0A0A0A", "surface": "#FFFFFF" },
+      "soft_purple": { "name": "Estúdio/Estética", "primary": "#C4B5FD", "secondary": "#71717A", "surface": "#FFFFFF" }
+    }
+  },
+  "typography": {
+    "heading": { "family": "Poppins", "weights": [500, 600, 700], "webVar": "--font-heading", "mobileNote": "usar Google Fonts 'Poppins' via pubspec (não instalado ainda) ou o padrão do sistema até então" },
+    "body": { "family": "Inter", "weights": [400, 500, 600], "webVar": "--font-body", "mobileNote": "Roboto/system default do Material 3 hoje — Inter ainda não portado pro mobile" }
+  },
+  "radius": {
+    "base": "0.75rem",
+    "lg": "0.75rem",
+    "md": "0.625rem",
+    "sm": "0.5rem"
+  },
+  "spacing_scale": [4, 8, 12, 16, 20, 24, 32, 48, 64]
+}

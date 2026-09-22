@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Keystore de release e credenciais — segredo de longo prazo, nunca commitar.
+/android/key.properties
+/android/keystore/

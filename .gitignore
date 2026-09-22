@@ -9,10 +9,29 @@ out/
 build/
 dist/
 
-# Env
+# Env — cobre .env, .env.local e QUALQUER variante (.env.development,
+# .env.production, .env.staging, .env.*.local...). Auditoria de git de
+# 11/09/2026 encontrou que .env.development/.env.production/.env.staging
+# (sem o sufixo .local) não eram cobertos por nenhuma regra anterior.
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Cobertura de testes (nenhuma suíte configurada ainda, mas protege se um
+# dia existir)
+coverage/
+
+# Deploy — não existe hoje, protege se o projeto passar a usar Vercel
+.vercel/
+
+# Chaves e certificados — nenhum arquivo assim existe hoje no repo,
+# regra preventiva
+*.pem
+*.key
+*.p12
+
+# Cache do Supabase CLI (não é código, é gerado a cada `db query`/`link`)
+supabase/.temp/
 
 # Logs
 npm-debug.log*
@@ -31,6 +50,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Auditoria de git de 11/09/2026 — fora do produto InovaFlow, não deve ser
+# versionado (ver relatório da auditoria):
+# - "iNova Flow/": projeto Xcode nativo solto na raiz, sem código-fonte
+#   restante, contém estado de IDE (.xcuserstate) que nunca deveria ir pro
+#   Git em nenhum projeto Xcode.
+# - pagamento.json: config local de servidor MCP (Mercado Pago), não é
+#   código nem dado do InovaFlow.
+/iNova Flow/
+/pagamento.json
+
 # Flutter / Dart — android/, ios/, macos/, web/, windows/, linux/ (gerados por
 # `flutter create .`) SÃO versionados normalmente, só os artefatos de build:
 mobile/**/.dart_tool/
@@ -39,3 +68,7 @@ mobile/**/.flutter-plugins-dependencies
 mobile/**/.packages
 mobile/**/build/
 mobile/**/*.g.dart
+
+# Credenciais de contas de TESTE (ambiente de dev/preview) — nunca deve ir
+# pro Git, mesmo sendo senha de conta fictícia, não de produção.
+TEST_CREDENTIALS.local.md

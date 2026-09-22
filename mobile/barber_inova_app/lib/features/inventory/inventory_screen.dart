@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/app_drawer.dart';
 import '../../data/company_service.dart';
 import '../../data/supabase_client.dart';
 
@@ -30,7 +31,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         .from('products')
         .select('id, name, unit, stock_qty, min_stock_qty')
         .eq('company_id', widget.company.id)
-        .order('name');
+        .order('name', ascending: true);
     if (!mounted) return;
     setState(() {
       _products = List<Map<String, dynamic>>.from(rows);
@@ -55,6 +56,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Widget build(BuildContext context) {
     final baixoEstoque = _produtosComEstoqueBaixo;
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(title: const Text('Estoque')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

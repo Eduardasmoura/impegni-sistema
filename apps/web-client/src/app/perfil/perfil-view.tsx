@@ -27,6 +27,11 @@ export function PerfilView({ userEmail, userId, profile }: { userEmail: string; 
     setUploading(true);
     try {
       const url = await uploadAvatar(supabase, userId, file);
+      // Persiste já aqui, não só quando "Salvar alterações" for clicado —
+      // sem isso, o arquivo ia pro Storage mas um refresh antes de salvar o
+      // resto do formulário perdia a troca de foto (BUG: auditoria pré-lançamento).
+      const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
+      if (error) throw error;
       setAvatarUrl(url);
     } catch (e) {
       toast({ title: "Erro no upload", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
@@ -85,7 +90,7 @@ export function PerfilView({ userEmail, userId, profile }: { userEmail: string; 
           </div>
 
           <div><Label>Nome completo</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
-          <div><Label>Telefone / WhatsApp</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+          <div><Label>Telefone / WhatsApp</Label><Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
           <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
 
           <Button onClick={salvar} disabled={saving} className="w-full gap-2">

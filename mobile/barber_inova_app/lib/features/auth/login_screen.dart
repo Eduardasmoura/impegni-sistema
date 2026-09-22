@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.content_cut, size: 48),
                 const SizedBox(height: 12),
                 Text(
-                  'Barber iNova',
+                  'InovaFlow',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Use a mesma conta do painel web (barberinova.com)',
+                  'Use a mesma conta do painel web do InovaFlow',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),

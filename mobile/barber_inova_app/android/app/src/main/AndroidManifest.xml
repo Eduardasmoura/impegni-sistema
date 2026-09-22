@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sem isso, um build de release não consegue fazer nenhuma chamada de
+         rede (Supabase, FCM) — só estava presente nos manifests de
+         debug/profile, que o Flutter mescla automaticamente durante
+         `flutter run`, mascarando a ausência aqui. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="barber_inova_app"
+        android:label="InovaFlow"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
