@@ -38,10 +38,10 @@ const ASAAS_BASE_URL = Deno.env.get("ASAAS_BASE_URL") ?? "https://sandbox.asaas.
 
 // CORS (auditoria ETAPA 1, item "CORS wildcard"): só o painel Super Admin
 // chama esta function — restringe a esse único caller em vez de "*".
-// `WEB_SUPERADMIN_URL` é opcional (secret a configurar quando o domínio de
-// produção existir); sem ele, só localhost:3002 (dev) é aceito — não
-// quebra nada hoje, só ainda não libera um domínio de produção que ainda
-// não existe.
+// Produção: secret `WEB_SUPERADMIN_URL` = https://admin.impegni.com.br
+// (configurado em 23/09/2026 — sem ele o preflight de produção voltava sem
+// Access-Control-Allow-Origin e o browser bloqueava a chamada com
+// "Failed to send a request to the Edge Function"). Dev: localhost:3002.
 const ALLOWED_ORIGINS = new Set(
   ["http://localhost:3002", Deno.env.get("WEB_SUPERADMIN_URL")?.replace(/\/$/, "")].filter(
     (v): v is string => !!v
@@ -127,9 +127,37 @@ Deno.serve(async (req: Request) => {
   // de uma vez (tenant, assinatura, vínculo do owner), nunca é exposta ao client.
   const admin = createClient(supabaseUrl, serviceRoleKey);
 
+  // 0. Idempotência: reenviar o formulário (duplo clique, nova tentativa
+  //    depois de um erro de rede) não pode criar a mesma empresa duas vezes.
+  //    CPF/CNPJ é obrigatório e identifica o negócio — compara nos formatos
+  //    em que ele pode ter sido salvo (só dígitos ou com máscara).
+  const docDigits = payload.document.replace(/\D/g, "");
+  const docVariants = [payload.document.trim(), docDigits];
+  if (docDigits.length === 11) docVariants.push(docDigits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"));
+  if (docDigits.length === 14) docVariants.push(docDigits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5"));
+  const { data: existing, error: existingError } = await admin
+    .from("companies")
+    .select("id, name, slug")
+    .in("document", [...new Set(docVariants)])
+    .neq("status", "deleted")
+    .limit(1);
+  if (existingError) {
+    console.error("[admin-create-company] duplicate check failed", existingError.message);
+    return jsonResponse({ error: "could not verify existing companies" }, 500);
+  }
+  if (existing && existing.length > 0) {
+    return jsonResponse(
+      { error: `Já existe uma empresa cadastrada com este CNPJ/CPF (${existing[0].name}).`, company: existing[0] },
+      409
+    );
+  }
+
   // 1. Slug único (mesma função usada no onboarding self-service).
   const { data: slug, error: slugError } = await admin.rpc("generate_unique_slug", { base_name: payload.name });
-  if (slugError || !slug) return jsonResponse({ error: slugError?.message || "failed to generate slug" }, 500);
+  if (slugError || !slug) {
+    console.error("[admin-create-company] slug", slugError?.message);
+    return jsonResponse({ error: slugError?.message || "failed to generate slug" }, 500);
+  }
 
   // 2. Tenant.
   const { data: company, error: companyError } = await admin
@@ -154,7 +182,10 @@ Deno.serve(async (req: Request) => {
     })
     .select()
     .single();
-  if (companyError || !company) return jsonResponse({ error: companyError?.message || "failed to create company" }, 500);
+  if (companyError || !company) {
+    console.error("[admin-create-company] insert company", companyError?.message);
+    return jsonResponse({ error: companyError?.message || "failed to create company" }, 500);
+  }
 
   // 3. Plano (preço, pra cobrança no Asaas) + assinatura local (trial, 14
   //    dias — o mesmo prazo do primeiro vencimento no Asaas, ver passo 4).
@@ -174,7 +205,10 @@ Deno.serve(async (req: Request) => {
     })
     .select()
     .single();
-  if (subscriptionError) return jsonResponse({ error: subscriptionError.message }, 500);
+  if (subscriptionError) {
+    console.error("[admin-create-company] insert subscription", subscriptionError.message);
+    return jsonResponse({ error: subscriptionError.message }, 500);
+  }
 
   // 4. Asaas: cliente + assinatura recorrente, primeiro vencimento no dia
   //    em que o trial acaba (a partir daí o próprio Asaas gera a cobrança de

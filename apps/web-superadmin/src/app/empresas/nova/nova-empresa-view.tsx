@@ -82,16 +82,33 @@ export function NovaEmpresaView({
     setSaving(false);
 
     if (error) {
-      let message = error.message;
-      try {
-        const ctx = (error as unknown as { context?: Response }).context;
-        if (ctx) {
-          const body = await ctx.json();
-          if (body?.error) message = body.error;
+      // Detalhe técnico só no console; o toast mostra uma mensagem útil, sem
+      // expor erro interno. Sem `context` = a requisição nem chegou à função
+      // (rede/CORS) — FunctionsFetchError do supabase-js.
+      const ctx = (error as unknown as { context?: Response }).context;
+      let status: number | undefined;
+      let serverMessage: string | undefined;
+      if (ctx instanceof Response) {
+        status = ctx.status;
+        try {
+          serverMessage = (await ctx.clone().json())?.error;
+        } catch {
+          // corpo não veio em JSON
         }
-      } catch {
-        // mantém a mensagem genérica se o corpo não vier em JSON
       }
+      // eslint-disable-next-line no-console
+      console.error("[admin-create-company]", { name: error.name, message: error.message, status, serverMessage });
+
+      const message =
+        status === 409 && serverMessage
+          ? serverMessage
+          : status === 401
+            ? "Sua sessão expirou. Entre novamente e tente outra vez."
+            : status === 403
+              ? "Apenas o Super Admin pode criar empresas."
+              : status === 400
+                ? "Confira os campos obrigatórios e tente novamente."
+                : "Não foi possível criar a empresa. Tente novamente.";
       toast({ title: "Erro ao criar empresa", description: message, variant: "destructive" });
       return;
     }
