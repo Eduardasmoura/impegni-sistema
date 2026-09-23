@@ -1,44 +1,43 @@
+import { ArrowDown } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Reveal } from "@/components/ui/reveal";
 
+// O "antes e depois" que abre a narrativa: problema → solução, em três
+// situações concretas do dia a dia, antes de mostrar qualquer funcionalidade.
 const SITUACOES = [
   {
-    title: "Agenda espalhada",
-    body: "Agendamentos pelo WhatsApp, Instagram e anotações soltas acabam dificultando sua organização.",
+    antes: "Horários anotados no caderno, no Instagram e em dezenas de conversas.",
+    depois: "Todos os atendimentos numa agenda só, atualizada na hora.",
   },
   {
-    title: "Clientes sem histórico",
-    body: "Informações importantes ficam espalhadas e você perde tempo procurando o que já foi combinado.",
+    antes: "Cliente pedindo horário às 23h e você respondendo no intervalo do atendimento.",
+    depois: "O cliente agenda sozinho pelo seu link, a qualquer hora.",
   },
   {
-    title: "Horários esquecidos",
-    body: "Sem uma agenda centralizada, fica mais difícil acompanhar seus próximos atendimentos.",
-  },
-  {
-    title: "Muito trabalho manual",
-    body: "Você deveria estar atendendo seus clientes, não gastando horas organizando sua agenda.",
+    antes: "Fim do mês chega e você não sabe quanto entrou nem quanto sobrou.",
+    depois: "Receitas, despesas e resultado do período sempre à vista.",
   },
 ];
 
-// Lista editorial, sem cards nem ícones em caixa — de propósito diferente
-// do formato de grade usado em "Solução" logo abaixo, pra a página não
-// repetir o mesmo componente duas vezes seguidas.
 export function Problema() {
   return (
-    <section className="max-w-3xl mx-auto px-5 sm:px-6 py-16 sm:py-24">
-      <SectionHeading title="Sua rotina não precisa ser uma bagunça." align="left" className="mb-4 max-w-none" />
+    <section aria-labelledby="problema-title" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+      <SectionHeading
+        id="problema-title"
+        eyebrow="Por que o Impegni"
+        title="Talento você já tem. Falta a gestão acompanhar."
+        description="Quem atende o dia inteiro não pode perder tempo organizando papel, planilha e mensagem."
+      />
 
-      <div className="mt-10 divide-y divide-border border-t border-border">
-        {SITUACOES.map(({ title, body }, i) => (
-          <Reveal key={title} delay={i * 60}>
-            <div className="py-6 flex flex-col sm:flex-row sm:items-baseline gap-1.5 sm:gap-8">
-              <span className="font-heading text-sm font-semibold text-primary shrink-0 sm:w-8">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div className="sm:flex-1 sm:grid sm:grid-cols-[13rem_1fr] sm:gap-8">
-                <h3 className="font-heading text-[17px] font-semibold">{title}</h3>
-                <p className="mt-1.5 sm:mt-0 text-[15px] text-muted-foreground leading-relaxed text-pretty">{body}</p>
-              </div>
+      <div className="mt-14 grid md:grid-cols-3 gap-4 sm:gap-5">
+        {SITUACOES.map(({ antes, depois }, i) => (
+          <Reveal key={depois} delay={i * 80}>
+            <div className="h-full rounded-2xl border border-foreground/[0.08] bg-card p-6 sm:p-7 flex flex-col">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80">Hoje</p>
+              <p className="mt-2 text-[15px] text-muted-foreground leading-relaxed text-pretty">{antes}</p>
+              <ArrowDown className="my-5 w-4 h-4 text-foreground/25" aria-hidden="true" />
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-primary/80">Com o Impegni</p>
+              <p className="mt-2 text-[16.5px] font-medium leading-snug text-pretty">{depois}</p>
             </div>
           </Reveal>
         ))}

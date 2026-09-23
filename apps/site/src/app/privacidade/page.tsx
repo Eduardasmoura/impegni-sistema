@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { SUPPORT_EMAIL } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Política de privacidade — Impegni" };
 
@@ -16,7 +17,7 @@ export default function PrivacidadePage() {
         <h1 className="font-heading text-3xl font-semibold mb-4">Política de privacidade</h1>
         <p className="text-muted-foreground leading-relaxed">
           Este documento está em elaboração e será publicado aqui antes do lançamento oficial, detalhando como os dados de empresas e clientes são tratados no Impegni, em conformidade com a LGPD. Qualquer dúvida pode ser esclarecida diretamente com o{" "}
-          <Link href="mailto:atendimento.inovabi@gmail.com" className="text-primary hover:underline">suporte</Link>.
+          <Link href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">suporte</Link>.
         </p>
       </main>
       <Footer />

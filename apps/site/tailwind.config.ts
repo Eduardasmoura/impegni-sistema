@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
-// Mesmos tokens de cor/tipografia de `apps/web-professional` (globals.css) —
-// o site de vendas precisa parecer o mesmo produto, não uma marca à parte.
+// Tokens definidos em src/styles/globals.css.
 const config: Config = {
   darkMode: ["class"],
   content: ["./src/**/*.{ts,tsx}"],
@@ -23,6 +22,7 @@ const config: Config = {
         accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
         destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
         border: "hsl(var(--border))",
+        ink: "hsl(var(--ink))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         chart: {

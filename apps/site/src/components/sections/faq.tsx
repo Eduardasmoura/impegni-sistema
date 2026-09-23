@@ -1,26 +1,23 @@
-import { ChevronDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { WHATSAPP_URL } from "@/lib/format";
 
 const PERGUNTAS = [
   {
-    q: "Preciso instalar algum aplicativo?",
-    a: "Não. O Impegni funciona direto pelo navegador, no computador ou no celular, sem precisar instalar nada.",
+    q: "Preciso instalar alguma coisa?",
+    a: "Não. O Impegni funciona direto pelo navegador, no computador, no tablet ou no celular, sem instalar nada.",
   },
   {
-    q: "Posso usar pelo celular?",
-    a: "Sim — a interface se adapta ao celular normalmente. Um aplicativo dedicado para Android e iPhone chega em breve.",
+    q: "Posso usar no celular?",
+    a: "Sim. O sistema se adapta à tela do celular e funciona normalmente pelo navegador. Um aplicativo dedicado para Android e iPhone está em preparação.",
   },
   {
     q: "Meus clientes conseguem agendar sozinhos?",
-    a: "Sim. Cada empresa tem sua própria página pública de agendamento — é só compartilhar o link, sem o cliente precisar criar conta ou instalar nada.",
+    a: "Sim. Seu negócio ganha uma página pública de agendamento: é só compartilhar o link pelo WhatsApp ou Instagram. O cliente escolhe o serviço, o profissional e um horário livre.",
   },
   {
-    q: "Como meus clientes recebem o link de agendamento?",
-    a: "Do jeito que for mais prático pra você: pelo WhatsApp, Instagram ou onde já conversa com eles. É um link fixo, o mesmo sempre.",
-  },
-  {
-    q: "Existe período de teste?",
-    a: "Sim — 14 dias grátis em qualquer plano, com acesso completo ao sistema, sem pedir cartão de crédito no cadastro.",
+    q: "Como funciona o teste grátis?",
+    a: "São 14 dias grátis em qualquer plano, com acesso completo ao sistema e sem pedir cartão de crédito no cadastro. Ao fim do teste, você escolhe um plano pra continuar.",
   },
   {
     q: "Posso cancelar quando quiser?",
@@ -30,27 +27,41 @@ const PERGUNTAS = [
     q: "Posso cadastrar meus próprios serviços?",
     a: "Sim. Você cadastra nome, preço e duração de cada serviço, e eles aparecem automaticamente na sua página de agendamento.",
   },
-  {
-    q: "Dá pra controlar o financeiro do meu negócio?",
-    a: "Sim. O painel mostra receitas, despesas e resultado do período, com filtro por serviço e por profissional.",
-  },
 ];
+
+const FAQ_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: PERGUNTAS.map(({ q, a }) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+};
 
 export function Faq() {
   return (
-    <section id="faq" className="max-w-3xl mx-auto px-5 sm:px-6 py-16 sm:py-24">
-      <SectionHeading title="Perguntas frequentes" description="O que costuma pesar na hora de decidir." className="mb-12" />
+    <section id="faq" aria-labelledby="faq-title" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
+      <div className="grid lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] gap-10 lg:gap-16">
+        <div>
+          <SectionHeading id="faq-title" align="left" eyebrow="FAQ" title="Perguntas frequentes" />
+          <p className="mt-5 text-[15px] text-muted-foreground">
+            Ficou alguma dúvida?{" "}
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4 decoration-foreground/25 hover:decoration-foreground">
+              Fale com a gente no WhatsApp
+            </a>
+            .
+          </p>
+        </div>
 
-      <div className="divide-y divide-border border-y border-border">
-        {PERGUNTAS.map(({ q, a }) => (
-          <details key={q} className="group py-5">
-            <summary className="flex items-center justify-between gap-4 cursor-pointer list-none font-medium text-[15px] marker:content-none">
-              {q}
-              <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <p className="mt-3 text-[14.5px] text-muted-foreground leading-relaxed text-pretty">{a}</p>
-          </details>
-        ))}
+        <div className="divide-y divide-foreground/[0.08] border-y border-foreground/[0.08]">
+          {PERGUNTAS.map(({ q, a }) => (
+            <details key={q} className="group">
+              <summary className="flex items-center justify-between gap-6 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden font-medium text-[16px] hover:text-foreground/80 transition-colors">
+                {q}
+                <Plus className="w-4 h-4 text-foreground/50 shrink-0 transition-transform duration-200 group-open:rotate-45" aria-hidden="true" />
+              </summary>
+              <p className="pb-5 -mt-1 pr-10 text-[15px] text-muted-foreground leading-relaxed text-pretty">{a}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   );

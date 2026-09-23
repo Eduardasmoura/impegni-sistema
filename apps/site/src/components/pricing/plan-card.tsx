@@ -38,10 +38,10 @@ function anamneseNivel(planFeatures: Tables<"plan_features">[]): "padrão" | "pe
 function Price({ cents }: { cents: number }) {
   const value = (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (
-    <p className="font-heading font-extrabold flex items-baseline gap-1 text-[3rem] leading-none">
-      <span className="text-base font-semibold text-muted-foreground self-start">R$</span>
+    <p className="font-heading font-semibold flex items-baseline gap-1 text-[2.4rem] leading-none tracking-[-0.03em]">
+      <span className="text-[15px] font-medium text-muted-foreground self-start mt-1 tracking-normal">R$</span>
       <span>{value}</span>
-      <span className="text-base font-normal text-muted-foreground">/mês</span>
+      <span className="text-[15px] font-normal text-muted-foreground tracking-normal">/mês</span>
     </p>
   );
 }
@@ -76,20 +76,20 @@ export function PlanCard({ plan, planFeatures, previousPlan, previousPlanFeature
 
   return (
     <div
-      className={`relative rounded-2xl border bg-card p-8 sm:p-10 flex flex-col ${
+      className={`relative rounded-2xl border bg-card p-7 sm:p-9 flex flex-col ${
         highlighted
-          ? "order-1 sm:order-none border-primary shadow-xl shadow-primary/[0.12] ring-1 ring-primary/15"
-          : "order-2 sm:order-none border-border"
+          ? "order-1 md:order-none border-primary/60 shadow-product ring-1 ring-primary/10"
+          : "order-2 md:order-none border-foreground/10"
       }`}
     >
       {highlighted && (
-        <span className="absolute -top-3 left-8 bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-wide px-3 py-1 rounded-full whitespace-nowrap">
+        <span className="absolute -top-3 left-7 sm:left-9 bg-primary text-primary-foreground text-[12px] font-semibold px-3 py-1 rounded-full whitespace-nowrap">
           Mais popular
         </span>
       )}
 
-      <h3 className="font-heading text-2xl font-extrabold">{plan.name}</h3>
-      <p className="text-sm text-muted-foreground mt-1 mb-6">{TAGLINE[plan.name] ?? ""}</p>
+      <h3 className="font-heading text-xl font-semibold tracking-tight">{plan.name}</h3>
+      <p className="text-[15px] text-muted-foreground mt-1 mb-6">{TAGLINE[plan.name] ?? ""}</p>
 
       {temPromo && (
         <span className="inline-flex self-start items-center text-xs font-semibold text-primary bg-accent px-2.5 py-1 rounded-md mb-3">
@@ -116,13 +116,13 @@ export function PlanCard({ plan, planFeatures, previousPlan, previousPlanFeature
         size="lg"
         className="mt-7 w-full"
       >
-        Começar teste grátis
+        Começar grátis
       </ButtonLink>
-      <p className="mt-3 text-center text-xs text-muted-foreground">14 dias grátis • Sem cartão de crédito</p>
+      <p className="mt-3 text-center text-[13px] text-muted-foreground">14 dias grátis • Sem cartão de crédito</p>
 
-      <div className="mt-8 pt-7 border-t border-border flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-5">{recursosLabel}</p>
-        <ul className="space-y-4 text-[15px]">
+      <div className="mt-8 pt-7 border-t border-foreground/[0.08] flex-1">
+        <p className="text-[13px] font-semibold text-foreground/70 mb-4">{recursosLabel}</p>
+        <ul className="space-y-3 text-[15px]">
           {!previousPlan && (
             <>
               {UNIVERSAL_FEATURES.map((feature) => (
