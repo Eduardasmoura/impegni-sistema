@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cookieDomain } from "@/lib/subdomain";
 import type { Database } from "./database.types";
 
 // Usado em Server Components, Server Actions e Route Handlers. Lê/escreve o
@@ -11,6 +12,8 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // domain: cobre todos os subdomínios de empresa — ver cookieDomain().
+      cookieOptions: { domain: cookieDomain() },
       cookies: {
         getAll() {
           return cookieStore.getAll();

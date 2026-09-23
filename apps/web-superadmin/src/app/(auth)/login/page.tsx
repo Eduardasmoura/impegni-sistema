@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/auth-layout";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "/empresas";
   const [email, setEmail] = useState("");
@@ -40,8 +39,11 @@ function LoginForm() {
       setError(signInError.message === "Invalid login credentials" ? "Email ou senha inválidos" : signInError.message);
       return;
     }
-    router.push(returnTo);
-    router.refresh();
+    // Navegação completa (não router.push): evita o cache de rota do
+    // Next.js servir um RSC prefetchado de antes do login e causar um
+    // loop de redirecionamento com o middleware — achado testando em
+    // produção (mesmo problema encontrado e corrigido no web-professional).
+    window.location.replace(returnTo);
   }
 
   return (

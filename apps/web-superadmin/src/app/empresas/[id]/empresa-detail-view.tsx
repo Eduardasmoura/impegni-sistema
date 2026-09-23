@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase/client";
+import { professionalUrlForCompany } from "@/lib/professional-url";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { BUSINESS_SIZE_LABEL, GOAL_LABEL, STAFF_SIZE_LABEL } from "@/lib/onboarding-options";
 import type { Tables } from "@/lib/supabase/database.types";
@@ -126,7 +127,7 @@ export function EmpresaDetailView({
         body: {
           company_id: company.id,
           reason: impersonateReason || undefined,
-          redirect_to: process.env.NEXT_PUBLIC_WEB_PROFESSIONAL_URL,
+          redirect_to: professionalUrlForCompany(company.slug),
         },
       });
       if (error || !data?.url) throw new Error(data?.error || error?.message || "falha ao gerar acesso");
@@ -162,7 +163,7 @@ export function EmpresaDetailView({
     setResettingUserId(userId);
     try {
       const { data, error } = await supabase.functions.invoke("admin-reset-user-password", {
-        body: { user_id: userId, redirect_to: process.env.NEXT_PUBLIC_WEB_PROFESSIONAL_URL },
+        body: { user_id: userId, redirect_to: professionalUrlForCompany(company.slug) },
       });
       if (error || data?.error) throw new Error(data?.error || error?.message);
       toast({ title: "E-mail de redefinição enviado", description: data.email });

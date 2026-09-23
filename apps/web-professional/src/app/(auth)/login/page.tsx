@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/auth-layout";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "/dashboard";
   const [email, setEmail] = useState("");
@@ -41,8 +40,14 @@ function LoginForm() {
       setError(friendlyError(signInError, "entrar"));
       return;
     }
-    router.push(returnTo);
-    router.refresh();
+    // Navegação completa (não router.push), de propósito: o cache de rota
+    // do Next.js pode servir um RSC prefetchado de ANTES do login (quando
+    // o middleware ainda via "não autenticado" pra /dashboard), causando
+    // um loop de redirecionamento entre /login e /dashboard que só se
+    // resolve sozinho às vezes — achado testando em produção (mais visível
+    // com latência mais alta). Mesmo padrão já usado em
+    // app/auth/callback/page.tsx pro mesmo tipo de transição.
+    window.location.replace(returnTo);
   }
 
   return (
