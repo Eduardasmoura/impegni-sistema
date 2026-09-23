@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { BOOKING_DOMAIN } from "@/lib/format";
 
 const COLLAPSE_KEY = "setup-guide:collapsed";
 const DISMISS_KEY = "setup-guide:dismissed-complete";
@@ -118,7 +119,7 @@ export function SetupGuide(progress: SetupProgress) {
   const concluidos = itens.filter((i) => i.done).length;
   const total = itens.length;
   const completo = concluidos === total;
-  const link = `${progress.companySlug}.inova.app`;
+  const link = `${progress.companySlug}.${BOOKING_DOMAIN}`;
 
   function alternarCollapsed() {
     setCollapsed((v) => {

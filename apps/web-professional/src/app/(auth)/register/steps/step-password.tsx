@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SITE_URL } from "@/lib/format";
 import { Check, Eye, EyeOff, Lock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -137,8 +138,16 @@ export function StepPassword({ data, onChange, segments }: StepProps & { segment
         <span className="text-sm text-muted-foreground">
           Li e concordo com o{" "}
           <Link href="/contrato" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
-            Contrato de Prestação de Serviços e os Termos de Uso
+            Contrato de Prestação de Serviços
           </Link>
+          , com os{" "}
+          <a href={`${SITE_URL}/termos-de-uso`} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
+            Termos de Uso
+          </a>{" "}
+          e com a{" "}
+          <a href={`${SITE_URL}/privacidade`} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
+            Política de Privacidade
+          </a>
           .
         </span>
       </label>

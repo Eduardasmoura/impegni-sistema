@@ -29,3 +29,10 @@ export function formatDuration(minutes: number): string {
   if (m === 0) return `${h}h`;
   return `${h}h${String(m).padStart(2, "0")}`;
 }
+
+// Domínio da página pública de agendamento (web-client): cada empresa em
+// `{slug}.impegni.com.br`. Usado onde o painel mostra/abre o link público.
+export const BOOKING_DOMAIN = process.env.NEXT_PUBLIC_BOOKING_DOMAIN || "impegni.com.br";
+
+// Site público (apps/site) — onde ficam Termos de Uso e Política de Privacidade.
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://impegni.com.br";

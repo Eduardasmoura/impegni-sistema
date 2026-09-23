@@ -19,6 +19,7 @@ import { StepBusiness, stepBusinessIsValid } from "@/app/(auth)/register/steps/s
 import { StepSegment, stepSegmentIsValid } from "@/app/(auth)/register/steps/step-segment";
 import { StepAddress, stepAddressIsValid } from "@/app/(auth)/register/steps/step-address";
 import type { Tables } from "@/lib/supabase/database.types";
+import { BOOKING_DOMAIN } from "@/lib/format";
 
 // Ícone só pra decorar o card de segmento — a lista de verdade vem do banco
 // (public.segments), o Super Admin pode cadastrar um segmento novo sem
@@ -308,7 +309,7 @@ export function OnboardingForm({ userEmail }: { userEmail: string }) {
               placeholder="sua-empresa"
               required
             />
-            <span className="px-3 py-2 text-muted-foreground bg-muted whitespace-nowrap">.inova.app</span>
+            <span className="px-3 py-2 text-muted-foreground bg-muted whitespace-nowrap">.{BOOKING_DOMAIN}</span>
           </div>
           <p className="text-xs text-muted-foreground">Gerado a partir do nome — pode editar, a gente garante que fica único.</p>
         </div>

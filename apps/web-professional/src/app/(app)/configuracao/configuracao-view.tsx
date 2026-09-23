@@ -14,8 +14,10 @@ import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import { uploadCompanyAsset } from "@/lib/upload";
 import type { Tables } from "@/lib/supabase/database.types";
+import { BOOKING_DOMAIN } from "@/lib/format";
 
 const PALETAS_PRONTAS = [
+  { nome: "Impegni", primaria: "#BE185D", secundaria: "#1C1917", acento: "#FCE7F3" },
   { nome: "Âmbar", primaria: "#B45309", secundaria: "#1C1917", acento: "#F5E6D3" },
   { nome: "Rosa", primaria: "#BE185D", secundaria: "#3B0764", acento: "#FCE7F3" },
   { nome: "Esmeralda", primaria: "#047857", secundaria: "#064E3B", acento: "#D1FAE5" },
@@ -81,9 +83,9 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
     business_hours: company.business_hours || "",
     logo_url: company.logo_url || "",
     cover_url: company.cover_url || "",
-    color_primary: company.color_primary || "#B45309",
+    color_primary: company.color_primary || "#BE185D",
     color_secondary: company.color_secondary || "#1C1917",
-    color_accent: company.color_accent || "#F5E6D3",
+    color_accent: company.color_accent || "#FCE7F3",
     segment_id: company.segment_id,
     loyalty_program_enabled: company.loyalty_program_enabled,
     whatsapp_reminder_enabled: company.whatsapp_reminder_enabled,
@@ -129,11 +131,11 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
             <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
             <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Link público (o que você compartilha com clientes)</p>
-              <p className="font-mono text-sm truncate">{company.slug}.inova.app</p>
+              <p className="font-mono text-sm truncate">{company.slug}.{BOOKING_DOMAIN}</p>
             </div>
           </div>
           <a
-            href={`https://${company.slug}.inova.app`}
+            href={`https://${company.slug}.${BOOKING_DOMAIN}`}
             target="_blank"
             rel="noreferrer"
             className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"

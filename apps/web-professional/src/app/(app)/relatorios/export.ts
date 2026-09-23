@@ -34,7 +34,7 @@ export async function buildReportPdfFile(ctx: ExportContext, columns: ExportColu
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.setTextColor(194, 92, 24); // tom âmbar próximo do --primary da marca
+  doc.setTextColor(190, 24, 93); // cor da marca (#BE185D, mesmo --primary)
   doc.text("Impegni", margin, y);
   y += 20;
 

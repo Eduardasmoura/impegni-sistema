@@ -65,7 +65,7 @@ export default async function CompanyPage({ params }: { params: { slug: string }
       </div>
 
       {/* pb-24 pra sobrar espaço acima da barra fixa "Agendar horário" no mobile */}
-      <main className="max-w-3xl mx-auto px-4 -mt-10 pb-24 sm:pb-16">
+      <main className="relative max-w-3xl mx-auto px-4 -mt-10 pb-24 sm:pb-16">
         {!bookable && (
           <div className="mb-6 rounded-lg border border-amber-300/60 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 p-4 flex items-start gap-3">
             <CalendarOff className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
