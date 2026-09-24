@@ -8,13 +8,14 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/database.types";
+import { PUBLIC_COMPANY_COLUMNS } from "@/lib/public-company";
 
 export default async function CompanyPage({ params }: { params: { slug: string } }) {
   const supabase = await createClient();
 
   const { data: company } = await supabase
     .from("companies")
-    .select("*")
+    .select(PUBLIC_COMPANY_COLUMNS)
     .eq("slug", params.slug)
     .in("status", ["active", "trial"])
     .maybeSingle();

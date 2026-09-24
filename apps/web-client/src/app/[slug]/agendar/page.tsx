@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { AgendarView } from "./agendar-view";
+import { PUBLIC_COMPANY_COLUMNS } from "@/lib/public-company";
 
 export default async function AgendarPage({ params }: { params: { slug: string } }) {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export default async function AgendarPage({ params }: { params: { slug: string }
   // normalmente. suspended/deleted continuam fora (RLS).
   const { data: company } = await supabase
     .from("companies")
-    .select("*")
+    .select(PUBLIC_COMPANY_COLUMNS)
     .eq("slug", params.slug)
     .in("status", ["active", "trial"])
     .maybeSingle();

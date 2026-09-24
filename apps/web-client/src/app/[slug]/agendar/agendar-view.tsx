@@ -18,6 +18,7 @@ import { zonedTimeToUtcIso, DEFAULT_TIMEZONE } from "@/lib/timezone";
 import { AvailabilityCalendar } from "./availability-calendar";
 import type { Tables } from "@/lib/supabase/database.types";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
+import type { PublicCompany } from "@/lib/public-company";
 
 // Ordem pedida: profissional -> serviço -> calendário/horário -> confirmação.
 const STEPS = ["Profissional", "Serviço", "Horário", "Confirmação"];
@@ -45,7 +46,7 @@ function mensagemDeErro(e: unknown): string {
   return raw;
 }
 
-export function AgendarView({ company }: { company: Tables<"companies"> }) {
+export function AgendarView({ company }: { company: PublicCompany }) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
