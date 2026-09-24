@@ -4,11 +4,14 @@ export function formatCurrency(value: number | null | undefined): string {
 
 // URL pública deste site (canonical, sitemap, Open Graph). Em produção,
 // configurar `NEXT_PUBLIC_SITE_URL` (https://impegni.com.br).
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003";
+// Sem a variável, o build de produção usa os domínios oficiais — nunca
+// localhost (links "Começar grátis"/"Entrar" já quebraram assim).
+const IS_PROD = process.env.NODE_ENV === "production";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (IS_PROD ? "https://impegni.com.br" : "http://localhost:3003");
 
 // Domínio do painel do profissional — todo CTA do site aponta pra lá.
 // Em produção, configurar via `NEXT_PUBLIC_APP_URL` (ex.: https://app.impegni.com.br).
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || (IS_PROD ? "https://app.impegni.com.br" : "http://localhost:3000");
 export const REGISTER_URL = `${APP_URL}/register`;
 export const LOGIN_URL = `${APP_URL}/login`;
 

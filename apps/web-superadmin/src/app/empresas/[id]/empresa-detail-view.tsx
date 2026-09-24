@@ -336,12 +336,12 @@ export function EmpresaDetailView({
             <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[status] ?? ""}`}>{STATUS_LABEL[status] ?? status}</span>
           </div>
           <a
-            href={`https://${company.slug}.inova.app`}
+            href={`https://${company.slug}.impegni.com.br`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mt-1"
           >
-            {company.slug}.inova.app <ExternalLink className="w-3 h-3" />
+            {company.slug}.impegni.com.br <ExternalLink className="w-3 h-3" />
           </a>
         </div>
 

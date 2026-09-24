@@ -11,7 +11,8 @@
  * já funciona sem configuração extra (RFC 6761).
  */
 export function professionalUrlForCompany(slug: string): string {
-  const base = process.env.NEXT_PUBLIC_WEB_PROFESSIONAL_URL || "http://localhost:3000";
+  const base =
+    process.env.NEXT_PUBLIC_WEB_PROFESSIONAL_URL || (process.env.NODE_ENV === "production" ? "https://app.impegni.com.br" : "http://localhost:3000");
   // Subdomínio por empresa só quando o domínio curinga *.app.impegni.com.br
   // estiver servindo HTTPS na Vercel (hoje resolve no DNS mas não responde)
   // — até lá, os links do Super Admin usam o domínio principal do painel.
