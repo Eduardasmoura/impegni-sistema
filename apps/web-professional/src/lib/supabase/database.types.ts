@@ -319,6 +319,76 @@ export type Database = {
           },
         ]
       }
+      appointment_deposits: {
+        Row: {
+          amount: number
+          appointment_id: string
+          client_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          method: string
+          percent: number
+          reported_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          appointment_id: string
+          client_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          method: string
+          percent: number
+          reported_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string
+          client_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          method?: string
+          percent?: number
+          reported_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_deposits_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_deposits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_deposits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_notifications: {
         Row: {
           appointment_id: string
@@ -875,6 +945,59 @@ export type Database = {
             columns: ["segment_id"]
             isOneToOne: false
             referencedRelation: "segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_deposit_settings: {
+        Row: {
+          company_id: string
+          created_at: string
+          enabled: boolean
+          method: string
+          payment_link_url: string | null
+          percent: number
+          pix_key: string | null
+          pix_key_type: string | null
+          pix_qr_code_url: string | null
+          pix_receiver_name: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          enabled?: boolean
+          method?: string
+          payment_link_url?: string | null
+          percent?: number
+          pix_key?: string | null
+          pix_key_type?: string | null
+          pix_qr_code_url?: string | null
+          pix_receiver_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          enabled?: boolean
+          method?: string
+          payment_link_url?: string | null
+          percent?: number
+          pix_key?: string | null
+          pix_key_type?: string | null
+          pix_qr_code_url?: string | null
+          pix_receiver_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_deposit_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -2909,6 +3032,28 @@ export type Database = {
           price: number
         }[]
       }
+      book_appointment_with_deposit: {
+        Args: {
+          p_client_id: string
+          p_company_id: string
+          p_coupon_code?: string
+          p_deposit_reported: boolean
+          p_payment_method?: string
+          p_professional_id: string
+          p_scheduled_at: string
+          p_service_id: string
+        }
+        Returns: {
+          appointment_id: string
+          deposit_amount: number
+          deposit_id: string
+          discount_amount: number
+          duration_min: number
+          final_amount: number
+          payment_id: string
+          price: number
+        }[]
+      }
       calculate_professional_payout: {
         Args: {
           p_company_id: string
@@ -3080,6 +3225,20 @@ export type Database = {
           service_id: string
           service_name: string
           status: string
+        }[]
+      }
+      get_booking_deposit: {
+        Args: { p_company_id: string; p_service_id: string }
+        Returns: {
+          deposit_amount: number
+          method: string
+          payment_link_url: string
+          percent: number
+          pix_key: string
+          pix_key_type: string
+          pix_qr_code_url: string
+          pix_receiver_name: string
+          service_price: number
         }[]
       }
       get_company_access_status: {
@@ -3367,6 +3526,30 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_appointment_deposit: {
+        Args: { p_deposit_id: string; p_status: string }
+        Returns: {
+          amount: number
+          appointment_id: string
+          client_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          method: string
+          percent: number
+          reported_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointment_deposits"
           isOneToOne: true
           isSetofReturn: false
         }

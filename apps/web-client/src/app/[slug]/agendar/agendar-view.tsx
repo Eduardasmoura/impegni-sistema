@@ -19,6 +19,7 @@ import { AvailabilityCalendar } from "./availability-calendar";
 import type { Tables } from "@/lib/supabase/database.types";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
 import type { PublicCompany } from "@/lib/public-company";
+import { CaucaoBox } from "./caucao-box";
 
 // Ordem pedida: profissional -> serviço -> calendário/horário -> confirmação.
 const STEPS = ["Profissional", "Serviço", "Horário", "Confirmação"];
@@ -74,6 +75,7 @@ export function AgendarView({ company }: { company: PublicCompany }) {
   const [entrandoNaFila, setEntrandoNaFila] = useState(false);
   const [naFilaDeEspera, setNaFilaDeEspera] = useState(false);
   const [cpfCliente, setCpfCliente] = useState("");
+  const [caucaoDeclarado, setCaucaoDeclarado] = useState(false);
   const [pagamentoOnline, setPagamentoOnline] = useState<{ invoiceUrl: string; appointmentId?: string } | null>(null);
 
   const agora = useMemo(() => new Date(), []);
@@ -253,6 +255,24 @@ export function AgendarView({ company }: { company: PublicCompany }) {
     },
   });
   const carregandoDados = !!user && (carregandoCliente || carregandoPerfil);
+
+  // Caução (pago direto ao estabelecimento). Só vem configuração se ESTA
+  // empresa cobra caução; o valor já chega calculado pelo servidor sobre o
+  // preço do serviço. Sem caução, o fluxo segue exatamente como antes.
+  const { data: caucao, isLoading: carregandoCaucao } = useQuery({
+    queryKey: ["booking-deposit", company.id, serviceId, user?.id],
+    enabled: !!user && !!serviceId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_booking_deposit", { p_company_id: company.id, p_service_id: serviceId! });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+  const aguardandoCaucao = !!user && !!serviceId && carregandoCaucao;
+  // A declaração vale só para o horário/serviço escolhido agora.
+  useEffect(() => {
+    setCaucaoDeclarado(false);
+  }, [serviceId, professionalId, data, hora]);
   const nomeCadastrado = clienteExistente?.name?.trim() || perfil?.full_name?.trim() || "";
   const telefoneCadastrado = clienteExistente?.phone?.trim() || perfil?.phone?.trim() || "";
   const nomeFinal = nomeCadastrado || nome.trim();
@@ -327,7 +347,7 @@ export function AgendarView({ company }: { company: PublicCompany }) {
       // Agendamento + pagamento numa RPC só (transação atômica) — antes eram
       // dois inserts separados e o segundo (payments) sempre falhava por RLS
       // pra um cliente comum, deixando o agendamento órfão sem pagamento.
-      const { data: bookData, error: bookError } = await supabase.rpc("book_appointment", {
+      const agendamento = {
         p_company_id: company.id,
         p_client_id: clientId,
         p_professional_id: professionalId!,
@@ -335,7 +355,13 @@ export function AgendarView({ company }: { company: PublicCompany }) {
         p_scheduled_at: scheduledAt,
         p_payment_method: metodo,
         p_coupon_code: cupomAplicado?.code || undefined,
-      });
+      };
+      // Com caução: mesma reserva (book_appointment é chamado lá dentro, com
+      // preço/duplo agendamento no servidor) + registro de que o cliente
+      // informou o pagamento, na mesma transação.
+      const { data: bookData, error: bookError } = caucao
+        ? await supabase.rpc("book_appointment_with_deposit", { ...agendamento, p_deposit_reported: caucaoDeclarado })
+        : await supabase.rpc("book_appointment", agendamento);
       if (bookError) throw bookError;
       const desconto = Number(bookData?.[0]?.discount_amount || 0);
       const paymentId = bookData?.[0]?.payment_id as string | undefined;
@@ -696,6 +722,9 @@ export function AgendarView({ company }: { company: PublicCompany }) {
                         </div>
                       )}
                     </div>
+                    {caucao && servico && (
+                      <CaucaoBox caucao={caucao} servicoNome={servico.name} declarado={caucaoDeclarado} onDeclaradoChange={setCaucaoDeclarado} />
+                    )}
                   </>
                 )}
               </div>
@@ -703,7 +732,7 @@ export function AgendarView({ company }: { company: PublicCompany }) {
             <div className="flex justify-between mt-6">
               <BackBtn onClick={() => setStep(2)} />
               {user && (
-                <Button disabled={carregandoDados || !nomeFinal || !telefoneFinal || loading || (metodo === "online" && !cpfCliente.trim())} onClick={confirmar} className="gap-2">
+                <Button disabled={carregandoDados || aguardandoCaucao || (!!caucao && !caucaoDeclarado) || !nomeFinal || !telefoneFinal || loading || (metodo === "online" && !cpfCliente.trim())} onClick={confirmar} className="gap-2">
                   {loading ? "Confirmando..." : <><Check className="w-4 h-4" /> Confirmar agendamento</>}
                 </Button>
               )}

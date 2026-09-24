@@ -53,3 +53,13 @@ export const PAGAMENTO_ASSINATURA_STATUS_LABEL: Record<string, string> = {
   refunded: "Estornado",
   deleted: "Removido",
 };
+
+// appointment_deposits.status (caução pago direto ao estabelecimento —
+// migration 20260927000000). `dot` é a cor do marcador na timeline da Agenda.
+export const CAUCAO_STATUS: Record<string, { label: string; className: string; dot: string }> = {
+  pending: { label: "Caução aguardando pagamento", className: "bg-amber-100 text-amber-800", dot: "bg-amber-500" },
+  reported: { label: "Caução aguardando confirmação", className: "bg-amber-100 text-amber-800", dot: "bg-amber-500" },
+  confirmed: { label: "Caução confirmado", className: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
+  rejected: { label: "Caução recusado", className: "bg-red-100 text-red-700", dot: "bg-red-500" },
+  canceled: { label: "Caução cancelado", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+};

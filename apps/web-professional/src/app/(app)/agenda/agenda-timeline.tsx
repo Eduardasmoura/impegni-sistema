@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Ban, Coffee, Palmtree } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CAUCAO_STATUS } from "@/lib/labels";
 import { formatTime } from "@/lib/format";
 import type { Tables } from "@/lib/supabase/database.types";
 
@@ -57,6 +58,7 @@ export function AgendaTimeline({
   blocks,
   clientNameById,
   serviceById,
+  depositByAppointment,
   onSelectAppointment,
 }: {
   dia: string;
@@ -70,6 +72,7 @@ export function AgendaTimeline({
   blocks: BlockRow[];
   clientNameById: Map<string, string>;
   serviceById: Map<string, Tables<"services">>;
+  depositByAppointment?: Map<string, Tables<"appointment_deposits">>;
   onSelectAppointment: (a: Tables<"appointments">) => void;
 }) {
   // A faixa visível cobre o expediente, mas nunca corta um agendamento ou
@@ -169,6 +172,8 @@ export function AgendaTimeline({
           const servico = serviceById.get(a.service_id);
           const nomeCliente = clientNameById.get(a.client_id) || "Cliente";
           const compacto = fimAt - inicio <= 20;
+          const caucao = depositByAppointment?.get(a.id);
+          const caucaoInfo = caucao ? CAUCAO_STATUS[caucao.status] : undefined;
           return (
             <button
               key={a.id}
@@ -182,6 +187,9 @@ export function AgendaTimeline({
               style={{ top: topFor(inicio) + 1, height: Math.max(18, topFor(fimAt) - topFor(inicio) - 2) }}
             >
               <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", style.bar)} />
+              {caucaoInfo && (
+                <span title={caucaoInfo.label} aria-label={caucaoInfo.label} className={cn("absolute top-1 right-1 w-2 h-2 rounded-full", caucaoInfo.dot)} />
+              )}
               <div className={cn("h-full pl-2.5 pr-2 flex flex-col justify-center min-w-0", compacto ? "py-0" : "py-1")}>
                 <p className={cn("text-[13px] font-semibold truncate leading-tight", style.text, style.muted && "line-through decoration-1")}>
                   {nomeCliente}

@@ -110,6 +110,17 @@ export function AgendaView({
       return data as Tables<"services">[];
     },
   });
+  // Caução dos agendamentos online (pago direto ao estabelecimento) — só
+  // leitura aqui; confirmar/recusar passa pela RPC review_appointment_deposit.
+  const { data: deposits = [] } = useQuery({
+    queryKey: ["appointment-deposits", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("appointment_deposits").select("*").eq("company_id", companyId);
+      if (error) throw error;
+      return data as Tables<"appointment_deposits">[];
+    },
+  });
+  const depositByAppointment = useMemo(() => new Map(deposits.map((d) => [d.appointment_id, d])), [deposits]);
   const { data: professionals = [], isLoading: loadingProfessionals, isError: errorProfessionals } = useQuery({
     queryKey: ["professionals", companyId],
     queryFn: async () => {
@@ -276,6 +287,7 @@ export function AgendaView({
     }
     qc.invalidateQueries({ queryKey: ["appointments", companyId] });
     qc.invalidateQueries({ queryKey: ["occupancy-month", companyId] });
+    qc.invalidateQueries({ queryKey: ["appointment-deposits", companyId] });
     setDetalhe(null);
   }
 
@@ -487,6 +499,7 @@ export function AgendaView({
                   blocks={blocksDoDia}
                   clientNameById={clientNameById}
                   serviceById={serviceById}
+                  depositByAppointment={depositByAppointment}
                   onSelectAppointment={setDetalhe}
                 />
               </>
@@ -505,6 +518,8 @@ export function AgendaView({
           clientName={clientNameById.get(detalhe.client_id) || "Cliente"}
           service={serviceById.get(detalhe.service_id)}
           professionalName={professionals.find((p) => p.id === detalhe.professional_id)?.name}
+          deposit={depositByAppointment.get(detalhe.id)}
+          onDepositReviewed={() => qc.invalidateQueries({ queryKey: ["appointment-deposits", companyId] })}
           onOpenChange={(o) => !o && setDetalhe(null)}
           onMudarStatus={mudarStatus}
           onReagendar={(a) => { setDetalhe(null); setReagendando(a); }}
