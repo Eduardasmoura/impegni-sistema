@@ -3125,6 +3125,17 @@ export type Database = {
           role_empresa: string
         }[]
       }
+      get_my_notifications: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: string
+          is_read: boolean
+          message: string
+          sent_at: string | null
+          title: string
+        }[]
+      }
+      get_my_unread_notifications_count: { Args: never; Returns: number }
       get_new_client_candidates: {
         Args: { p_company_id: string; p_days?: number }
         Returns: {
@@ -3227,6 +3238,11 @@ export type Database = {
           status: string
           total_count: number
         }[]
+      }
+      mark_all_notifications_read: { Args: never; Returns: undefined }
+      mark_notification_read: {
+        Args: { p_announcement_id: string }
+        Returns: undefined
       }
       mark_payout_paid: {
         Args: {

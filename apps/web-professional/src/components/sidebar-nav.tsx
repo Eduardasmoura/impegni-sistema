@@ -9,6 +9,7 @@ import {
   UserSearch, ListOrdered, Megaphone, CalendarOff, ClipboardList, BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationsBell } from "@/components/notifications-bell";
 import { createClient } from "@/lib/supabase/client";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
@@ -197,7 +198,10 @@ export function SidebarNav({
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/notificacoes"><Bell className="w-4 h-4" /> Notificações</Link>
+          <Link href="/avisos"><Bell className="w-4 h-4" /> Notificações</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/notificacoes"><Bell className="w-4 h-4" /> Lembretes aos clientes</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/seguranca"><ShieldCheck className="w-4 h-4" /> Segurança</Link>
@@ -234,22 +238,26 @@ export function SidebarNav({
             não cabe ao lado do logo, então vira uma linha própria logo
             abaixo (ver bloco seguinte) em vez de existir duas vezes no DOM. */}
         {!collapsed && (
-          <button
-            onClick={alternarCollapsed}
-            aria-label="Recolher menu"
-            title="Recolher menu"
-            className="hidden lg:flex p-1.5 rounded-lg hover:bg-muted text-muted-foreground shrink-0"
-          >
-            <Menu className="w-4 h-4" />
-          </button>
+          <div className="hidden lg:flex items-center gap-0.5 shrink-0">
+            <NotificationsBell />
+            <button
+              onClick={alternarCollapsed}
+              aria-label="Recolher menu"
+              title="Recolher menu"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
 
       {collapsed && (
-        <div className="hidden lg:flex justify-center py-2 border-b border-border">
+        <div className="hidden lg:flex flex-col items-center gap-1 py-2 border-b border-border">
           <button onClick={alternarCollapsed} aria-label="Expandir menu" title="Expandir menu" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
             <Menu className="w-4 h-4" />
           </button>
+          <NotificationsBell />
         </div>
       )}
 
@@ -301,6 +309,7 @@ export function SidebarNav({
           <Menu className="w-5 h-5" />
         </button>
         <span className="font-heading font-semibold truncate">{companyName}</span>
+        <NotificationsBell className="ml-auto -mr-1.5" align="end" />
       </header>
 
       {/* Backdrop do drawer mobile */}

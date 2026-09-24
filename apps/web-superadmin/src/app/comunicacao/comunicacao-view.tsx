@@ -1,13 +1,13 @@
 "use client";
 
-// Comunicação = preparar avisos pra base de empresas (manutenção, novidade,
-// aviso de cobrança etc). NÃO existe infraestrutura de e-mail/SMS/push
-// configurada no projeto (confirmado na auditoria) — por isso não há botão
-// de "Enviar": todo aviso criado fica em rascunho, pra a equipe copiar e
-// disparar pelos canais que já usa hoje (WhatsApp, e-mail manual). Fingir
-// um "enviado" aqui seria mentir sobre o que o sistema realmente fez.
+// Comunicação = avisos pra base de empresas (manutenção, novidade, aviso de
+// cobrança etc). Todo aviso nasce rascunho; "Enviar para o painel" muda para
+// status 'sent' e ele passa a aparecer nas Notificações (sino) do painel das
+// empresas do público escolhido — entrega feita pelas funções
+// get_my_notifications/mark_notification_read (migration 20260925000000).
+// Não há e-mail/SMS/push: "Copiar texto" continua pra outros canais.
 import { useState } from "react";
-import { Plus, Megaphone, Copy, Check } from "lucide-react";
+import { Plus, Megaphone, Copy, Check, Send, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +84,28 @@ export function ComunicacaoView({ announcements: initial, plans, segments, compa
     toast({ title: "Rascunho criado" });
   }
 
+  const [enviandoId, setEnviandoId] = useState<string | null>(null);
+
+  async function enviarParaPainel(a: AnnouncementRow) {
+    if (!window.confirm(`Enviar "${a.title}" para o painel de: ${audienciaResumo(a)}?`)) return;
+    setEnviandoId(a.id);
+    const { data, error } = await supabase
+      .from("platform_announcements")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", a.id)
+      .eq("status", "draft")
+      .select("*, plans:audience_plan_id(id, name), segments:audience_segment_id(id, name), companies:audience_company_id(id, name)")
+      .single();
+    setEnviandoId(null);
+    if (error || !data) {
+      console.error("[comunicacao] envio falhou", error?.message);
+      toast({ title: "Não foi possível enviar o aviso", description: "Tente novamente.", variant: "destructive" });
+      return;
+    }
+    setAnnouncements((prev) => prev.map((x) => (x.id === a.id ? data : x)));
+    toast({ title: "Aviso enviado", description: "Ele já aparece nas Notificações do painel das empresas do público escolhido." });
+  }
+
   function copiarTexto(a: AnnouncementRow) {
     navigator.clipboard.writeText(`${a.title}\n\n${a.message}`);
     setCopiedId(a.id);
@@ -95,7 +117,7 @@ export function ComunicacaoView({ announcements: initial, plans, segments, compa
       <div className="flex items-start justify-between gap-4 flex-wrap mb-2">
         <div>
           <h1 className="font-heading text-3xl font-semibold">Comunicação</h1>
-          <p className="text-sm text-muted-foreground">Avisos preparados para a base de empresas.</p>
+          <p className="text-sm text-muted-foreground">Avisos para as Notificações do painel das empresas.</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button><Plus className="w-4 h-4" /> Novo aviso</Button></DialogTrigger>
@@ -142,7 +164,7 @@ export function ComunicacaoView({ announcements: initial, plans, segments, compa
       </div>
 
       <div className="mb-6 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-        Não existe envio automático (e-mail/SMS/push) configurado no Impegni hoje. Todo aviso fica como rascunho — use &quot;Copiar texto&quot; para disparar pelo canal que a equipe já usa (WhatsApp, e-mail manual etc).
+        Todo aviso nasce como rascunho. Use &quot;Enviar para o painel&quot; para ele aparecer nas Notificações (sino) do painel das empresas do público escolhido. Não há envio por e-mail/SMS — &quot;Copiar texto&quot; serve para outros canais.
       </div>
 
       {loadError && <Card className="mb-4 border-destructive/40"><CardContent className="p-4 text-sm text-destructive">Erro ao carregar avisos: {loadError}</CardContent></Card>}
@@ -152,16 +174,28 @@ export function ComunicacaoView({ announcements: initial, plans, segments, compa
           <Card key={a.id}>
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">Rascunho</span>
+                {a.status === "sent" ? (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-primary/10 text-primary">Enviado{a.sent_at ? ` em ${formatDateTime(a.sent_at)}` : ""}</span>
+                ) : (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">Rascunho</span>
+                )}
                 <span className="text-xs text-muted-foreground">{audienciaResumo(a)}</span>
                 <span className="text-xs text-muted-foreground ml-auto">{formatDateTime(a.created_at)}</span>
               </div>
               <p className="font-medium">{a.title}</p>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{a.message}</p>
-              <Button size="sm" variant="outline" className="mt-3" onClick={() => copiarTexto(a)}>
-                {copiedId === a.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedId === a.id ? "Copiado" : "Copiar texto"}
-              </Button>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {a.status === "draft" && (
+                  <Button size="sm" onClick={() => enviarParaPainel(a)} disabled={enviandoId === a.id}>
+                    {enviandoId === a.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    Enviar para o painel
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => copiarTexto(a)}>
+                  {copiedId === a.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedId === a.id ? "Copiado" : "Copiar texto"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
