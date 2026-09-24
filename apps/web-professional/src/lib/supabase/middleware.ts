@@ -8,7 +8,7 @@ import type { Database } from "./database.types";
 // URL (#access_token=...), que só o supabase-js rodando no navegador
 // consegue ler; o middleware bloquear essa rota pra quem "ainda não está
 // logado" impediria exatamente o login acontecer.
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/auth/callback"];
 
 // /contrato é público mas, diferente das rotas acima, faz sentido ler
 // estando logado também (não é uma rota "só pra quem não tem conta") — por
@@ -16,7 +16,12 @@ const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-passwor
 // está logado) e entra só na checagem de "não exige login". O link "Ler
 // contrato completo" da Etapa 5 do cadastro abre em nova aba sem sessão
 // nenhuma (signUp exige confirmação de e-mail antes de logar).
-const ALWAYS_PUBLIC_PATHS = ["/contrato"];
+//
+// /auth/confirm e /reset-password (recuperação de senha, fluxo token_hash)
+// também: /auth/confirm cria a sessão de recuperação e manda pra
+// /reset-password, que precisa abrir justamente COM a pessoa logada — se
+// ficasse em PUBLIC_PATHS, ela seria jogada pro dashboard sem trocar a senha.
+const ALWAYS_PUBLIC_PATHS = ["/contrato", "/auth/confirm", "/reset-password"];
 
 // Renova o cookie de sessão em toda request e redireciona quem não está
 // logado para /login (rotas públicas de auth ficam de fora dessa guarda).
