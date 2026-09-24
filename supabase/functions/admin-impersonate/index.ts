@@ -109,7 +109,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "could not resolve target user's email" }, 500);
   }
 
-  const redirectTo = payload.redirect_to || Deno.env.get("WEB_PROFESSIONAL_URL") || "http://localhost:3000";
+  const redirectTo = payload.redirect_to || Deno.env.get("WEB_PROFESSIONAL_URL") || "https://app.impegni.com.br";
   const { data: link, error: linkError } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email: targetUser.user.email,

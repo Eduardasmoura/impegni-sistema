@@ -78,7 +78,9 @@ export function RegisterWizard() {
       password: data.password,
       options: {
         data: { full_name: data.fullName, phone: onlyDigits(data.phone) },
-        emailRedirectTo: `${window.location.origin}/login`,
+        // Volta pelo /auth/callback: entra já logada e segue pro onboarding,
+        // que cria a empresa a partir do rascunho guardado logo abaixo.
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 

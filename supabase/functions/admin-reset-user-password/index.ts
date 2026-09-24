@@ -75,9 +75,11 @@ Deno.serve(async (req: Request) => {
   // self-service "esqueci minha senha" — manda o e-mail de verdade via
   // provedor configurado no projeto; não expõe nenhum link pro Super Admin.
   const anonAuthClient = createClient(supabaseUrl, anonKey);
-  const redirectTo = payload.redirect_to || Deno.env.get("WEB_PROFESSIONAL_URL") || "http://localhost:3000";
+  const redirectTo = payload.redirect_to || Deno.env.get("WEB_PROFESSIONAL_URL") || "https://app.impegni.com.br";
   const { error: sendError } = await anonAuthClient.auth.resetPasswordForEmail(targetUser.user.email, {
-    redirectTo: `${redirectTo.replace(/\/$/, "")}/reset-password`,
+    // Via /auth/callback: este e-mail chega no fluxo implícito (tokens no
+    // fragmento), que o /reset-password (PKCE) não consegue ler sozinho.
+    redirectTo: `${redirectTo.replace(/\/$/, "")}/auth/callback`,
   });
   if (sendError) return jsonResponse({ error: sendError.message }, 500);
 

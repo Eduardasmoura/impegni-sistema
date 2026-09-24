@@ -276,7 +276,12 @@ Deno.serve(async (req: Request) => {
     }
   }
   if (!ownerId) {
-    const { data: invitedUser, error: inviteError } = await admin.auth.admin.inviteUserByEmail(payload.owner_email);
+    // O link do convite volta pelo /auth/callback do painel, que cria a
+    // sessão e manda o dono para /definir-senha (ele ainda não tem senha).
+    const appUrl = (Deno.env.get("WEB_PROFESSIONAL_URL") || "https://app.impegni.com.br").replace(/\/$/, "");
+    const { data: invitedUser, error: inviteError } = await admin.auth.admin.inviteUserByEmail(payload.owner_email, {
+      redirectTo: `${appUrl}/auth/callback`,
+    });
     if (inviteError || !invitedUser?.user) {
       return jsonResponse(
         { error: `company created, but could not create/invite owner: ${inviteError?.message}`, company, asaas_warning: asaasWarning },

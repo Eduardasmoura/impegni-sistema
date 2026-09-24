@@ -12,6 +12,10 @@
  */
 export function professionalUrlForCompany(slug: string): string {
   const base = process.env.NEXT_PUBLIC_WEB_PROFESSIONAL_URL || "http://localhost:3000";
+  // Subdomínio por empresa só quando o domínio curinga *.app.impegni.com.br
+  // estiver servindo HTTPS na Vercel (hoje resolve no DNS mas não responde)
+  // — até lá, os links do Super Admin usam o domínio principal do painel.
+  if (process.env.NEXT_PUBLIC_PROFESSIONAL_SUBDOMAINS !== "true") return base.replace(/\/$/, "");
   try {
     const url = new URL(base);
     url.hostname = `${slug}.${url.hostname}`;
