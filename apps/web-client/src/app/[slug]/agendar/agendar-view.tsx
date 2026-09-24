@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, User, Calendar as CalIcon, Check, ChevronLeft, LogIn, UserPlus, Tag, X as XIcon, ListPlus, ExternalLink } from "lucide-react";
+import { Clock, User, Phone, Calendar as CalIcon, Check, ChevronLeft, LogIn, UserPlus, Tag, X as XIcon, ListPlus, ExternalLink } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -232,10 +232,11 @@ export function AgendarView({ company }: { company: PublicCompany }) {
     setCupomAplicado({ code: cupomCodigo.trim(), discount_amount: Number(resultado.discount_amount), final_amount: Number(resultado.final_amount) });
   }
 
-  // Cliente já cadastrado nesta empresa? Decide se o botão "Entrar na lista
-  // de espera" pede nome/telefone antes (1ª vez) ou age direto (já é
-  // cliente cadastrado, mesmo dado que o passo de confirmação reaproveita).
-  const { data: clienteExistente } = useQuery({
+  // Dados que o cliente logado já tem: primeiro o cadastro dele NESTA empresa
+  // (clients, filtrado por company_id), depois o perfil da própria conta
+  // (profiles, preenchido no cadastro/“Meu perfil”). Cadastro de outra
+  // empresa nunca é consultado. Só o que faltar nos dois é perguntado.
+  const { data: clienteExistente, isLoading: carregandoCliente } = useQuery({
     queryKey: ["client-lookup", company.id, user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -243,22 +244,61 @@ export function AgendarView({ company }: { company: PublicCompany }) {
       return data;
     },
   });
+  const { data: perfil, isLoading: carregandoPerfil } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name, phone").eq("id", user!.id).maybeSingle();
+      return data;
+    },
+  });
+  const carregandoDados = !!user && (carregandoCliente || carregandoPerfil);
+  const nomeCadastrado = clienteExistente?.name?.trim() || perfil?.full_name?.trim() || "";
+  const telefoneCadastrado = clienteExistente?.phone?.trim() || perfil?.phone?.trim() || "";
+  const nomeFinal = nomeCadastrado || nome.trim();
+  const telefoneFinal = telefoneCadastrado || telefone.trim();
+
+  // Garante o registro `clients` desta empresa (unique(company_id, user_id))
+  // e grava o que o cliente acabou de informar no perfil da conta. Nunca
+  // sobrescreve um valor existente — só preenche o que estava vazio.
+  async function obterClienteId(): Promise<string> {
+    if (!user) throw new Error("Faça login para continuar.");
+    if (!nomeFinal || !telefoneFinal) throw new Error("Informe seu nome e telefone.");
+
+    const perfilPatch: { full_name?: string; phone?: string } = {};
+    if (!perfil?.full_name?.trim()) perfilPatch.full_name = nomeFinal;
+    if (!perfil?.phone?.trim()) perfilPatch.phone = telefoneFinal;
+    if (perfil && Object.keys(perfilPatch).length) {
+      const { error } = await supabase.from("profiles").update(perfilPatch).eq("id", user.id);
+      if (error) throw error;
+    }
+
+    const { data: clientRow } = await supabase.from("clients").select("id, name, phone").eq("company_id", company.id).eq("user_id", user.id).maybeSingle();
+    if (!clientRow) {
+      const { data: novoCliente, error: clientError } = await supabase
+        .from("clients")
+        .insert({ company_id: company.id, user_id: user.id, name: nomeFinal, phone: telefoneFinal })
+        .select("id")
+        .single();
+      if (clientError) throw clientError;
+      return novoCliente.id;
+    }
+    const clientePatch: { name?: string; phone?: string } = {};
+    if (!clientRow.name?.trim()) clientePatch.name = nomeFinal;
+    if (!clientRow.phone?.trim()) clientePatch.phone = telefoneFinal;
+    if (Object.keys(clientePatch).length) {
+      const { error } = await supabase.from("clients").update(clientePatch).eq("id", clientRow.id);
+      if (error) throw error;
+    }
+    return clientRow.id;
+  }
 
   async function entrarNaListaDeEspera() {
     if (!user || !serviceId) return;
-    if (!clienteExistente && (!nome.trim() || !telefone.trim())) return;
+    if (!nomeFinal || !telefoneFinal) return;
     setEntrandoNaFila(true);
     try {
-      let clientId = clienteExistente?.id;
-      if (!clientId) {
-        const { data: novoCliente, error: clientError } = await supabase
-          .from("clients")
-          .insert({ company_id: company.id, user_id: user.id, name: nome, phone: telefone })
-          .select("id")
-          .single();
-        if (clientError) throw clientError;
-        clientId = novoCliente.id;
-      }
+      const clientId = await obterClienteId();
       const { error } = await supabase.from("waitlist_entries").insert({
         company_id: company.id,
         client_id: clientId,
@@ -281,21 +321,7 @@ export function AgendarView({ company }: { company: PublicCompany }) {
     if (!servico || !user) return;
     setLoading(true);
     try {
-      // Reaproveita o cadastro do cliente pelo telefone, se já existir; um
-      // cliente com conta sempre tem no máximo um registro `clients` por
-      // empresa (unique(company_id, user_id)) — buscamos primeiro por isso.
-      let { data: clientRow } = await supabase.from("clients").select("*").eq("company_id", company.id).eq("user_id", user.id).maybeSingle();
-      if (!clientRow) {
-        const { data: novoCliente, error: clientError } = await supabase
-          .from("clients")
-          .insert({ company_id: company.id, user_id: user.id, name: nome, phone: telefone })
-          .select()
-          .single();
-        if (clientError) throw clientError;
-        clientRow = novoCliente;
-      } else if (nome !== clientRow.name || telefone !== clientRow.phone) {
-        await supabase.from("clients").update({ name: nome, phone: telefone }).eq("id", clientRow.id);
-      }
+      const clientId = await obterClienteId();
 
       const scheduledAt = zonedTimeToUtcIso(data, hora, company.timezone ?? DEFAULT_TIMEZONE);
       // Agendamento + pagamento numa RPC só (transação atômica) — antes eram
@@ -303,7 +329,7 @@ export function AgendarView({ company }: { company: PublicCompany }) {
       // pra um cliente comum, deixando o agendamento órfão sem pagamento.
       const { data: bookData, error: bookError } = await supabase.rpc("book_appointment", {
         p_company_id: company.id,
-        p_client_id: clientRow.id,
+        p_client_id: clientId,
         p_professional_id: professionalId!,
         p_service_id: serviceId!,
         p_scheduled_at: scheduledAt,
@@ -464,17 +490,17 @@ export function AgendarView({ company }: { company: PublicCompany }) {
                               <Button size="sm" variant="outline" className="gap-1.5"><LogIn className="w-3.5 h-3.5" /> Entrar pra participar</Button>
                             </Link>
                           </div>
-                        ) : !clienteExistente && (!nome.trim() || !telefone.trim()) ? (
+                        ) : !carregandoDados && (!nomeCadastrado || !telefoneCadastrado) ? (
                           <div className="space-y-2">
                             <p className="text-xs font-medium text-muted-foreground">Seus dados pra entrar na lista de espera:</p>
-                            <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
-                            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="Telefone / WhatsApp" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
-                            <Button size="sm" variant="outline" className="gap-1.5 w-full" onClick={entrarNaListaDeEspera} disabled={entrandoNaFila || !nome.trim() || !telefone.trim()}>
+                            {!nomeCadastrado && <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />}
+                            {!telefoneCadastrado && <input type="tel" inputMode="tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="Telefone / WhatsApp" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />}
+                            <Button size="sm" variant="outline" className="gap-1.5 w-full" onClick={entrarNaListaDeEspera} disabled={entrandoNaFila || !nomeFinal || !telefoneFinal}>
                               <ListPlus className="w-3.5 h-3.5" /> {entrandoNaFila ? "Entrando..." : "Entrar na lista de espera"}
                             </Button>
                           </div>
                         ) : (
-                          <Button size="sm" variant="outline" className="gap-1.5 w-full" onClick={entrarNaListaDeEspera} disabled={entrandoNaFila}>
+                          <Button size="sm" variant="outline" className="gap-1.5 w-full" onClick={entrarNaListaDeEspera} disabled={entrandoNaFila || carregandoDados}>
                             <ListPlus className="w-3.5 h-3.5" /> {entrandoNaFila ? "Entrando..." : "Entrar na lista de espera pra esse dia"}
                           </Button>
                         )}
@@ -600,30 +626,47 @@ export function AgendarView({ company }: { company: PublicCompany }) {
                 </div>
                 {user && (
                   <>
-                    <div>
-                      <label htmlFor="nome-cliente" className="text-xs font-medium text-muted-foreground">Seu nome *</label>
-                      <input
-                        id="nome-cliente"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        placeholder="Seu nome"
-                        required
-                        className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="telefone-cliente" className="text-xs font-medium text-muted-foreground">Telefone / WhatsApp *</label>
-                      <input
-                        id="telefone-cliente"
-                        type="tel"
-                        inputMode="tel"
-                        value={telefone}
-                        onChange={(e) => setTelefone(e.target.value)}
-                        placeholder="(11) 99999-9999"
-                        required
-                        className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
-                      />
-                    </div>
+                    {carregandoDados ? (
+                      <p className="text-xs text-muted-foreground">Carregando seus dados...</p>
+                    ) : (
+                      <>
+                        {(nomeCadastrado || telefoneCadastrado) && (
+                          <div data-testid="seus-dados" className="rounded-lg border border-border px-3 py-2 text-sm space-y-0.5">
+                            <p className="text-xs font-medium text-muted-foreground">Seus dados</p>
+                            {nomeCadastrado && <p className="flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-muted-foreground shrink-0" /><span className="truncate">{nomeCadastrado}</span></p>}
+                            {telefoneCadastrado && <p className="flex items-center gap-1.5 text-muted-foreground"><Phone className="w-3.5 h-3.5 shrink-0" />{telefoneCadastrado}</p>}
+                          </div>
+                        )}
+                        {!nomeCadastrado && (
+                          <div>
+                            <label htmlFor="nome-cliente" className="text-xs font-medium text-muted-foreground">Seu nome *</label>
+                            <input
+                              id="nome-cliente"
+                              value={nome}
+                              onChange={(e) => setNome(e.target.value)}
+                              placeholder="Seu nome"
+                              required
+                              className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
+                            />
+                          </div>
+                        )}
+                        {!telefoneCadastrado && (
+                          <div>
+                            <label htmlFor="telefone-cliente" className="text-xs font-medium text-muted-foreground">Telefone / WhatsApp *</label>
+                            <input
+                              id="telefone-cliente"
+                              type="tel"
+                              inputMode="tel"
+                              value={telefone}
+                              onChange={(e) => setTelefone(e.target.value)}
+                              placeholder="(11) 99999-9999"
+                              required
+                              className="w-full mt-1 rounded-lg border border-input bg-card px-3 py-2 text-sm"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
                     <div>
                       <label className="text-sm font-medium">Forma de pagamento</label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
@@ -660,7 +703,7 @@ export function AgendarView({ company }: { company: PublicCompany }) {
             <div className="flex justify-between mt-6">
               <BackBtn onClick={() => setStep(2)} />
               {user && (
-                <Button disabled={!nome || !telefone || loading || (metodo === "online" && !cpfCliente.trim())} onClick={confirmar} className="gap-2">
+                <Button disabled={carregandoDados || !nomeFinal || !telefoneFinal || loading || (metodo === "online" && !cpfCliente.trim())} onClick={confirmar} className="gap-2">
                   {loading ? "Confirmando..." : <><Check className="w-4 h-4" /> Confirmar agendamento</>}
                 </Button>
               )}
