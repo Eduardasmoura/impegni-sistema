@@ -208,7 +208,7 @@ export function SidebarNav({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href="mailto:atendimento.inovabi@gmail.com"><HelpCircle className="w-4 h-4" /> Ajuda e suporte</a>
+          <Link href="/suporte"><HelpCircle className="w-4 h-4" /> Ajuda e suporte</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="w-4 h-4" /> Sair
