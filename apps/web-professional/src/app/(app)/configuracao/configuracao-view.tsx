@@ -17,7 +17,7 @@ import type { Tables } from "@/lib/supabase/database.types";
 import { BOOKING_DOMAIN } from "@/lib/format";
 
 const PALETAS_PRONTAS = [
-  { nome: "Impegni", primaria: "#BE185D", secundaria: "#1C1917", acento: "#FCE7F3" },
+  { nome: "Impegni", primaria: "#6D3FD6", secundaria: "#1C1B21", acento: "#F1EDFD" },
   { nome: "Âmbar", primaria: "#B45309", secundaria: "#1C1917", acento: "#F5E6D3" },
   { nome: "Rosa", primaria: "#BE185D", secundaria: "#3B0764", acento: "#FCE7F3" },
   { nome: "Esmeralda", primaria: "#047857", secundaria: "#064E3B", acento: "#D1FAE5" },
@@ -83,9 +83,9 @@ export function ConfiguracaoView({ company }: { company: Tables<"companies"> }) 
     business_hours: company.business_hours || "",
     logo_url: company.logo_url || "",
     cover_url: company.cover_url || "",
-    color_primary: company.color_primary || "#BE185D",
-    color_secondary: company.color_secondary || "#1C1917",
-    color_accent: company.color_accent || "#FCE7F3",
+    color_primary: company.color_primary || "#6D3FD6",
+    color_secondary: company.color_secondary || "#1C1B21",
+    color_accent: company.color_accent || "#F1EDFD",
     segment_id: company.segment_id,
     loyalty_program_enabled: company.loyalty_program_enabled,
     whatsapp_reminder_enabled: company.whatsapp_reminder_enabled,

@@ -49,7 +49,7 @@ export function Header() {
         Pular para o conteúdo
       </a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
-        <Logo />
+        <Logo priority />
 
         <nav aria-label="Navegação principal" className="hidden lg:flex items-center gap-0.5 text-[14.5px] text-foreground/70">
           {NAV_LINKS.map((link) => (

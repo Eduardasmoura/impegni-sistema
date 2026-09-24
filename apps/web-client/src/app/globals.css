@@ -5,34 +5,34 @@
 @tailwind utilities;
 
 /*
- * Tokens de tema (claro/escuro). Paleta padrão Impegni: magenta #BE185D
- * (--primary) sobre base off-white rosada — a mesma do site de vendas.
+ * Tokens de tema (claro/escuro). Paleta padrão Impegni, tirada da logo: roxo #6D3FD6
+ * (--primary), grafite #1C1B21 e base off-white quente — a mesma do site.
  * Os valores por empresa (companies.color_primary/secondary/accent) podem no
  * futuro sobrescrever --primary/--secondary/--accent via inline style no
  * layout autenticado, já que o restante da UI só referencia essas variáveis.
  */
 @layer base {
   :root {
-    --background: 330 25% 98.5%;
-    --foreground: 330 15% 10%;
+    --background: 40 30% 98.5%;
+    --foreground: 250 10% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 330 15% 10%;
+    --card-foreground: 250 10% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 330 15% 10%;
-    --primary: 335 78% 42%;
+    --popover-foreground: 250 10% 12%;
+    --primary: 258 65% 54%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 24 10% 10%;
+    --secondary: 250 12% 12%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 330 14% 95.5%;
-    --muted-foreground: 330 5% 40%;
-    --accent: 326 78% 95%;
-    --accent-foreground: 336 74% 30%;
+    --muted: 40 20% 95%;
+    --muted-foreground: 250 5% 40%;
+    --accent: 258 70% 96%;
+    --accent-foreground: 258 60% 38%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 330 10% 89%;
-    --input: 330 10% 89%;
-    --ring: 335 78% 42%;
-    --chart-1: 335 78% 42%;
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 258 65% 54%;
+    --chart-1: 258 65% 54%;
     --chart-2: 160 55% 38%;
     --chart-3: 200 70% 45%;
     --chart-4: 43 90% 55%;
@@ -43,26 +43,26 @@
   }
 
   .dark {
-    --background: 330 12% 7%;
-    --foreground: 330 15% 95%;
-    --card: 330 10% 10%;
-    --card-foreground: 330 15% 95%;
-    --popover: 330 10% 10%;
-    --popover-foreground: 330 15% 95%;
-    --primary: 330 80% 68%;
-    --primary-foreground: 336 84% 12%;
-    --secondary: 330 8% 18%;
-    --secondary-foreground: 330 15% 95%;
-    --muted: 330 8% 15%;
-    --muted-foreground: 330 6% 65%;
-    --accent: 336 30% 20%;
-    --accent-foreground: 330 15% 95%;
+    --background: 250 12% 7%;
+    --foreground: 40 20% 95%;
+    --card: 250 10% 10%;
+    --card-foreground: 40 20% 95%;
+    --popover: 250 10% 10%;
+    --popover-foreground: 40 20% 95%;
+    --primary: 258 80% 72%;
+    --primary-foreground: 258 60% 12%;
+    --secondary: 250 8% 18%;
+    --secondary-foreground: 40 20% 95%;
+    --muted: 250 8% 15%;
+    --muted-foreground: 250 6% 65%;
+    --accent: 258 30% 20%;
+    --accent-foreground: 40 20% 95%;
     --destructive: 0 63% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 330 8% 20%;
-    --input: 330 8% 20%;
-    --ring: 330 80% 68%;
-    --chart-1: 330 80% 68%;
+    --border: 250 8% 20%;
+    --input: 250 8% 20%;
+    --ring: 258 80% 72%;
+    --chart-1: 258 80% 72%;
     --chart-2: 160 50% 48%;
     --chart-3: 200 70% 55%;
     --chart-4: 43 90% 60%;

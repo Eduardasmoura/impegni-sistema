@@ -3,37 +3,37 @@
 @tailwind utilities;
 
 /*
- * Tokens do site de vendas. A cor da marca é o magenta #BE185D — a mesma
- * cor padrão do painel e da página pública —, usada com parcimônia (CTAs e
- * detalhes). As seções escuras usam --ink, um vinho profundo da mesma
- * família, em vez de um bloco inteiro de magenta.
+ * Tokens do site de vendas, tirados da logo oficial: roxo #6D3FD6 (marca,
+ * usado com parcimônia em CTAs e detalhes), grafite #1C1B21 (texto) e base
+ * off-white quente, próxima do creme da logo. As seções escuras usam --ink,
+ * um roxo profundo da mesma família.
  * A fonte (Work Sans) vem de next/font em layout.tsx, via --font-sans.
  */
 @layer base {
   :root {
-    --background: 330 25% 98.5%;
-    --foreground: 330 15% 10%;
+    --background: 40 30% 98.5%;
+    --foreground: 250 10% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 330 15% 10%;
+    --card-foreground: 250 10% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 330 15% 10%;
-    /* Cor da marca: #BE185D */
-    --primary: 335 78% 42%;
+    --popover-foreground: 250 10% 12%;
+    /* Roxo da marca (ponto da logo): #6D3FD6 */
+    --primary: 258 65% 54%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 330 14% 95%;
-    --secondary-foreground: 330 15% 12%;
-    --muted: 330 14% 95.5%;
-    --muted-foreground: 330 5% 38%;
-    --accent: 326 78% 95.5%;
-    --accent-foreground: 336 74% 30%;
+    --secondary: 40 20% 95%;
+    --secondary-foreground: 250 10% 14%;
+    --muted: 40 20% 95.5%;
+    --muted-foreground: 250 5% 38%;
+    --accent: 258 70% 96%;
+    --accent-foreground: 258 60% 38%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 330 10% 88%;
-    --input: 330 10% 88%;
-    --ring: 335 78% 42%;
-    /* Superfície escura das seções de destaque (vinho da mesma família). */
-    --ink: 336 55% 11%;
-    --chart-1: 335 78% 42%;
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 258 65% 54%;
+    /* Superfície escura das seções de destaque (roxo profundo da mesma família). */
+    --ink: 258 40% 13%;
+    --chart-1: 258 65% 54%;
     --chart-2: 160 55% 38%;
     --chart-3: 200 70% 45%;
     --chart-4: 43 90% 55%;
@@ -66,14 +66,14 @@
 /* Sombra única dos "prints" do produto — suave e longa, sem borda pesada. */
 .shadow-product {
   box-shadow:
-    0 1px 2px rgba(60, 10, 30, 0.04),
-    0 12px 24px -8px rgba(60, 10, 30, 0.08),
-    0 40px 80px -24px rgba(60, 10, 30, 0.16);
+    0 1px 2px rgba(28, 20, 48, 0.04),
+    0 12px 24px -8px rgba(28, 20, 48, 0.08),
+    0 40px 80px -24px rgba(28, 20, 48, 0.16);
 }
 .shadow-float {
   box-shadow:
-    0 1px 2px rgba(60, 10, 30, 0.05),
-    0 10px 30px -10px rgba(60, 10, 30, 0.22);
+    0 1px 2px rgba(28, 20, 48, 0.05),
+    0 10px 30px -10px rgba(28, 20, 48, 0.22);
 }
 
 @keyframes fade-up {
