@@ -8,10 +8,10 @@ import { BookingMockup } from "./booking-mockup";
 // Mesmo fluxo do web-client: link → profissional/serviço → dia/horário
 // livres → agendamento criado, que aparece na agenda do painel.
 const PASSOS = [
-  { title: "Seu cliente abre o seu link", body: "Pelo WhatsApp, pelo Instagram ou onde vocês já conversam." },
+  { title: "Você compartilha o link", body: "Pelo WhatsApp, pelo Instagram ou onde vocês já conversam." },
   { title: "Escolhe o serviço e o profissional", body: "Com preço e duração de cada serviço à vista." },
   { title: "Escolhe o dia e o horário", body: "Só aparecem horários realmente livres na sua agenda." },
-  { title: "O agendamento chega pra você", body: "Entra direto na sua agenda, sem troca de mensagem." },
+  { title: "O agendamento entra no sistema", body: "Aparece direto na sua agenda, sem troca de mensagem." },
 ];
 
 // A única seção escura da página — é o diferencial mais fácil de entender
@@ -27,8 +27,8 @@ export function AgendamentoOnline() {
               align="left"
               inverted
               eyebrow="Agendamento online"
-              title="Seu cliente agenda. Você cuida do atendimento."
-              description="Cada negócio no Impegni ganha uma página própria de agendamento, que funciona 24 horas — inclusive enquanto você está atendendo."
+              title="Deixe seus clientes agendarem mesmo quando você estiver atendendo."
+              description="Você compartilha o link da sua página. O cliente escolhe o serviço e o horário, e o agendamento entra direto na sua agenda — a qualquer hora."
             />
 
             <ol className="mt-10 space-y-0">

@@ -13,7 +13,7 @@ export function BookingMockup() {
       <div className="sm:hidden mx-auto w-[72%] max-w-[270px] rounded-[2.1rem] bg-[#141014] p-[7px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.55)]">
         <div className="rounded-[1.7rem] overflow-hidden bg-white">
           <Image
-            src="/produto/agendamento-celular.png"
+            src="/produto/agendamento-celular.webp"
             alt="No celular, o cliente escolhe o dia no calendário e um dos horários disponíveis"
             width={390}
             height={844}
@@ -36,7 +36,7 @@ export function BookingMockup() {
           <span className="w-10 sm:w-12" />
         </div>
         <Image
-          src="/produto/agendamento-publico.png"
+          src="/produto/agendamento-publico.webp"
           alt="Página pública de agendamento da Taty Beauty, com o botão Agendar horário e a lista de serviços com preço e duração"
           width={1200}
           height={900}
@@ -48,7 +48,7 @@ export function BookingMockup() {
       <div className="absolute hidden sm:block right-0 bottom-0 w-[42%] max-w-[250px] min-w-[180px] rounded-[2.1rem] bg-[#141014] p-[7px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.55)]">
         <div className="relative rounded-[1.7rem] overflow-hidden bg-white">
           <Image
-            src="/produto/agendamento-celular.png"
+            src="/produto/agendamento-celular.webp"
             alt="No celular, o cliente escolhe o dia no calendário e um dos horários disponíveis"
             width={390}
             height={844}

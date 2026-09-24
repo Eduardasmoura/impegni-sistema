@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { Instagram } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { LOGIN_URL, REGISTER_URL, WHATSAPP_URL } from "@/lib/format";
+
+// Perfil oficial no Instagram.
+const INSTAGRAM_URL = "https://www.instagram.com/impegni.app/";
 
 const COLUNAS = [
   {
@@ -22,10 +26,11 @@ const COLUNAS = [
     ],
   },
   {
-    heading: "Legal",
+    heading: "Institucional",
     items: [
       { label: "Termos de Uso", href: "/termos-de-uso" },
       { label: "Política de Privacidade", href: "/privacidade" },
+      { label: "@impegni.app", href: INSTAGRAM_URL, external: true, instagram: true },
       { label: "Contato", href: WHATSAPP_URL, external: true },
     ],
   },
@@ -49,7 +54,18 @@ export function Footer() {
               <ul className="space-y-3 text-[14.5px]">
                 {col.items.map((item) => (
                   <li key={item.label}>
-                    {"external" in item ? (
+                    {"instagram" in item ? (
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Instagram do Impegni"
+                        className="flex w-fit items-center gap-2 min-h-11 sm:min-h-0 -my-2.5 sm:my-0 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Instagram className="w-4 h-4 shrink-0" aria-hidden="true" />
+                        {item.label}
+                      </a>
+                    ) : "external" in item ? (
                       <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
                         {item.label}
                       </a>

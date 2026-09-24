@@ -31,9 +31,9 @@ export default function HomePage() {
         <Problema />
         <Funcionalidades />
         <Agenda />
-        <AgendamentoOnline />
-        <Financeiro />
         <Clientes />
+        <Financeiro />
+        <AgendamentoOnline />
         <InterfaceProduto />
         <ParaQuem />
         <ComoFunciona />

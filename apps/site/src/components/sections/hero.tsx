@@ -58,10 +58,9 @@ export function Hero() {
             <div className="absolute -inset-x-6 -bottom-10 top-16 sm:-inset-x-10 rounded-[2rem] bg-accent/70" aria-hidden="true" />
 
             <BrowserFrame
-              src="/produto/dashboard.png"
+              desktop={{ src: "/produto/dashboard.webp", width: 1440, height: 836 }}
+              mobile={{ src: "/produto/m-dashboard.webp", width: 390, height: 844 }}
               alt="Início do Impegni com os números do dia, a agenda de hoje e o gráfico de receita do mês"
-              width={1440}
-              height={836}
               url="app.impegni.com.br/dashboard"
               priority
               sizes="(min-width: 1280px) 820px, (min-width: 1024px) 60vw, 100vw"

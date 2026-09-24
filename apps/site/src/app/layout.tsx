@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     siteName: "Impegni",
     type: "website",
     locale: "pt_BR",
-    images: [{ url: "/produto/dashboard.png", width: 1440, height: 836, alt: "Painel do Impegni" }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Início do Impegni com a agenda do dia e a receita do mês" }],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/produto/dashboard.png"],
+    images: ["/og-image.jpg"],
   },
 };
 
