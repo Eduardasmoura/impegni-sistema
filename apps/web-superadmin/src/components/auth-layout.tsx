@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Scissors, type LucideIcon } from "lucide-react";
 
@@ -17,11 +18,10 @@ export function AuthLayout({
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
-        <Link href="/empresas" className="flex items-center justify-center gap-2 mb-8 text-foreground">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <Scissors className="w-4.5 h-4.5 text-primary-foreground" />
-          </div>
-          <span className="font-heading text-lg font-semibold">Impegni Admin</span>
+        {/* Logo oficial — mesmo arquivo do site (apps/site/public/logo-impegni.png, 720x175). */}
+        <Link href="/empresas" aria-label="Impegni Admin" className="flex items-center justify-center mb-8">
+          <Image src="/logo-impegni.png" alt="Impegni" width={720} height={175} priority className="h-8 sm:h-9 w-auto" />
+          <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Admin</span>
         </Link>
 
         <div className="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm">
