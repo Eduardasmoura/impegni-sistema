@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { HandCoins, Info, Loader2, QrCode, Save, Trash2, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,7 +178,10 @@ export function CaucaoCard({ companyId, isManager }: { companyId: string; isMana
   return (
     <section id="caucao" className="scroll-mt-6">
       <h2 className="font-heading text-2xl font-semibold mb-1">Recebimentos / Caução</h2>
-      <p className="text-sm text-muted-foreground mb-4">Cobre um sinal para confirmar os agendamentos feitos online.</p>
+      <p className="text-sm text-muted-foreground mb-4">
+        Cobre um sinal para confirmar os agendamentos feitos online.{" "}
+        <Link href="/suporte/artigo/configurar-caucao" className="text-primary hover:underline whitespace-nowrap">Como funciona</Link>
+      </p>
 
       <Card>
         <CardHeader>

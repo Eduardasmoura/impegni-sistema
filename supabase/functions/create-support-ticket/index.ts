@@ -15,14 +15,20 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+// Mesmas chaves do CHECK em support_tickets.category (migrations
+// 20260926000000 e 20260928000000). 'duvida' e 'sugestao' continuam aceitas
+// por compatibilidade, mas o formulário atual não as oferece mais.
 const CATEGORIES: Record<string, string> = {
   problema_tecnico: "Problema técnico",
   agenda: "Agenda",
   financeiro: "Financeiro",
+  pagamentos: "Pagamentos",
+  pacotes: "Pacotes recorrentes",
+  clientes: "Clientes",
   conta: "Cadastro/Conta",
+  outro: "Outro",
   duvida: "Dúvida sobre o sistema",
   sugestao: "Sugestão",
-  outro: "Outro",
 };
 
 const ALLOWED_ORIGINS = new Set(
@@ -132,6 +138,7 @@ Deno.serve(async (req: Request) => {
       ["Categoria", CATEGORIES[category]],
       ["Assunto", subject],
       ["Data/hora", `${quando} (horário de Brasília)`],
+      ["Protocolo", ticket.id.replace(/-/g, "").slice(0, 8).toUpperCase()],
       ["ID da solicitação", ticket.id],
     ];
     const html = `<div style="font-family:Arial,Helvetica,sans-serif;color:#1C1B21;max-width:640px">
@@ -152,7 +159,7 @@ Deno.serve(async (req: Request) => {
           from: "Impegni Suporte <nao-responda@impegni.com.br>",
           to: [to],
           reply_to: user.email ?? undefined,
-          subject: `[Suporte] ${CATEGORIES[category]} — ${subject}`,
+          subject: `[Suporte #${ticket.id.replace(/-/g, "").slice(0, 8).toUpperCase()}] ${CATEGORIES[category]} — ${subject}`,
           html,
           text,
         }),

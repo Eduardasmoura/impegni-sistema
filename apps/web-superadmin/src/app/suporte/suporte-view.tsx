@@ -17,6 +17,11 @@ import type { Tables } from "@/lib/supabase/database.types";
 const ALL = "__all__";
 
 const STATUS_LABEL: Record<string, string> = { open: "Aberto", in_progress: "Em andamento", waiting_company: "Aguardando empresa", resolved: "Resolvido", closed: "Fechado" };
+// Mesmas chaves de support_tickets.category (formulário do painel do profissional).
+const CATEGORY_LABEL: Record<string, string> = {
+  problema_tecnico: "Problema técnico", agenda: "Agenda", financeiro: "Financeiro", pagamentos: "Pagamentos", pacotes: "Pacotes recorrentes",
+  clientes: "Clientes", conta: "Conta", outro: "Outro", duvida: "Dúvida sobre o sistema", sugestao: "Sugestão",
+};
 const STATUS_COLOR: Record<string, string> = {
   open: "bg-chart-4/15 text-chart-4", in_progress: "bg-primary/15 text-primary", waiting_company: "bg-chart-4/15 text-chart-4",
   resolved: "bg-chart-2/15 text-chart-2", closed: "bg-muted text-muted-foreground",
@@ -152,6 +157,7 @@ export function SuporteView({ tickets: initial, companies, loadError, currentUse
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[t.status] ?? "bg-muted"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
                 <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${PRIORITY_COLOR[t.priority] ?? "bg-muted"}`}>{PRIORITY_LABEL[t.priority] ?? t.priority}</span>
+                {t.category && <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-muted text-foreground/80">{CATEGORY_LABEL[t.category] ?? t.category}</span>}
                 <span className="text-xs text-muted-foreground ml-auto">{formatDateTime(t.created_at)}</span>
               </div>
               <p className="font-medium">{t.subject}</p>

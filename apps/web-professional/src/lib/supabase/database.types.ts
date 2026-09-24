@@ -2614,6 +2614,7 @@ export type Database = {
       support_tickets: {
         Row: {
           assigned_to: string | null
+          category: string | null
           closed_at: string | null
           company_id: string
           created_at: string
@@ -2627,6 +2628,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          category?: string | null
           closed_at?: string | null
           company_id: string
           created_at?: string
@@ -2640,6 +2642,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          category?: string | null
           closed_at?: string | null
           company_id?: string
           created_at?: string
