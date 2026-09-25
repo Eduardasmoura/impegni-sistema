@@ -74,6 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         avatarUrl={profile?.avatar_url ?? null}
         planName={subscription?.plans?.name ?? null}
         showEquipe={planAllowsTeam(planLimits, professionalsCount ?? 0)}
+        isManager={current.roleEmpresa === "owner" || current.roleEmpresa === "admin"}
       />
       <main className="flex-1 min-w-0">{children}</main>
     </div>

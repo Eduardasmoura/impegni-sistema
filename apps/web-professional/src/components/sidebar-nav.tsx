@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { GlobalSearch, GlobalSearchIconButton } from "@/components/global-search";
 import { createClient } from "@/lib/supabase/client";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
@@ -85,6 +86,7 @@ export function SidebarNav({
   avatarUrl,
   planName,
   showEquipe = true,
+  isManager = false,
 }: {
   companyName: string;
   userEmail?: string;
@@ -93,6 +95,8 @@ export function SidebarNav({
   planName?: string | null;
   // Mesma regra de sempre — calculada no layout, não uma preferência de UI.
   showEquipe?: boolean;
+  /** owner/admin — mesmo critério das páginas (Campanhas, caução etc.). */
+  isManager?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -239,6 +243,7 @@ export function SidebarNav({
             abaixo (ver bloco seguinte) em vez de existir duas vezes no DOM. */}
         {!collapsed && (
           <div className="hidden lg:flex items-center gap-0.5 shrink-0">
+            <GlobalSearchIconButton />
             <NotificationsBell />
             <button
               onClick={alternarCollapsed}
@@ -257,6 +262,7 @@ export function SidebarNav({
           <button onClick={alternarCollapsed} aria-label="Expandir menu" title="Expandir menu" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
             <Menu className="w-4 h-4" />
           </button>
+          <GlobalSearchIconButton />
           <NotificationsBell />
         </div>
       )}
@@ -309,8 +315,12 @@ export function SidebarNav({
           <Menu className="w-5 h-5" />
         </button>
         <span className="font-heading font-semibold truncate">{companyName}</span>
-        <NotificationsBell className="ml-auto -mr-1.5" align="end" />
+        <GlobalSearchIconButton className="ml-auto" />
+        <NotificationsBell className="-mr-1.5" align="end" />
       </header>
+
+      {/* Busca global (⌘K / Ctrl K) — uma instância para o painel todo. */}
+      <GlobalSearch permissions={{ equipe: showEquipe, manager: isManager, assinatura: !!planName }} />
 
       {/* Backdrop do drawer mobile */}
       {mobileOpen && (

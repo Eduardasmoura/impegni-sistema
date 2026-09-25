@@ -19,6 +19,8 @@ import { DEFAULT_FILTERS, resolvePeriodRange, resolvePreviousPeriodRange, countA
 import { FiltersBar } from "./filters-bar";
 import { AdvancedFiltersDialog } from "./advanced-filters-dialog";
 import { SetupGuide, type SetupProgress } from "@/components/setup-guide";
+import { GlobalSearchField } from "@/components/global-search";
+import { AjudaAtalho } from "./ajuda-atalho";
 import { QuickActions } from "./quick-actions";
 import { TodayOverview } from "./today-overview";
 import { AgendaTodayCard } from "./agenda-today-card";
@@ -383,12 +385,15 @@ export function DashboardView({
           <h1 className="font-heading text-3xl font-semibold">{primeiroNome ? `Olá, ${primeiroNome}!` : "Olá!"}</h1>
           <p className="text-sm text-muted-foreground">Veja como está o seu negócio hoje.</p>
         </div>
-        <FiltersBar
-          periodo={filters.periodo}
-          onPeriodoChange={(p) => setFilters((f) => ({ ...f, periodo: p }))}
-          activeFilterCount={countActiveFilters(filters)}
-          onOpenAdvanced={() => setFiltrosAbertos(true)}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <GlobalSearchField className="hidden md:flex w-60 xl:w-72" />
+          <FiltersBar
+            periodo={filters.periodo}
+            onPeriodoChange={(p) => setFilters((f) => ({ ...f, periodo: p }))}
+            activeFilterCount={countActiveFilters(filters)}
+            onOpenAdvanced={() => setFiltrosAbertos(true)}
+          />
+        </div>
         <AdvancedFiltersDialog
           open={filtrosAbertos}
           onOpenChange={setFiltrosAbertos}
@@ -402,6 +407,8 @@ export function DashboardView({
       </div>
 
       <SetupGuide {...setup} />
+
+      <AjudaAtalho />
 
       {isLoading ? (
         <LoadingState text="Carregando dashboard..." />
