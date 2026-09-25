@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { GlobalSearch, GlobalSearchIconButton } from "@/components/global-search";
+import { GlobalSearch, GlobalSearchField, GlobalSearchIconButton } from "@/components/global-search";
 import { createClient } from "@/lib/supabase/client";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
@@ -225,11 +225,12 @@ export function SidebarNav({
     <>
       <div className={cn("h-16 flex items-center border-b border-border shrink-0", collapsed ? "justify-center px-2" : "justify-between px-4")}>
         {!collapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+          <Link href="/dashboard" title={companyName} className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
               <Scissors className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-heading font-semibold truncate min-w-0">{companyName}</span>
+            {/* Até 2 linhas: nomes longos aparecem inteiros sem apertar os ícones ao lado. */}
+            <span className="font-heading font-semibold min-w-0 leading-tight line-clamp-2 break-words">{companyName}</span>
           </Link>
         )}
         {collapsed && (
@@ -243,7 +244,6 @@ export function SidebarNav({
             abaixo (ver bloco seguinte) em vez de existir duas vezes no DOM. */}
         {!collapsed && (
           <div className="hidden lg:flex items-center gap-0.5 shrink-0">
-            <GlobalSearchIconButton />
             <NotificationsBell />
             <button
               onClick={alternarCollapsed}
@@ -264,6 +264,14 @@ export function SidebarNav({
           </button>
           <GlobalSearchIconButton />
           <NotificationsBell />
+        </div>
+      )}
+
+      {/* Busca global com a lupa numa faixa própria (menu aberto): não disputa
+          a linha do nome da empresa. Recolhido, fica só o ícone acima. */}
+      {!collapsed && (
+        <div className="hidden lg:block px-2 pt-3">
+          <GlobalSearchField className="flex w-full" />
         </div>
       )}
 
