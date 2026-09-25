@@ -172,7 +172,7 @@ export default async function CompanyPage({ params }: { params: { slug: string }
             <h2 className="font-heading text-lg font-semibold mb-3 mt-8 flex items-center gap-2">
               Avaliações
               <span className="text-sm font-normal text-muted-foreground flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 fill-primary text-primary" /> {mediaAvaliacoes.toFixed(1)} · {totalAvaliacoes} avaliação(ões)
+                <Star className="w-3.5 h-3.5 fill-primary text-primary" /> {mediaAvaliacoes.toFixed(1)} · {totalAvaliacoes} {totalAvaliacoes === 1 ? "avaliação" : "avaliações"}
               </span>
             </h2>
             <div className="space-y-3">
